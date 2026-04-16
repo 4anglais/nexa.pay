@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@cloudflare/vite-plugin": "^1.25.5",
-    "@fontsource/nunito": "^5.2.7",
+    "@fontsource/raleway": "^5.2.8",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",

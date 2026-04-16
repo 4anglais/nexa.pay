@@ -35,7 +35,7 @@ export function AppSidebar() {
   const NavContent = () => (
     <div className="flex h-full flex-col">
       <div className="flex h-20 items-center px-6">
-        <span className="text-xl font-black tracking-tighter text-foreground">
+        <span className="text-xl font-thin tracking-tighter text-foreground">
           NexaPayslips
         </span>
       </div>

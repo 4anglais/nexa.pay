@@ -59,7 +59,6 @@ function PayslipDetailPage() {
   const [allowances, setAllowances] = useState<AllowanceRow[]>([]);
   const [deductions, setDeductions] = useState<DeductionRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [printMode, setPrintMode] = useState<"single" | "duplicate">("single");
 
   useEffect(() => {
     Promise.all([
@@ -175,262 +174,161 @@ function PayslipDetailPage() {
 
   const referenceCode = signature.slice(0, 10).toUpperCase();
 
-  const ReceiptCard = ({ compact }: { compact?: boolean }) => (
+  const TicketCard = () => (
     <div
       style={{ breakInside: "avoid", pageBreakInside: "avoid" }}
-      className={`rounded-3xl border border-slate-200/80 bg-white/90 shadow-2xl shadow-slate-900/10 print:rounded-none print:border-0 print:bg-white print:shadow-none print:pb-4 ${compact ? "p-4 text-[10px] print:p-3" : "p-10 text-sm"}`}
+      className="border border-slate-200/80 bg-white/90 shadow-2xl shadow-slate-900/10 print:border print:shadow-none print:bg-white p-6 text-sm"
     >
-      {/* Header */}
-      <div
-        className={`flex justify-between items-start border-b border-border ${compact ? "pb-3 mb-3" : "pb-6 mb-0"}`}
-      >
-        <div>
-          <h2
-            className={`font-black tracking-tighter text-foreground ${compact ? "text-base" : "text-3xl"}`}
-          >
-            {companyName}
-          </h2>
-          <p
-            className={`mt-1 font-bold text-muted-foreground uppercase tracking-widest ${compact ? "text-[8px]" : "text-[10px]"}`}
-          >
-            Official Payslip
-          </p>
-        </div>
-        <div className="text-right">
-          <p
-            className={`font-black text-foreground ${compact ? "text-sm" : "text-xl"}`}
-          >
-            {period}
-          </p>
-          <p
-            className={`text-muted-foreground ${compact ? "text-[8px]" : "text-[10px]"}`}
-          >
-            REF: {payslip.id.slice(0, 8).toUpperCase()}
-          </p>
-        </div>
-      </div>
-
-      {/* Employee & Summary */}
-      <div
-        className={`grid grid-cols-2 ${compact ? "gap-4 py-3 mb-3" : "gap-8 py-8 mb-0"} border-b border-border`}
-      >
-        <div className={`space-y-${compact ? "0.5" : "1"}`}>
-          <p
-            className={`font-bold text-muted-foreground uppercase tracking-wider ${compact ? "text-[8px]" : "text-[10px]"}`}
-          >
-            Employee Details
-          </p>
-          <p
-            className={`font-black text-foreground ${compact ? "text-sm" : "text-base"}`}
-          >
-            {emp?.full_name ?? "—"}
-          </p>
-          <p
-            className={`text-muted-foreground ${compact ? "text-[9px]" : "text-sm"}`}
-          >
-            {emp?.position ?? "—"}
-          </p>
-          <p
-            className={`text-muted-foreground ${compact ? "text-[9px]" : "text-sm"}`}
-          >
-            {emp?.department ?? "—"}
-          </p>
-          <p
-            className={`font-mono ${compact ? "text-[8px] mt-1" : "text-xs mt-2"}`}
-          >
-            ID: {emp?.nrc_or_id ?? "—"}
-          </p>
-        </div>
-        <div className={`space-y-${compact ? "0.5" : "1"} text-right`}>
-          <p
-            className={`font-bold text-muted-foreground uppercase tracking-wider ${compact ? "text-[8px]" : "text-[10px]"}`}
-          >
-            Payment Info
-          </p>
-          <p
-            className={`text-muted-foreground ${compact ? "text-[9px]" : "text-sm"}`}
-          >
-            {emp?.bank_name || "Bank Transfer"}
-          </p>
-          <p className={`font-mono ${compact ? "text-[8px]" : "text-xs"}`}>
-            {emp?.account_number || "•••• •••• ••••"}
-          </p>
-          <div className={compact ? "pt-1" : "pt-2"}>
-            <span
-              className={`inline-flex items-center rounded-full bg-success/10 px-${compact ? "2" : "2.5"} py-${compact ? "0.25" : "0.5"} text-${compact ? "[8px]" : "[10px]"} font-bold text-success`}
-            >
-              PAID
-            </span>
+      {/* Landscape Ticket Layout */}
+      <div className="flex gap-6">
+        {/* Left Section - Employee & Financials */}
+        <div className="flex-1">
+          {/* Header */}
+          <div className="mb-4 pb-3 border-b border-border">
+            <h2 className="font-thin tracking-tighter text-foreground text-2xl">
+              {companyName}
+            </h2>
+            <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5">
+              Official Payslip — {period}
+            </p>
+            <p className="text-[8px] text-muted-foreground mt-1">
+              REF: {payslip.id.slice(0, 8).toUpperCase()}
+            </p>
           </div>
-        </div>
-      </div>
 
-      {/* Financials */}
-      <div
-        className={`grid grid-cols-2 ${compact ? "gap-6 py-3 mb-3" : "gap-12 py-8 mb-0"}`}
-      >
-        {/* Earnings */}
-        <div className="space-y-4">
-          <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-            Earnings
-          </h3>
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Basic Salary</span>
-              <span className="font-bold">
-                {formatCurrency(emp?.basic_salary ?? 0)}
-              </span>
-            </div>
-            {allowances.length > 0 ? (
-              allowances.map((a, i) => (
-                <div key={i} className="flex justify-between">
-                  <span className="text-muted-foreground">
-                    {a.type || "Allowance"}
+          {/* Employee Details */}
+          <div className="mb-3">
+            <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-wider mb-1">
+              Employee
+            </p>
+            <p className="font-bold text-foreground text-sm">
+              {emp?.full_name ?? "—"}
+            </p>
+            <p className="text-[9px] text-muted-foreground">
+              {emp?.position ?? "—"} • {emp?.department ?? "—"}
+            </p>
+            <p className="font-mono text-[8px] text-muted-foreground mt-1">
+              ID: {emp?.nrc_or_id ?? "—"}
+            </p>
+          </div>
+
+          {/* Financials Grid */}
+          <div className="grid grid-cols-3 gap-3 text-[8px]">
+            {/* Earnings Column */}
+            <div>
+              <h3 className="font-bold text-muted-foreground uppercase tracking-wider mb-1.5">
+                Earnings
+              </h3>
+              <div className="space-y-1">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Basic</span>
+                  <span className="font-bold">
+                    {formatCurrency(emp?.basic_salary ?? 0).replace("ZMW ", "")}
                   </span>
-                  <span className="font-bold">{formatCurrency(a.amount)}</span>
                 </div>
-              ))
-            ) : (
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Allowances</span>
-                <span className="font-bold">
-                  {formatCurrency(emp?.allowances ?? 0)}
+                {allowances.length > 0 ? (
+                  allowances.slice(0, 1).map((a, i) => (
+                    <div key={i} className="flex justify-between">
+                      <span className="text-muted-foreground truncate mr-1">
+                        {a.type}
+                      </span>
+                      <span className="font-bold">
+                        {formatCurrency(a.amount).replace("ZMW ", "")}
+                      </span>
+                    </div>
+                  ))
+                ) : null}
+              </div>
+              <div className="flex justify-between border-t border-border pt-1 mt-1 font-bold">
+                <span>Gross</span>
+                <span>{formatCurrency(gross).replace("ZMW ", "")}</span>
+              </div>
+            </div>
+
+            {/* Deductions Column */}
+            <div>
+              <h3 className="font-bold text-muted-foreground uppercase tracking-wider mb-1.5">
+                Deductions
+              </h3>
+              <div className="space-y-1">
+                {payeRate > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">PAYE</span>
+                    <span className="font-bold text-destructive">
+                      {formatCurrency(paye).replace("ZMW ", "")}
+                    </span>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">NAPSA</span>
+                  <span className="font-bold text-destructive">
+                    {formatCurrency(napsa).replace("ZMW ", "")}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">NHIMA</span>
+                  <span className="font-bold text-destructive">
+                    {formatCurrency(nhima).replace("ZMW ", "")}
+                  </span>
+                </div>
+              </div>
+              <div className="flex justify-between border-t border-border pt-1 mt-1 font-bold text-destructive">
+                <span>Total</span>
+                <span>{formatCurrency(payslip.total_deductions).replace("ZMW ", "")}</span>
+              </div>
+            </div>
+
+            {/* Payment Column */}
+            <div>
+              <h3 className="font-bold text-muted-foreground uppercase tracking-wider mb-1.5">
+                Payment
+              </h3>
+              <p className="text-muted-foreground text-[7px]">
+                {emp?.bank_name || "Bank Transfer"}
+              </p>
+              <p className="font-mono text-[7px] text-muted-foreground mt-1">
+                {emp?.account_number || "•••• •••• ••••"}
+              </p>
+              <div className="mt-2 pt-2 border-t border-border">
+                <span className="inline-flex items-center rounded-full bg-success/10 px-2 py-0.5 text-[7px] font-bold text-success">
+                  PAID
                 </span>
               </div>
-            )}
+            </div>
           </div>
-          <div className="flex justify-between border-t border-border pt-2 font-black text-foreground">
-            <span>Gross Pay</span>
-            <span>{formatCurrency(gross)}</span>
+
+          {/* Net Pay */}
+          <div className="rounded-xl bg-primary p-3 text-primary-foreground mt-3">
+            <p className="text-[7px] font-bold uppercase tracking-widest opacity-70">
+              Net Take Home (ZMW)
+            </p>
+            <p className="font-black text-lg mt-1">
+              {formatCurrency(payslip.net_pay).replace("ZMW ", "")}
+            </p>
           </div>
         </div>
 
-        {/* Deductions */}
-        <div className="space-y-4">
-          <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-            Deductions
-          </h3>
-          <div className="space-y-2">
-            {payeRate > 0 && (
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">
-                  PAYE ({payeRate}%)
-                </span>
-                <span className="font-bold text-destructive">
-                  -{formatCurrency(paye)}
-                </span>
-              </div>
-            )}
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">
-                NAPSA ({napsaRate}%)
-              </span>
-              <span className="font-bold text-destructive">
-                -{formatCurrency(napsa)}
-              </span>
+        {/* Right Section - QR Code & Verification */}
+        <div className="flex flex-col items-center justify-between py-2 border-l border-border pl-6 min-w-fit">
+          <div className="text-center">
+            <div className="rounded-2xl border border-slate-200/70 bg-white p-3 dark:border-slate-700/50 dark:bg-slate-950 inline-block">
+              <QRCodeSVG value={qrData} size={96} level="M" />
             </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">
-                NHIMA ({nhimaRate}%)
-              </span>
-              <span className="font-bold text-destructive">
-                -{formatCurrency(nhima)}
-              </span>
-            </div>
-            {deductions.map((d, i) => (
-              <div key={i} className="flex justify-between">
-                <span className="text-muted-foreground">{d.type}</span>
-                <span className="font-bold text-destructive">
-                  -{formatCurrency(d.amount)}
-                </span>
-              </div>
-            ))}
-          </div>
-          <div className="flex justify-between border-t border-border pt-2 font-black text-foreground">
-            <span>Total Deductions</span>
-            <span className="text-destructive">
-              {formatCurrency(payslip.total_deductions)}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Net Pay Highlight */}
-      <div
-        className={`rounded-2xl bg-primary p-${compact ? "3" : "6"} text-primary-foreground ${compact ? "mt-3 mb-3" : "mt-4 mb-0"}`}
-      >
-        <div
-          className={`flex items-center ${compact ? "flex-col gap-1.5 text-center" : "justify-between"}`}
-        >
-          <div>
-            <p
-              className={`font-black uppercase tracking-widest opacity-70 ${compact ? "text-[8px]" : "text-[10px]"}`}
-            >
-              Net Take Home
-            </p>
-            <p className={`opacity-50 ${compact ? "text-[8px]" : "text-xs"}`}>
-              ZMW
+            <p className="text-[7px] font-semibold text-slate-900 dark:text-slate-100 mt-2">
+              VERIFY
             </p>
           </div>
-          <p className={`font-black ${compact ? "text-xl" : "text-4xl"}`}>
-            {formatCurrency(payslip.net_pay)}
-          </p>
-        </div>
-      </div>
-
-      {/* Footer / Verification */}
-      <div
-        className={`rounded-3xl border border-slate-200/80 bg-slate-50/80 ${compact ? "p-3 mt-3" : "p-6 mt-8"} shadow-sm dark:bg-slate-950/90 dark:border-slate-700/40`}
-      >
-        <div
-          className={`flex ${compact ? "flex-col gap-2" : "flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"}`}
-        >
-          <div>
-            <div
-              className={`inline-flex items-center gap-1 font-bold uppercase tracking-[0.24em] text-muted-foreground ${compact ? "text-[8px]" : "text-[10px]"}`}
-            >
-              <ShieldCheck
-                className={`${compact ? "h-3 w-3" : "h-4 w-4"}`}
-                strokeWidth={1.75}
-              />
-              Verification Code
-            </div>
-            <p
-              className={`uppercase tracking-[0.24em] text-muted-foreground ${compact ? "text-[8px] mt-1.5" : "mt-3 text-[10px]"}`}
-            >
-              Reference
+          
+          <div className="text-center">
+            <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-wider">
+              Reference Code
             </p>
-            <p
-              className={`font-mono font-bold text-slate-900 dark:text-white tracking-widest ${compact ? "text-sm" : "text-lg"}`}
-            >
+            <p className="font-mono font-bold text-slate-900 dark:text-white tracking-widest text-xs mt-1">
               {referenceCode}
             </p>
-            <p
-              className={`text-muted-foreground ${compact ? "text-[8px] mt-0.5" : "mt-2 text-[10px]"}`}
-            >
-              Scan QR or enter code
+            <p className="text-[7px] text-muted-foreground mt-1">
+              Scan QR to verify
             </p>
-          </div>
-          <div
-            className={`flex items-center gap-${compact ? "2" : "3"} rounded-3xl bg-white/80 p-${compact ? "2" : "3"} shadow-sm dark:bg-slate-900/70`}
-          >
-            <div
-              className={`rounded-2xl border border-slate-200/70 bg-white p-${compact ? "1.5" : "3"} dark:border-slate-700/50 dark:bg-slate-950`}
-            >
-              <QRCodeSVG value={qrData} size={compact ? 48 : 80} level="M" />
-            </div>
-            <div className="space-y-0.5">
-              <p
-                className={`font-semibold text-slate-900 dark:text-slate-100 ${compact ? "text-[8px]" : "text-xs"}`}
-              >
-                Scan to Verify
-              </p>
-              <p
-                className={`text-muted-foreground ${compact ? "text-[8px]" : "text-[11px]"}`}
-              >
-                QR Signature
-              </p>
-            </div>
           </div>
         </div>
       </div>
@@ -447,17 +345,7 @@ function PayslipDetailPage() {
               <ArrowLeft className="h-4 w-4 mr-2" strokeWidth={2.5} /> Back
             </Button>
           </Link>
-          <div className="ml-auto flex items-center gap-3">
-            <select
-              value={printMode}
-              onChange={(e) =>
-                setPrintMode(e.target.value as "single" | "duplicate")
-              }
-              className="h-10 rounded-xl border border-border bg-background px-4 text-sm font-bold focus:ring-2 focus:ring-primary outline-none transition-all"
-            >
-              <option value="single">Single Layout</option>
-              <option value="duplicate">Vertical Duplicate</option>
-            </select>
+          <div className="ml-auto">
             <Button onClick={handlePrint} className="rounded-xl font-bold px-6">
               <Printer className="h-4 w-4 mr-2" strokeWidth={2.5} /> Print
             </Button>
@@ -465,23 +353,26 @@ function PayslipDetailPage() {
         </div>
       </div>
 
-      {/* Screen view — always single */}
-      <div className="mx-auto max-w-[800px] print:hidden mb-20">
-        <ReceiptCard />
+      {/* Screen view */}
+      <div className="mx-auto max-w-[1200px] print:hidden mb-20">
+        <TicketCard />
       </div>
 
-      {/* Print view — conditional layout */}
+      {/* Print view — landscape ticket on one page */}
+      <style>{`
+        @media print {
+          @page {
+            size: A4;
+            margin: 0.5cm;
+          }
+          body {
+            margin: 0;
+            padding: 0;
+          }
+        }
+      `}</style>
       <div className="hidden print:block">
-        {printMode === "duplicate" ? (
-          <div className="flex flex-col gap-0 print:max-w-[760px] print:mx-auto">
-            <ReceiptCard compact />
-            <ReceiptCard compact />
-          </div>
-        ) : (
-          <div className="mx-auto print:max-w-[760px]">
-            <ReceiptCard />
-          </div>
-        )}
+        <TicketCard />
       </div>
     </>
   );

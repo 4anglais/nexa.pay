@@ -170,144 +170,132 @@ function PayslipDetailPage() {
   const referenceCode = signature.slice(0, 10).toUpperCase();
 
   /* ─────────────────────────────────────────────
-     LANDSCAPE TICKET CARD — compact, fits 2 per A4 landscape
+     LANDSCAPE TICKET CARD — receipt-like, simple design
   ───────────────────────────────────────────── */
   const LandscapeCard = ({ copyLabel }: { copyLabel: string }) => (
     <div
       style={{ breakInside: "avoid", pageBreakInside: "avoid" }}
-      className="border border-black bg-white print:border print:shadow-none p-4 text-sm"
+      className="border-2 border-black bg-white print:border print:shadow-none p-5 text-sm rounded-lg"
     >
-      {/* Copy label strip */}
-      <div className="mb-2 pb-1 border-b border-black flex items-center justify-between">
-        <span className="text-[7px] font-black uppercase tracking-[0.2em] text-black">
-          {copyLabel}
-        </span>
-        <span className="text-[7px] font-bold text-gray-500 uppercase tracking-widest">
-          {period}
-        </span>
+      {/* Header */}
+      <div className="mb-4 pb-3 border-b-2 border-black text-center">
+        <h2 className="font-semibold tracking-tight text-black text-base leading-none">
+          {companyName}
+        </h2>
+        <p className="text-[7px] font-medium text-black uppercase tracking-wider mt-2">
+          PAYSLIP {copyLabel.toUpperCase()}
+        </p>
+        <p className="text-[8px] text-black mt-1 font-medium">{period}</p>
       </div>
 
-      <div className="flex gap-5">
+      <div className="flex gap-4">
         {/* Left Section */}
         <div className="flex-1">
-          {/* Header */}
-          <div className="mb-3 pb-2 border-b border-gray-300">
-            <h2 className="font-black tracking-tight text-black text-lg leading-none">
-              {companyName}
-            </h2>
-            <p className="text-[8px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">
-              Official Payslip — {period}
-            </p>
-            <p className="text-[7px] text-gray-400 mt-0.5">
-              REF: {payslip.id.slice(0, 8).toUpperCase()}
-            </p>
-          </div>
-
           {/* Employee Details */}
-          <div className="mb-2">
-            <p className="text-[7px] font-black text-gray-500 uppercase tracking-wider mb-0.5">
+          <div className="mb-3 pb-3 border-b border-dashed border-black">
+            <p className="text-[7px] font-semibold text-black uppercase tracking-wider mb-1">
               Employee
             </p>
-            <p className="font-black text-black text-xs leading-tight">
+            <p className="font-semibold text-black text-sm leading-tight">
               {emp?.full_name ?? "—"}
             </p>
-            <p className="text-[8px] text-gray-500">
-              {emp?.position ?? "—"} · {emp?.department ?? "—"}
+            <p className="text-[7px] text-black font-medium mt-1">
+              {emp?.position ?? "—"} • {emp?.department ?? "—"}
             </p>
-            <p className="font-mono text-[7px] text-gray-400 mt-0.5">
+            <p className="text-[7px] text-black mt-1">
               ID: {emp?.nrc_or_id ?? "—"}
             </p>
           </div>
 
           {/* Financials Grid */}
-          <div className="grid grid-cols-3 gap-2 text-[7px]">
+          <div className="grid grid-cols-3 gap-3 text-[7px] mb-3">
             {/* Earnings */}
-            <div>
-              <h3 className="font-black text-gray-500 uppercase tracking-wider mb-1">
+            <div className="border border-black rounded p-2">
+              <h3 className="font-semibold text-black uppercase tracking-wider text-[7px] mb-1.5">
                 Earnings
               </h3>
-              <div className="space-y-0.5">
+              <div className="space-y-1">
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Basic</span>
-                  <span className="font-bold text-black">
+                  <span className="text-black font-medium">Basic</span>
+                  <span className="font-semibold text-black">
                     {formatCurrency(emp?.basic_salary ?? 0).replace("ZMW ", "")}
                   </span>
                 </div>
                 {allowances.slice(0, 2).map((a, i) => (
                   <div key={i} className="flex justify-between">
-                    <span className="text-gray-500 truncate mr-1">
+                    <span className="text-black truncate mr-1 font-medium">
                       {a.type}
                     </span>
-                    <span className="font-bold text-black">
+                    <span className="font-semibold text-black">
                       {formatCurrency(a.amount).replace("ZMW ", "")}
                     </span>
                   </div>
                 ))}
-              </div>
-              <div className="flex justify-between border-t border-black pt-0.5 mt-0.5 font-black text-black">
-                <span>Gross</span>
-                <span>{formatCurrency(gross).replace("ZMW ", "")}</span>
+                <div className="flex justify-between border-t border-black pt-1 mt-1 font-semibold text-black">
+                  <span>Gross</span>
+                  <span>{formatCurrency(gross).replace("ZMW ", "")}</span>
+                </div>
               </div>
             </div>
 
             {/* Deductions */}
-            <div>
-              <h3 className="font-black text-gray-500 uppercase tracking-wider mb-1">
+            <div className="border border-black rounded p-2">
+              <h3 className="font-semibold text-black uppercase tracking-wider text-[7px] mb-1.5">
                 Deductions
               </h3>
-              <div className="space-y-0.5">
+              <div className="space-y-1">
                 {payeRate > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">PAYE</span>
-                    <span className="font-bold text-red-600">
+                  <div className="flex justify-between text-[7px]">
+                    <span className="text-black font-medium">PAYE</span>
+                    <span className="font-semibold text-black">
                       {formatCurrency(paye).replace("ZMW ", "")}
                     </span>
                   </div>
                 )}
-                <div className="flex justify-between">
-                  <span className="text-gray-500">NAPSA</span>
-                  <span className="font-bold text-red-600">
+                <div className="flex justify-between text-[7px]">
+                  <span className="text-black font-medium">NAPSA</span>
+                  <span className="font-semibold text-black">
                     {formatCurrency(napsa).replace("ZMW ", "")}
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">NHIMA</span>
-                  <span className="font-bold text-red-600">
+                <div className="flex justify-between text-[7px]">
+                  <span className="text-black font-medium">NHIMA</span>
+                  <span className="font-semibold text-black">
                     {formatCurrency(nhima).replace("ZMW ", "")}
                   </span>
                 </div>
                 {deductions.slice(0, 1).map((d, i) => (
-                  <div key={i} className="flex justify-between">
-                    <span className="text-gray-500 truncate mr-1">
+                  <div key={i} className="flex justify-between text-[7px]">
+                    <span className="text-black truncate mr-1 font-medium">
                       {d.type}
                     </span>
-                    <span className="font-bold text-red-600">
+                    <span className="font-semibold text-black">
                       {formatCurrency(d.amount).replace("ZMW ", "")}
                     </span>
                   </div>
                 ))}
-              </div>
-              <div className="flex justify-between border-t border-black pt-0.5 mt-0.5 font-black text-red-600">
-                <span>Total</span>
-                <span>
-                  {formatCurrency(payslip.total_deductions).replace("ZMW ", "")}
-                </span>
+                <div className="flex justify-between border-t border-black pt-1 mt-1 font-semibold text-black text-[7px]">
+                  <span>Total</span>
+                  <span>
+                    {formatCurrency(payslip.total_deductions).replace("ZMW ", "")}
+                  </span>
+                </div>
               </div>
             </div>
 
             {/* Payment */}
-            <div>
-              <h3 className="font-black text-gray-500 uppercase tracking-wider mb-1">
+            <div className="border border-black rounded p-2">
+              <h3 className="font-semibold text-black uppercase tracking-wider text-[7px] mb-1.5">
                 Payment
               </h3>
-              <p className="text-gray-500 text-[7px]">
+              <p className="text-black text-[7px] font-medium">
                 {emp?.bank_name || "Bank Transfer"}
               </p>
-              <p className="font-mono text-[7px] text-gray-400 mt-0.5">
+              <p className="font-mono text-[7px] text-black font-semibold mt-1">
                 {emp?.account_number || "•••• •••• ••••"}
               </p>
-              <div className="mt-1 pt-1 border-t border-gray-300">
-                <span className="inline-flex items-center rounded-sm bg-black px-1.5 py-0.5 text-[6px] font-black text-white tracking-widest">
+              <div className="mt-2 pt-1.5 border-t border-black">
+                <span className="inline-flex items-center rounded px-2 py-0.5 text-[6px] font-semibold bg-black text-white uppercase tracking-wider">
                   PAID
                 </span>
               </div>
@@ -315,34 +303,33 @@ function PayslipDetailPage() {
           </div>
 
           {/* Net Pay */}
-          <div className="bg-black p-2 text-white mt-2">
-            <p className="text-[6px] font-black uppercase tracking-widest opacity-60">
-              Net Take Home (ZMW)
+          <div className="bg-black text-white p-3 rounded">
+            <p className="text-[6px] font-medium uppercase tracking-wider opacity-80 mb-1">
+              Net Pay
             </p>
-            <p className="font-black text-base mt-0.5 leading-none">
-              {formatCurrency(payslip.net_pay).replace("ZMW ", "")}
+            <p className="font-semibold text-lg leading-none">
+              {formatCurrency(payslip.net_pay).replace("ZMW ", "")} ZMW
             </p>
           </div>
         </div>
 
         {/* Right Section - QR */}
-        <div className="flex flex-col items-center justify-between py-1 border-l border-gray-300 pl-4 min-w-fit">
+        <div className="flex flex-col items-center justify-between py-1 border-l-2 border-black pl-4 min-w-fit">
           <div className="text-center">
-            <div className="border border-gray-300 bg-white p-1.5 inline-block">
-              <QRCodeSVG value={qrData} size={80} level="M" />
+            <div className="border-2 border-black bg-white p-2 inline-block rounded">
+              <QRCodeSVG value={qrData} size={90} level="M" />
             </div>
-            <p className="text-[6px] font-black text-black mt-1 uppercase tracking-widest">
-              VERIFY
+            <p className="text-[6px] font-semibold text-black mt-2 uppercase tracking-wider">
+              Scan to Verify
             </p>
           </div>
-          <div className="text-center mt-2">
-            <p className="text-[7px] font-black text-gray-500 uppercase tracking-wider">
+          <div className="text-center mt-3">
+            <p className="text-[6px] font-semibold text-black uppercase tracking-wider">
               Ref Code
             </p>
-            <p className="font-mono font-black text-black tracking-widest text-[9px] mt-0.5">
+            <p className="font-mono font-semibold text-black tracking-widest text-[9px] mt-1 bg-white border border-black px-2 py-1 rounded">
               {referenceCode}
             </p>
-            <p className="text-[6px] text-gray-400 mt-0.5">Scan to verify</p>
           </div>
         </div>
       </div>
@@ -350,68 +337,42 @@ function PayslipDetailPage() {
   );
 
   /* ─────────────────────────────────────────────
-     PORTRAIT CARD — full detail, fits 1 per A4 portrait
+     PORTRAIT CARD — receipt-like, simple design
   ───────────────────────────────────────────── */
   const PortraitCard = ({ copyLabel }: { copyLabel: string }) => (
     <div
       style={{ breakInside: "avoid", pageBreakInside: "avoid" }}
-      className="border border-black bg-white print:border print:shadow-none p-5 text-sm"
+      className="border-2 border-black bg-white print:border print:shadow-none p-6 text-sm rounded-lg"
     >
-      {/* Copy label strip */}
-      <div className="mb-3 pb-2 border-b-2 border-black flex items-center justify-between">
-        <span className="text-[8px] font-black uppercase tracking-[0.2em] text-black">
-          {copyLabel}
-        </span>
-        <span className="text-[8px] font-bold text-gray-500 uppercase tracking-widest">
-          {period}
-        </span>
-      </div>
-
       {/* Header */}
-      <div className="mb-4 pb-3 border-b border-gray-300 flex items-start justify-between">
-        <div>
-          <h2 className="font-black tracking-tight text-black text-xl leading-none">
-            {companyName}
-          </h2>
-          <p className="text-[8px] font-bold text-gray-500 uppercase tracking-widest mt-1">
-            Official Payslip — {period}
-          </p>
-          <p className="text-[7px] text-gray-400 mt-0.5">
-            REF: {payslip.id.slice(0, 8).toUpperCase()}
-          </p>
-        </div>
-        <div className="border border-gray-300 bg-white p-1.5">
-          <QRCodeSVG value={qrData} size={60} level="M" />
-        </div>
+      <div className="mb-5 pb-4 border-b-2 border-black text-center">
+        <h2 className="font-semibold tracking-tight text-black text-2xl leading-none">
+          {companyName}
+        </h2>
+        <p className="text-[8px] font-medium text-black uppercase tracking-wider mt-2">
+          PAYSLIP {copyLabel.toUpperCase()}
+        </p>
+        <p className="text-[9px] text-black mt-1 font-medium">{period}</p>
       </div>
 
       {/* Employee Details */}
-      <div className="mb-4 p-3 bg-gray-100 border border-gray-300">
-        <p className="text-[7px] font-black text-gray-500 uppercase tracking-wider mb-1">
-          Employee Details
-        </p>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-[8px]">
+      <div className="mb-4 pb-3 border-b border-dashed border-black">
+        <div className="grid grid-cols-2 gap-4 text-[10px]">
           <div>
-            <span className="text-gray-500">Name: </span>
-            <span className="font-black text-black">
-              {emp?.full_name ?? "—"}
-            </span>
+            <p className="font-medium text-black">Employee:</p>
+            <p className="text-black">{emp?.full_name ?? "—"}</p>
           </div>
           <div>
-            <span className="text-gray-500">ID: </span>
-            <span className="font-mono font-bold text-black">
-              {emp?.nrc_or_id ?? "—"}
-            </span>
+            <p className="font-medium text-black">Employee ID:</p>
+            <p className="text-black">{emp?.nrc_or_id ?? "—"}</p>
           </div>
           <div>
-            <span className="text-gray-500">Position: </span>
-            <span className="font-bold text-black">{emp?.position ?? "—"}</span>
+            <p className="font-medium text-black">Department:</p>
+            <p className="text-black">{emp?.department ?? "—"}</p>
           </div>
           <div>
-            <span className="text-gray-500">Department: </span>
-            <span className="font-bold text-black">
-              {emp?.department ?? "—"}
-            </span>
+            <p className="font-medium text-black">Position:</p>
+            <p className="text-black">{emp?.position ?? "—"}</p>
           </div>
         </div>
       </div>
@@ -419,123 +380,117 @@ function PayslipDetailPage() {
       {/* Earnings & Deductions side by side */}
       <div className="grid grid-cols-2 gap-4 mb-4">
         {/* Earnings */}
-        <div>
-          <h3 className="text-[7px] font-black text-gray-500 uppercase tracking-wider mb-2 pb-1 border-b border-black">
+        <div className="border border-dashed border-black p-3">
+          <h3 className="text-[9px] font-semibold text-black uppercase tracking-wider mb-2 pb-1 border-b border-black">
             Earnings
           </h3>
-          <div className="space-y-1 text-[8px]">
+          <div className="space-y-1 text-[9px]">
             <div className="flex justify-between">
-              <span className="text-gray-500">Basic Salary</span>
-              <span className="font-bold text-black">
-                {formatCurrency(emp?.basic_salary ?? 0)}
+              <span className="text-black">Basic Salary</span>
+              <span className="font-semibold text-black">
+                {formatCurrency(emp?.basic_salary ?? 0).replace("ZMW ", "")}
               </span>
             </div>
             {allowances.map((a, i) => (
               <div key={i} className="flex justify-between">
-                <span className="text-gray-500">{a.type}</span>
-                <span className="font-bold text-black">
-                  {formatCurrency(a.amount)}
+                <span className="text-black">{a.type}</span>
+                <span className="font-semibold text-black">
+                  {formatCurrency(a.amount).replace("ZMW ", "")}
                 </span>
               </div>
             ))}
-            <div className="flex justify-between border-t border-black pt-1 mt-1 font-black text-black text-[8px]">
+            <div className="flex justify-between border-t border-black pt-1 mt-1 font-semibold text-black text-[9px]">
               <span>Gross Pay</span>
-              <span>{formatCurrency(gross)}</span>
+              <span>{formatCurrency(gross).replace("ZMW ", "")}</span>
             </div>
           </div>
         </div>
 
         {/* Deductions */}
-        <div>
-          <h3 className="text-[7px] font-black text-gray-500 uppercase tracking-wider mb-2 pb-1 border-b border-black">
+        <div className="border border-dashed border-black p-3">
+          <h3 className="text-[9px] font-semibold text-black uppercase tracking-wider mb-2 pb-1 border-b border-black">
             Deductions
           </h3>
-          <div className="space-y-1 text-[8px]">
+          <div className="space-y-1 text-[9px]">
             {payeRate > 0 && (
               <div className="flex justify-between">
-                <span className="text-gray-500">PAYE ({payeRate}%)</span>
-                <span className="font-bold text-red-600">
-                  {formatCurrency(paye)}
+                <span className="text-black">PAYE</span>
+                <span className="font-semibold text-black">
+                  {formatCurrency(paye).replace("ZMW ", "")}
                 </span>
               </div>
             )}
             <div className="flex justify-between">
-              <span className="text-gray-500">NAPSA ({napsaRate}%)</span>
-              <span className="font-bold text-red-600">
-                {formatCurrency(napsa)}
+              <span className="text-black">NAPSA</span>
+              <span className="font-semibold text-black">
+                {formatCurrency(napsa).replace("ZMW ", "")}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-500">NHIMA ({nhimaRate}%)</span>
-              <span className="font-bold text-red-600">
-                {formatCurrency(nhima)}
+              <span className="text-black">NHIMA</span>
+              <span className="font-semibold text-black">
+                {formatCurrency(nhima).replace("ZMW ", "")}
               </span>
             </div>
             {deductions.map((d, i) => (
               <div key={i} className="flex justify-between">
-                <span className="text-gray-500">{d.type}</span>
-                <span className="font-bold text-red-600">
-                  {formatCurrency(d.amount)}
+                <span className="text-black">{d.type}</span>
+                <span className="font-semibold text-black">
+                  {formatCurrency(d.amount).replace("ZMW ", "")}
                 </span>
               </div>
             ))}
-            <div className="flex justify-between border-t border-black pt-1 mt-1 font-black text-red-600 text-[8px]">
-              <span>Total Deductions</span>
-              <span>{formatCurrency(payslip.total_deductions)}</span>
+            <div className="flex justify-between border-t border-black pt-1 mt-1 font-semibold text-black text-[9px]">
+              <span>Total</span>
+              <span>{formatCurrency(payslip.total_deductions).replace("ZMW ", "")}</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* Payment Info */}
-      <div className="mb-4 text-[8px] p-2 border border-gray-300 bg-gray-50">
-        <h3 className="text-[7px] font-black text-gray-500 uppercase tracking-wider mb-1">
+      <div className="mb-4 pb-3 border-b border-dashed border-black">
+        <h3 className="text-[9px] font-semibold text-black uppercase tracking-wider mb-2">
           Payment Details
         </h3>
-        <div className="flex gap-6">
+        <div className="grid grid-cols-2 gap-4 text-[9px]">
           <div>
-            <span className="text-gray-500">Bank: </span>
-            <span className="font-bold text-black">
-              {emp?.bank_name || "Bank Transfer"}
-            </span>
+            <p className="font-medium text-black">Bank:</p>
+            <p className="text-black">{emp?.bank_name || "Bank Transfer"}</p>
           </div>
           <div>
-            <span className="text-gray-500">Account: </span>
-            <span className="font-mono font-bold text-black">
-              {emp?.account_number || "•••• •••• ••••"}
-            </span>
+            <p className="font-medium text-black">Account:</p>
+            <p className="font-mono text-black">{emp?.account_number || "•••• •••• ••••"}</p>
           </div>
         </div>
       </div>
 
       {/* Net Pay */}
-      <div className="bg-black p-4 text-white mb-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-[7px] font-black uppercase tracking-widest opacity-60">
-              Net Take Home (ZMW)
-            </p>
-            <p className="font-black text-2xl mt-0.5 leading-none">
-              {formatCurrency(payslip.net_pay).replace("ZMW ", "")}
-            </p>
-          </div>
-          <span className="inline-flex items-center border border-white/40 px-3 py-1 text-[8px] font-black tracking-widest">
+      <div className="border-2 border-black p-4 mb-4 text-center">
+        <p className="text-[10px] font-semibold text-black uppercase tracking-wider mb-2">
+          Net Pay
+        </p>
+        <p className="font-bold text-black text-2xl">
+          {formatCurrency(payslip.net_pay).replace("ZMW ", "")}
+        </p>
+        <div className="mt-2">
+          <span className="inline-flex items-center border border-black px-3 py-1 text-[8px] font-semibold bg-black text-white uppercase tracking-wider">
             PAID
           </span>
         </div>
       </div>
 
-      {/* Reference */}
-      <div className="flex items-center justify-between text-[7px] text-gray-400">
+      {/* Reference Footer */}
+      <div className="flex items-center justify-between text-[7px] text-slate-500 pt-3 border-t border-slate-300">
         <div>
-          <span className="font-black text-gray-500 uppercase tracking-wider">
-            Ref:{" "}
+          <span className="font-black text-slate-600 uppercase tracking-wider">
+            Verification Code:{" "}
           </span>
-          <span className="font-mono font-black text-black tracking-widest">
+          <span className="font-mono font-black text-slate-900 tracking-widest bg-slate-100 px-2 py-0.5 rounded inline-block ml-1">
             {referenceCode}
           </span>
         </div>
-        <span>Scan QR code above to verify authenticity</span>
+        <span className="text-[6px] text-slate-400">Scan QR above to verify authenticity</span>
       </div>
     </div>
   );

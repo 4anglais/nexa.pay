@@ -1,3 +1,8 @@
 [build]
   command = "npm run build"
   publish = "dist"
+
+# Environment variables section for Netlify
+# Before deploying, add these to your Netlify Site Settings > Environment Variables:
+# - VITE_SUPABASE_URL: https://vqvobiisdwidviiqcqio.supabase.co
+# - VITE_SUPABASE_PUBLISHABLE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZxdm9iaWlzZHdpZHZpaXFjcWlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4OTkyODgsImV4cCI6MjA5MTQ3NTI4OH0.ZP1obaMNNxHvltYo7fb9gqMNiglxq-NXAzvbQBGQU5g

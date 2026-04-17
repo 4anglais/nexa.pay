@@ -191,6 +191,16 @@ function PayslipDetailPage() {
   // The long verify URL is still available in `verifyUrl` if you later want to restore it.
   const barcodeValue = referenceCode;
 
+  const labelCls =
+    "text-[7px] font-semibold text-slate-500 uppercase tracking-[0.22em]";
+  const mutedCls = "text-[9px] text-slate-600 font-medium";
+  const valueCls = "font-semibold text-slate-950";
+  const monoValueCls = "font-mono font-semibold text-slate-950 tabular-nums";
+  const moneyCls = monoValueCls;
+  const moneyOnDarkCls = "font-mono font-semibold text-white tabular-nums";
+  const sectionTitleCls =
+    "text-[8px] font-semibold text-slate-700 uppercase tracking-[0.28em]";
+
   const BarcodeMark = ({
     value,
     variant,
@@ -214,7 +224,7 @@ function PayslipDetailPage() {
             format="CODE128"
             displayValue={false}
             background="transparent"
-            lineColor="#0f172a"
+            lineColor="#000000"
             width={0.7}
             height={22}
             margin={0}
@@ -230,7 +240,7 @@ function PayslipDetailPage() {
           format="CODE128"
           displayValue={false}
           background="transparent"
-          lineColor="#0f172a"
+          lineColor="#000000"
           width={0.9}
           height={20}
           margin={0}
@@ -245,69 +255,77 @@ function PayslipDetailPage() {
   const LandscapeCard = ({ copyLabel }: { copyLabel: string }) => (
     <div
       style={{ breakInside: "avoid", pageBreakInside: "avoid" }}
-      className="relative flex overflow-hidden border border-slate-200 bg-white shadow-sm print:border print:shadow-none text-sm rounded-3xl h-[10cm] w-[17.5cm] mx-auto print:scale-90"
+      className="relative flex overflow-hidden border border-slate-200 bg-white shadow-sm print:border print:shadow-none text-sm rounded-3xl mx-auto w-full max-w-[900px] print:w-[17.5cm] h-auto print:h-[10cm]"
     >
       {/* Left Main Section */}
       <div className="flex-1 p-6 flex flex-col justify-between overflow-hidden">
         {/* Header */}
-        <div className="flex justify-between items-start">
+        <div className="flex justify-between items-start font-sans">
           <div>
-            <h2 className="font-bold tracking-tight text-slate-900 text-xl leading-none">
+            <h2 className="font-[300] tracking-tight text-slate-950 text-xl leading-none">
               {companyName}
             </h2>
-            <p className="text-[8px] font-bold text-blue-600 uppercase tracking-[0.2em] mt-2">
+            <p className="text-[8px] font-[300] text-slate-600 uppercase tracking-[0.34em] mt-2">
               Official Payslip — {period}
             </p>
           </div>
           <div className="text-right">
-            <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest">Type</p>
-            <p className="text-[9px] text-slate-900 font-bold mt-1 uppercase tracking-wider italic">
+            <p className={`${labelCls} font-[300]`}>Type</p>
+            <p className="text-[9px] text-slate-950 font-[300] mt-1 uppercase tracking-wider italic">
               {copyLabel}
             </p>
           </div>
         </div>
 
         {/* Employee Details Row */}
-        <div className="grid grid-cols-3 gap-4 my-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+        <div className="grid grid-cols-3 gap-4 my-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 font-sans">
           <div>
-            <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mb-1">Employee</p>
-            <p className="font-bold text-slate-900 text-xs">{emp?.full_name ?? "—"}</p>
-            <p className="text-[9px] text-slate-500 font-medium">{emp?.position ?? "—"}</p>
+            <p className={`${labelCls} mb-1 font-[300]`}>Employee</p>
+            <p className="text-xs font-[300] text-slate-950">
+              {emp?.full_name ?? "—"}
+            </p>
+            <p className="text-[9px] font-[300] text-slate-600">
+              {emp?.position ?? "—"}
+            </p>
           </div>
           <div>
-            <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mb-1">ID Number</p>
-            <p className="font-bold text-slate-900 text-xs">{emp?.nrc_or_id ?? "—"}</p>
+            <p className={`${labelCls} mb-1 font-[300]`}>ID Number</p>
+            <p className="text-xs font-[300] text-slate-950">
+              {emp?.nrc_or_id ?? "—"}
+            </p>
           </div>
           <div>
-            <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mb-1">Department</p>
-            <p className="font-bold text-slate-900 text-xs">{emp?.department ?? "—"}</p>
+            <p className={`${labelCls} mb-1 font-[300]`}>Department</p>
+            <p className="text-xs font-[300] text-slate-950">
+              {emp?.department ?? "—"}
+            </p>
           </div>
         </div>
 
         {/* Financials Row */}
         <div className="grid grid-cols-2 gap-8">
           <div className="space-y-2">
-            <h3 className="text-[8px] font-bold text-slate-900 uppercase tracking-widest border-b border-slate-900 pb-1 mb-2">
+            <h3 className={`${sectionTitleCls} border-b border-slate-900 pb-1 mb-2`}>
               Earnings
             </h3>
             <div className="space-y-1">
               <div className="flex justify-between items-center text-[10px]">
                 <span className="text-slate-500 font-medium">Basic</span>
-                <span className="font-bold text-slate-900">
+                <span className={`${moneyCls} text-[10px]`}>
                   {formatCurrency(emp?.basic_salary ?? 0).replace("ZMW ", "")}
                 </span>
               </div>
               {allowances.map((a, i) => (
                 <div key={i} className="flex justify-between items-center text-[10px]">
                   <span className="text-slate-500 font-medium">{a.type}</span>
-                  <span className="font-bold text-slate-900">
+                  <span className={`${moneyCls} text-[10px]`}>
                     {formatCurrency(a.amount).replace("ZMW ", "")}
                   </span>
                 </div>
               ))}
               <div className="flex justify-between items-center pt-1.5 mt-1.5 border-t border-slate-100">
                 <span className="text-[10px] font-bold text-slate-900">Gross</span>
-                <span className="font-black text-slate-900 text-[11px]">
+                <span className={`${moneyCls} font-bold text-[11px]`}>
                   {formatCurrency(gross).replace("ZMW ", "")}
                 </span>
               </div>
@@ -315,27 +333,27 @@ function PayslipDetailPage() {
           </div>
 
           <div className="space-y-2">
-            <h3 className="text-[8px] font-bold text-slate-900 uppercase tracking-widest border-b border-slate-900 pb-1 mb-2">
+            <h3 className={`${sectionTitleCls} border-b border-slate-900 pb-1 mb-2`}>
               Deductions
             </h3>
             <div className="space-y-1">
               <div className="flex justify-between items-center text-[10px]">
                 <span className="text-slate-500 font-medium">Statutory</span>
-                <span className="font-bold text-red-600">
+                <span className={`${moneyCls} font-bold text-red-600`}>
                   {formatCurrency(paye + napsa + nhima).replace("ZMW ", "")}
                 </span>
               </div>
               {deductions.map((d, i) => (
                 <div key={i} className="flex justify-between items-center text-[10px]">
                   <span className="text-slate-500 font-medium">{d.type}</span>
-                  <span className="font-bold text-red-600">
+                  <span className={`${moneyCls} font-bold text-red-600`}>
                     {formatCurrency(d.amount).replace("ZMW ", "")}
                   </span>
                 </div>
               ))}
               <div className="flex justify-between items-center pt-1.5 mt-1.5 border-t border-slate-100">
                 <span className="text-[10px] font-bold text-slate-900">Total</span>
-                <span className="font-bold text-red-600 text-[11px]">
+                <span className={`${moneyCls} font-semibold text-red-600 text-[11px]`}>
                   {formatCurrency(payslip.total_deductions).replace("ZMW ", "")}
                 </span>
               </div>
@@ -345,12 +363,14 @@ function PayslipDetailPage() {
 
         {/* Net Pay (moved up a bit) */}
         <div className="mt-3 flex justify-end">
-          <div className="bg-slate-900 text-white px-5 py-2.5 rounded-xl flex items-center gap-3">
+          <div className="bg-black text-white px-5 py-2.5 rounded-xl flex items-center gap-3">
             <div className="text-right">
               <p className="text-[7px] uppercase tracking-widest opacity-50 font-bold">
                 Net Pay
               </p>
-              <p className="text-lg font-black">{formatCurrency(payslip.net_pay)}</p>
+              <p className={`${moneyOnDarkCls} text-lg font-semibold`}>
+                {formatCurrency(payslip.net_pay)}
+              </p>
             </div>
             <div className="h-6 w-[1px] bg-white/20" />
             <span className="text-[9px] font-black uppercase tracking-widest text-emerald-400">
@@ -374,8 +394,8 @@ function PayslipDetailPage() {
       <div className="relative h-full py-4">
         <div className="border-l-2 border-dashed border-slate-200 h-full" />
         {/* Semi-circle cutouts (ticket style) */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 h-7 w-7 rounded-full bg-[var(--color-background)]" />
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 h-7 w-7 rounded-full bg-[var(--color-background)]" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 h-7 w-7 rounded-full bg-transparent border border-slate-200" />
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 h-7 w-7 rounded-full bg-transparent border border-slate-200" />
       </div>
 
       {/* Right Side Barcode Section (same container where QR was) */}
@@ -387,7 +407,7 @@ function PayslipDetailPage() {
           </div>
           <div className="flex items-center justify-center">
             <div
-              className="font-mono text-[10px] font-bold text-slate-900 tracking-wider"
+              className="font-mono text-[10px] font-semibold text-slate-950 tracking-wider"
               style={{ writingMode: "vertical-rl", textOrientation: "mixed" }}
             >
               {referenceCode}
@@ -399,18 +419,14 @@ function PayslipDetailPage() {
         <div className="pt-3 border-t border-slate-200 w-full text-left">
           <div className="space-y-2">
             <div>
-              <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mb-1">
-                Bank
-              </p>
-              <p className="text-[9px] font-bold text-slate-900 leading-tight break-words">
+              <p className={`${labelCls} mb-1`}>Bank</p>
+              <p className="text-[9px] font-semibold text-slate-950 leading-tight break-words">
                 {emp?.bank_name || "—"}
               </p>
             </div>
             <div>
-              <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mb-1">
-                Account
-              </p>
-              <p className="text-[9px] font-bold text-slate-900 font-mono leading-tight">
+              <p className={`${labelCls} mb-1`}>Account</p>
+              <p className="text-[9px] font-semibold text-slate-950 font-mono leading-tight tabular-nums">
                 {emp?.account_number ? `••••${emp.account_number.slice(-4)}` : "—"}
               </p>
             </div>
@@ -426,22 +442,22 @@ function PayslipDetailPage() {
   const PortraitCard = ({ copyLabel }: { copyLabel: string }) => (
     <div
       style={{ breakInside: "avoid", pageBreakInside: "avoid" }}
-      className="relative overflow-hidden border border-slate-200 bg-white shadow-sm print:border print:shadow-none p-8 text-sm rounded-3xl w-[16cm] mx-auto print:scale-90"
+      className="relative overflow-hidden border border-slate-200 bg-white shadow-sm print:border print:shadow-none p-6 sm:p-8 text-sm rounded-3xl mx-auto w-full max-w-[520px] print:w-[16cm]"
     >
       {/* Header */}
       <div className="mb-8 flex justify-between items-start">
         <div>
-          <h2 className="font-bold tracking-tight text-slate-900 text-2xl leading-none">
+          <h2 className="font-sans font-[300] tracking-tight text-slate-950 text-2xl leading-none">
             {companyName}
           </h2>
-          <p className="text-[10px] font-bold text-blue-600 uppercase tracking-[0.2em] mt-3">
+          <p className="text-[10px] font-sans font-[300] text-slate-600 uppercase tracking-[0.34em] mt-3">
             Official Payslip
           </p>
         </div>
         <div className="text-right">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Period</p>
-          <p className="text-sm text-slate-900 font-bold mt-1">{period}</p>
-          <p className="text-[9px] text-slate-500 mt-1 uppercase font-semibold tracking-wider">
+          <p className={labelCls}>Period</p>
+          <p className="text-sm text-slate-950 font-sans font-[300] mt-1">{period}</p>
+          <p className="text-[9px] text-slate-600 mt-1 uppercase font-sans font-[300] tracking-wider">
             {copyLabel}
           </p>
         </div>
@@ -450,14 +466,18 @@ function PayslipDetailPage() {
       {/* Employee Details Grid */}
       <div className="grid grid-cols-2 gap-y-6 gap-x-8 mb-8 pb-8 border-b border-slate-100">
         <div>
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Employee</p>
-          <p className="font-bold text-slate-900 text-base">{emp?.full_name ?? "—"}</p>
-          <p className="text-xs text-slate-500 mt-1 font-medium">{emp?.position ?? "—"}</p>
+          <p className="text-[9px] font-semibold text-slate-500 uppercase tracking-[0.22em] mb-1.5">
+            Employee
+          </p>
+          <p className="font-sans font-[300] text-slate-950 text-base">{emp?.full_name ?? "—"}</p>
+          <p className="text-xs font-sans font-[300] text-slate-600 mt-1">{emp?.position ?? "—"}</p>
         </div>
         <div>
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">ID Number</p>
-          <p className="font-bold text-slate-900 text-base">{emp?.nrc_or_id ?? "—"}</p>
-          <p className="text-xs text-slate-500 mt-1 font-medium">{emp?.department ?? "—"}</p>
+          <p className="text-[9px] font-semibold text-slate-500 uppercase tracking-[0.22em] mb-1.5">
+            ID Number
+          </p>
+          <p className="font-sans font-[300] text-slate-950 text-base">{emp?.nrc_or_id ?? "—"}</p>
+          <p className="text-xs font-sans font-[300] text-slate-600 mt-1">{emp?.department ?? "—"}</p>
         </div>
       </div>
 
@@ -466,27 +486,27 @@ function PayslipDetailPage() {
         <div className="grid grid-cols-2 gap-12">
           {/* Earnings */}
           <div className="space-y-3">
-            <h3 className="text-[10px] font-bold text-slate-900 uppercase tracking-widest border-b border-slate-900 pb-2 mb-4">
+            <h3 className="text-[9px] font-semibold text-slate-700 uppercase tracking-[0.28em] border-b border-slate-900 pb-2 mb-4">
               Earnings
             </h3>
             <div className="space-y-2.5">
               <div className="flex justify-between items-center text-xs">
                 <span className="text-slate-500 font-medium">Basic Salary</span>
-                <span className="font-bold text-slate-900">
+                <span className={moneyCls}>
                   {formatCurrency(emp?.basic_salary ?? 0).replace("ZMW ", "")}
                 </span>
               </div>
               {allowances.map((a, i) => (
                 <div key={i} className="flex justify-between items-center text-xs">
                   <span className="text-slate-500 font-medium">{a.type}</span>
-                  <span className="font-bold text-slate-900">
+                  <span className={moneyCls}>
                     {formatCurrency(a.amount).replace("ZMW ", "")}
                   </span>
                 </div>
               ))}
               <div className="flex justify-between items-center border-t border-slate-100 pt-3 mt-3">
                 <span className="text-xs font-bold text-slate-900">Gross Pay</span>
-                <span className="font-black text-slate-900 text-sm">
+                <span className={`${moneyCls} text-sm`}>
                   {formatCurrency(gross).replace("ZMW ", "")}
                 </span>
               </div>
@@ -495,41 +515,41 @@ function PayslipDetailPage() {
 
           {/* Deductions */}
           <div className="space-y-3">
-            <h3 className="text-[10px] font-bold text-slate-900 uppercase tracking-widest border-b border-slate-900 pb-2 mb-4">
+            <h3 className="text-[9px] font-semibold text-slate-700 uppercase tracking-[0.28em] border-b border-slate-900 pb-2 mb-4">
               Deductions
             </h3>
             <div className="space-y-2.5">
               {payeRate > 0 && (
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-slate-500 font-medium">PAYE Tax</span>
-                  <span className="font-bold text-slate-900 text-red-600">
+                  <span className={`${moneyCls} font-bold text-red-600`}>
                     {formatCurrency(paye).replace("ZMW ", "")}
                   </span>
                 </div>
               )}
               <div className="flex justify-between items-center text-xs">
                 <span className="text-slate-500 font-medium">NAPSA</span>
-                <span className="font-bold text-slate-900 text-red-600">
+                <span className={`${moneyCls} font-bold text-red-600`}>
                   {formatCurrency(napsa).replace("ZMW ", "")}
                 </span>
               </div>
               <div className="flex justify-between items-center text-xs">
                 <span className="text-slate-500 font-medium">NHIMA</span>
-                <span className="font-bold text-slate-900 text-red-600">
+                <span className={`${moneyCls} font-bold text-red-600`}>
                   {formatCurrency(nhima).replace("ZMW ", "")}
                 </span>
               </div>
               {deductions.map((d, i) => (
                 <div key={i} className="flex justify-between items-center text-xs">
                   <span className="text-slate-500 font-medium">{d.type}</span>
-                  <span className="font-bold text-slate-900 text-red-600">
+                  <span className={`${moneyCls} font-bold text-red-600`}>
                     {formatCurrency(d.amount).replace("ZMW ", "")}
                   </span>
                 </div>
               ))}
               <div className="flex justify-between items-center border-t border-slate-100 pt-3 mt-3">
                 <span className="text-xs font-bold text-slate-900">Total Deductions</span>
-                <span className="font-bold text-red-600 text-sm">
+                <span className={`${moneyCls} font-semibold text-red-600 text-sm`}>
                   {formatCurrency(payslip.total_deductions).replace("ZMW ", "")}
                 </span>
               </div>
@@ -538,10 +558,10 @@ function PayslipDetailPage() {
         </div>
 
         {/* Net Pay Highlight */}
-        <div className="bg-slate-900 rounded-2xl p-6 text-white flex justify-between items-center">
+        <div className="bg-black rounded-2xl p-6 text-white flex justify-between items-center">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-60 mb-1">Net Pay</p>
-            <p className="text-2xl font-black tracking-tighter">
+          <p className={`${moneyOnDarkCls} text-2xl font-semibold tracking-tight`}>
               {formatCurrency(payslip.net_pay)}
             </p>
           </div>
@@ -557,11 +577,13 @@ function PayslipDetailPage() {
       </div>
 
       {/* Dotted Cut Line */}
-      <div className="relative my-10 px-4">
-        <div className="border-t-2 border-dashed border-slate-200 w-full" />
+      <div className="relative my-10">
+        <div className="px-4">
+          <div className="border-t-2 border-dashed border-slate-200 w-full" />
+        </div>
         {/* Semi-circle cutouts (ticket style) */}
-        <div className="absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-[var(--color-background)]" />
-        <div className="absolute right-0 top-1/2 translate-x-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-[var(--color-background)]" />
+        <div className="absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-transparent border border-slate-200" />
+        <div className="absolute right-0 top-1/2 translate-x-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-transparent border border-slate-200" />
       </div>
 
       {/* Footer / Barcode Section */}

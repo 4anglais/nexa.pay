@@ -103,7 +103,7 @@ export function AppSidebar() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-80 rounded-tr-3xl rounded-br-3xl glass-sidebar transition-all duration-500 ease-in-out md:relative md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 w-80 rounded-tr-3xl rounded-br-3xl glass-sidebar transition-all duration-500 ease-in-out md:sticky md:top-0 md:h-screen md:translate-x-0 ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >

@@ -170,327 +170,329 @@ function PayslipDetailPage() {
   const referenceCode = signature.slice(0, 10).toUpperCase();
 
   /* ─────────────────────────────────────────────
-     LANDSCAPE TICKET CARD — receipt-like, simple design
+     LANDSCAPE CARD — modern ticket design
   ───────────────────────────────────────────── */
   const LandscapeCard = ({ copyLabel }: { copyLabel: string }) => (
     <div
       style={{ breakInside: "avoid", pageBreakInside: "avoid" }}
-      className="border-2 border-black bg-white print:border print:shadow-none p-5 text-sm rounded-lg"
+      className="relative flex overflow-hidden border border-slate-200 bg-white shadow-sm print:border print:shadow-none text-sm rounded-3xl h-[12cm]"
     >
-      {/* Header */}
-      <div className="mb-4 pb-3 border-b-2 border-black text-center">
-        <h2 className="font-semibold tracking-tight text-black text-base leading-none">
-          {companyName}
-        </h2>
-        <p className="text-[7px] font-medium text-black uppercase tracking-wider mt-2">
-          PAYSLIP {copyLabel.toUpperCase()}
-        </p>
-        <p className="text-[8px] text-black mt-1 font-medium">{period}</p>
-      </div>
-
-      <div className="flex gap-4">
-        {/* Left Section */}
-        <div className="flex-1">
-          {/* Employee Details */}
-          <div className="mb-3 pb-3 border-b border-dashed border-black">
-            <p className="text-[7px] font-semibold text-black uppercase tracking-wider mb-1">
-              Employee
-            </p>
-            <p className="font-semibold text-black text-sm leading-tight">
-              {emp?.full_name ?? "—"}
-            </p>
-            <p className="text-[7px] text-black font-medium mt-1">
-              {emp?.position ?? "—"} • {emp?.department ?? "—"}
-            </p>
-            <p className="text-[7px] text-black mt-1">
-              ID: {emp?.nrc_or_id ?? "—"}
+      {/* Left Main Section */}
+      <div className="flex-1 p-8 flex flex-col justify-between">
+        {/* Header */}
+        <div className="flex justify-between items-start">
+          <div>
+            <h2 className="font-bold tracking-tight text-slate-900 text-2xl leading-none">
+              {companyName}
+            </h2>
+            <p className="text-[9px] font-bold text-blue-600 uppercase tracking-[0.2em] mt-2">
+              Official Payslip — {period}
             </p>
           </div>
+          <div className="text-right">
+            <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Type</p>
+            <p className="text-[10px] text-slate-900 font-bold mt-1 uppercase tracking-wider italic">
+              {copyLabel}
+            </p>
+          </div>
+        </div>
 
-          {/* Financials Grid */}
-          <div className="grid grid-cols-3 gap-3 text-[7px] mb-3">
-            {/* Earnings */}
-            <div className="border border-black rounded p-2">
-              <h3 className="font-semibold text-black uppercase tracking-wider text-[7px] mb-1.5">
-                Earnings
-              </h3>
-              <div className="space-y-1">
-                <div className="flex justify-between">
-                  <span className="text-black font-medium">Basic</span>
-                  <span className="font-semibold text-black">
-                    {formatCurrency(emp?.basic_salary ?? 0).replace("ZMW ", "")}
-                  </span>
-                </div>
-                {allowances.slice(0, 2).map((a, i) => (
-                  <div key={i} className="flex justify-between">
-                    <span className="text-black truncate mr-1 font-medium">
-                      {a.type}
-                    </span>
-                    <span className="font-semibold text-black">
-                      {formatCurrency(a.amount).replace("ZMW ", "")}
-                    </span>
-                  </div>
-                ))}
-                <div className="flex justify-between border-t border-black pt-1 mt-1 font-semibold text-black">
-                  <span>Gross</span>
-                  <span>{formatCurrency(gross).replace("ZMW ", "")}</span>
-                </div>
+        {/* Employee Details Row */}
+        <div className="grid grid-cols-3 gap-6 my-6 p-5 bg-slate-50 rounded-2xl border border-slate-100">
+          <div>
+            <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1">Employee</p>
+            <p className="font-bold text-slate-900 text-sm">{emp?.full_name ?? "—"}</p>
+            <p className="text-[10px] text-slate-500 font-medium">{emp?.position ?? "—"}</p>
+          </div>
+          <div>
+            <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1">ID Number</p>
+            <p className="font-bold text-slate-900 text-sm">{emp?.nrc_or_id ?? "—"}</p>
+          </div>
+          <div>
+            <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1">Department</p>
+            <p className="font-bold text-slate-900 text-sm">{emp?.department ?? "—"}</p>
+          </div>
+        </div>
+
+        {/* Financials Row */}
+        <div className="grid grid-cols-2 gap-10">
+          <div className="space-y-2">
+            <h3 className="text-[9px] font-bold text-slate-900 uppercase tracking-widest border-b border-slate-900 pb-1.5 mb-3">
+              Earnings
+            </h3>
+            <div className="space-y-1.5">
+              <div className="flex justify-between items-center text-[11px]">
+                <span className="text-slate-500 font-medium">Basic</span>
+                <span className="font-bold text-slate-900">
+                  {formatCurrency(emp?.basic_salary ?? 0).replace("ZMW ", "")}
+                </span>
               </div>
-            </div>
-
-            {/* Deductions */}
-            <div className="border border-black rounded p-2">
-              <h3 className="font-semibold text-black uppercase tracking-wider text-[7px] mb-1.5">
-                Deductions
-              </h3>
-              <div className="space-y-1">
-                {payeRate > 0 && (
-                  <div className="flex justify-between text-[7px]">
-                    <span className="text-black font-medium">PAYE</span>
-                    <span className="font-semibold text-black">
-                      {formatCurrency(paye).replace("ZMW ", "")}
-                    </span>
-                  </div>
-                )}
-                <div className="flex justify-between text-[7px]">
-                  <span className="text-black font-medium">NAPSA</span>
-                  <span className="font-semibold text-black">
-                    {formatCurrency(napsa).replace("ZMW ", "")}
+              {allowances.map((a, i) => (
+                <div key={i} className="flex justify-between items-center text-[11px]">
+                  <span className="text-slate-500 font-medium">{a.type}</span>
+                  <span className="font-bold text-slate-900">
+                    {formatCurrency(a.amount).replace("ZMW ", "")}
                   </span>
                 </div>
-                <div className="flex justify-between text-[7px]">
-                  <span className="text-black font-medium">NHIMA</span>
-                  <span className="font-semibold text-black">
-                    {formatCurrency(nhima).replace("ZMW ", "")}
-                  </span>
-                </div>
-                {deductions.slice(0, 1).map((d, i) => (
-                  <div key={i} className="flex justify-between text-[7px]">
-                    <span className="text-black truncate mr-1 font-medium">
-                      {d.type}
-                    </span>
-                    <span className="font-semibold text-black">
-                      {formatCurrency(d.amount).replace("ZMW ", "")}
-                    </span>
-                  </div>
-                ))}
-                <div className="flex justify-between border-t border-black pt-1 mt-1 font-semibold text-black text-[7px]">
-                  <span>Total</span>
-                  <span>
-                    {formatCurrency(payslip.total_deductions).replace("ZMW ", "")}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Payment */}
-            <div className="border border-black rounded p-2">
-              <h3 className="font-semibold text-black uppercase tracking-wider text-[7px] mb-1.5">
-                Payment
-              </h3>
-              <p className="text-black text-[7px] font-medium">
-                {emp?.bank_name || "Bank Transfer"}
-              </p>
-              <p className="font-mono text-[7px] text-black font-semibold mt-1">
-                {emp?.account_number || "•••• •••• ••••"}
-              </p>
-              <div className="mt-2 pt-1.5 border-t border-black">
-                <span className="inline-flex items-center rounded px-2 py-0.5 text-[6px] font-semibold bg-black text-white uppercase tracking-wider">
-                  PAID
+              ))}
+              <div className="flex justify-between items-center pt-2 mt-2 border-t border-slate-100">
+                <span className="text-[11px] font-bold text-slate-900">Gross</span>
+                <span className="font-black text-slate-900 text-[12px]">
+                  {formatCurrency(gross).replace("ZMW ", "")}
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Net Pay */}
-          <div className="bg-black text-white p-3 rounded">
-            <p className="text-[6px] font-medium uppercase tracking-wider opacity-80 mb-1">
-              Net Pay
-            </p>
-            <p className="font-semibold text-lg leading-none">
-              {formatCurrency(payslip.net_pay).replace("ZMW ", "")} ZMW
-            </p>
+          <div className="space-y-2">
+            <h3 className="text-[9px] font-bold text-slate-900 uppercase tracking-widest border-b border-slate-900 pb-1.5 mb-3">
+              Deductions
+            </h3>
+            <div className="space-y-1.5">
+              <div className="flex justify-between items-center text-[11px]">
+                <span className="text-slate-500 font-medium">Statutory</span>
+                <span className="font-bold text-red-600">
+                  {formatCurrency(paye + napsa + nhima).replace("ZMW ", "")}
+                </span>
+              </div>
+              {deductions.map((d, i) => (
+                <div key={i} className="flex justify-between items-center text-[11px]">
+                  <span className="text-slate-500 font-medium">{d.type}</span>
+                  <span className="font-bold text-red-600">
+                    {formatCurrency(d.amount).replace("ZMW ", "")}
+                  </span>
+                </div>
+              ))}
+              <div className="flex justify-between items-center pt-2 mt-2 border-t border-slate-100">
+                <span className="text-[11px] font-bold text-slate-900">Total</span>
+                <span className="font-bold text-red-600 text-[12px]">
+                  {formatCurrency(payslip.total_deductions).replace("ZMW ", "")}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Right Section - QR */}
-        <div className="flex flex-col items-center justify-between py-1 border-l-2 border-black pl-4 min-w-fit">
-          <div className="text-center">
-            <div className="border-2 border-black bg-white p-2 inline-block rounded">
-              <QRCodeSVG value={qrData} size={90} level="M" />
+        {/* Payment Footer */}
+        <div className="mt-8 flex items-center justify-between border-t border-slate-100 pt-6">
+          <div className="flex gap-6">
+            <div>
+              <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1">Bank</p>
+              <p className="text-[10px] font-bold text-slate-900">{emp?.bank_name || "—"}</p>
             </div>
-            <p className="text-[6px] font-semibold text-black mt-2 uppercase tracking-wider">
-              Scan to Verify
-            </p>
+            <div>
+              <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1">Account</p>
+              <p className="text-[10px] font-bold text-slate-900 font-mono">
+                {emp?.account_number ? `••••${emp.account_number.slice(-4)}` : "—"}
+              </p>
+            </div>
           </div>
-          <div className="text-center mt-3">
-            <p className="text-[6px] font-semibold text-black uppercase tracking-wider">
-              Ref Code
-            </p>
-            <p className="font-mono font-semibold text-black tracking-widest text-[9px] mt-1 bg-white border border-black px-2 py-1 rounded">
-              {referenceCode}
-            </p>
+          <div className="bg-slate-900 text-white px-6 py-3 rounded-xl flex items-center gap-4">
+            <div className="text-right">
+              <p className="text-[8px] uppercase tracking-widest opacity-50 font-bold">Net Pay</p>
+              <p className="text-xl font-black">{formatCurrency(payslip.net_pay)}</p>
+            </div>
+            <div className="h-8 w-[1px] bg-white/20" />
+            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">Paid</span>
           </div>
+        </div>
+      </div>
+
+      {/* Vertical Cut Line with Semi-Circles */}
+      <div className="relative h-full">
+        <div className="absolute top-[-48px] left-1/2 -translate-x-1/2 h-8 w-8 rounded-full bg-slate-50 border border-slate-200 print:bg-white" />
+        <div className="absolute bottom-[-48px] left-1/2 -translate-x-1/2 h-8 w-8 rounded-full bg-slate-50 border border-slate-200 print:bg-white" />
+        <div className="border-l-2 border-dashed border-slate-200 h-full" />
+      </div>
+
+      {/* Right Side QR Section */}
+      <div className="w-[7cm] bg-slate-50/50 p-8 flex flex-col items-center justify-center text-center">
+        <div className="p-4 bg-white border border-slate-100 rounded-3xl shadow-sm mb-4">
+          <QRCodeSVG value={qrData} size={110} level="H" />
+        </div>
+        <h4 className="text-[10px] font-bold text-slate-900 uppercase tracking-widest mb-2">Verify Authenticity</h4>
+        <p className="text-[9px] text-slate-500 font-medium px-4 leading-relaxed mb-6">
+          Scan this code to instantly verify this payslip in our secure portal.
+        </p>
+        <div className="mt-auto pt-6 border-t border-slate-200 w-full">
+          <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-2">Reference Code</p>
+          <p className="font-mono text-[10px] font-bold text-slate-900 tracking-wider">
+            {referenceCode}
+          </p>
         </div>
       </div>
     </div>
   );
 
   /* ─────────────────────────────────────────────
-     PORTRAIT CARD — receipt-like, simple design
+     PORTRAIT CARD — modern sleek design
   ───────────────────────────────────────────── */
   const PortraitCard = ({ copyLabel }: { copyLabel: string }) => (
     <div
       style={{ breakInside: "avoid", pageBreakInside: "avoid" }}
-      className="border-2 border-black bg-white print:border print:shadow-none p-6 text-sm rounded-lg"
+      className="relative overflow-hidden border border-slate-200 bg-white shadow-sm print:border print:shadow-none p-8 text-sm rounded-3xl"
     >
       {/* Header */}
-      <div className="mb-5 pb-4 border-b-2 border-black text-center">
-        <h2 className="font-semibold tracking-tight text-black text-2xl leading-none">
-          {companyName}
-        </h2>
-        <p className="text-[8px] font-medium text-black uppercase tracking-wider mt-2">
-          PAYSLIP {copyLabel.toUpperCase()}
-        </p>
-        <p className="text-[9px] text-black mt-1 font-medium">{period}</p>
-      </div>
-
-      {/* Employee Details */}
-      <div className="mb-4 pb-3 border-b border-dashed border-black">
-        <div className="grid grid-cols-2 gap-4 text-[10px]">
-          <div>
-            <p className="font-medium text-black">Employee:</p>
-            <p className="text-black">{emp?.full_name ?? "—"}</p>
-          </div>
-          <div>
-            <p className="font-medium text-black">Employee ID:</p>
-            <p className="text-black">{emp?.nrc_or_id ?? "—"}</p>
-          </div>
-          <div>
-            <p className="font-medium text-black">Department:</p>
-            <p className="text-black">{emp?.department ?? "—"}</p>
-          </div>
-          <div>
-            <p className="font-medium text-black">Position:</p>
-            <p className="text-black">{emp?.position ?? "—"}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Earnings & Deductions side by side */}
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        {/* Earnings */}
-        <div className="border border-dashed border-black p-3">
-          <h3 className="text-[9px] font-semibold text-black uppercase tracking-wider mb-2 pb-1 border-b border-black">
-            Earnings
-          </h3>
-          <div className="space-y-1 text-[9px]">
-            <div className="flex justify-between">
-              <span className="text-black">Basic Salary</span>
-              <span className="font-semibold text-black">
-                {formatCurrency(emp?.basic_salary ?? 0).replace("ZMW ", "")}
-              </span>
-            </div>
-            {allowances.map((a, i) => (
-              <div key={i} className="flex justify-between">
-                <span className="text-black">{a.type}</span>
-                <span className="font-semibold text-black">
-                  {formatCurrency(a.amount).replace("ZMW ", "")}
-                </span>
-              </div>
-            ))}
-            <div className="flex justify-between border-t border-black pt-1 mt-1 font-semibold text-black text-[9px]">
-              <span>Gross Pay</span>
-              <span>{formatCurrency(gross).replace("ZMW ", "")}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Deductions */}
-        <div className="border border-dashed border-black p-3">
-          <h3 className="text-[9px] font-semibold text-black uppercase tracking-wider mb-2 pb-1 border-b border-black">
-            Deductions
-          </h3>
-          <div className="space-y-1 text-[9px]">
-            {payeRate > 0 && (
-              <div className="flex justify-between">
-                <span className="text-black">PAYE</span>
-                <span className="font-semibold text-black">
-                  {formatCurrency(paye).replace("ZMW ", "")}
-                </span>
-              </div>
-            )}
-            <div className="flex justify-between">
-              <span className="text-black">NAPSA</span>
-              <span className="font-semibold text-black">
-                {formatCurrency(napsa).replace("ZMW ", "")}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-black">NHIMA</span>
-              <span className="font-semibold text-black">
-                {formatCurrency(nhima).replace("ZMW ", "")}
-              </span>
-            </div>
-            {deductions.map((d, i) => (
-              <div key={i} className="flex justify-between">
-                <span className="text-black">{d.type}</span>
-                <span className="font-semibold text-black">
-                  {formatCurrency(d.amount).replace("ZMW ", "")}
-                </span>
-              </div>
-            ))}
-            <div className="flex justify-between border-t border-black pt-1 mt-1 font-semibold text-black text-[9px]">
-              <span>Total</span>
-              <span>{formatCurrency(payslip.total_deductions).replace("ZMW ", "")}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Payment Info */}
-      <div className="mb-4 pb-3 border-b border-dashed border-black">
-        <h3 className="text-[9px] font-semibold text-black uppercase tracking-wider mb-2">
-          Payment Details
-        </h3>
-        <div className="grid grid-cols-2 gap-4 text-[9px]">
-          <div>
-            <p className="font-medium text-black">Bank:</p>
-            <p className="text-black">{emp?.bank_name || "Bank Transfer"}</p>
-          </div>
-          <div>
-            <p className="font-medium text-black">Account:</p>
-            <p className="font-mono text-black">{emp?.account_number || "•••• •••• ••••"}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Net Pay */}
-      <div className="border-2 border-black p-4 mb-4 text-center">
-        <p className="text-[10px] font-semibold text-black uppercase tracking-wider mb-2">
-          Net Pay
-        </p>
-        <p className="font-bold text-black text-2xl">
-          {formatCurrency(payslip.net_pay).replace("ZMW ", "")}
-        </p>
-        <div className="mt-2">
-          <span className="inline-flex items-center border border-black px-3 py-1 text-[8px] font-semibold bg-black text-white uppercase tracking-wider">
-            PAID
-          </span>
-        </div>
-      </div>
-
-      {/* Reference Footer */}
-      <div className="flex items-center justify-between text-[7px] text-slate-500 pt-3 border-t border-slate-300">
+      <div className="mb-8 flex justify-between items-start">
         <div>
-          <span className="font-black text-slate-600 uppercase tracking-wider">
-            Verification Code:{" "}
-          </span>
-          <span className="font-mono font-black text-slate-900 tracking-widest bg-slate-100 px-2 py-0.5 rounded inline-block ml-1">
-            {referenceCode}
-          </span>
+          <h2 className="font-bold tracking-tight text-slate-900 text-3xl leading-none">
+            {companyName}
+          </h2>
+          <p className="text-[10px] font-bold text-blue-600 uppercase tracking-[0.2em] mt-3">
+            Official Payslip
+          </p>
         </div>
-        <span className="text-[6px] text-slate-400">Scan QR above to verify authenticity</span>
+        <div className="text-right">
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Period</p>
+          <p className="text-sm text-slate-900 font-bold mt-1">{period}</p>
+          <p className="text-[9px] text-slate-500 mt-1 uppercase font-semibold tracking-wider">
+            {copyLabel}
+          </p>
+        </div>
+      </div>
+
+      {/* Employee Details Grid */}
+      <div className="grid grid-cols-2 gap-y-6 gap-x-8 mb-8 pb-8 border-b border-slate-100">
+        <div>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Employee</p>
+          <p className="font-bold text-slate-900 text-base">{emp?.full_name ?? "—"}</p>
+          <p className="text-xs text-slate-500 mt-1 font-medium">{emp?.position ?? "—"}</p>
+        </div>
+        <div>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">ID Number</p>
+          <p className="font-bold text-slate-900 text-base">{emp?.nrc_or_id ?? "—"}</p>
+          <p className="text-xs text-slate-500 mt-1 font-medium">{emp?.department ?? "—"}</p>
+        </div>
+      </div>
+
+      {/* Financials Section */}
+      <div className="space-y-8 mb-8">
+        <div className="grid grid-cols-2 gap-12">
+          {/* Earnings */}
+          <div className="space-y-3">
+            <h3 className="text-[10px] font-bold text-slate-900 uppercase tracking-widest border-b border-slate-900 pb-2 mb-4">
+              Earnings
+            </h3>
+            <div className="space-y-2.5">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-500 font-medium">Basic Salary</span>
+                <span className="font-bold text-slate-900">
+                  {formatCurrency(emp?.basic_salary ?? 0).replace("ZMW ", "")}
+                </span>
+              </div>
+              {allowances.map((a, i) => (
+                <div key={i} className="flex justify-between items-center text-xs">
+                  <span className="text-slate-500 font-medium">{a.type}</span>
+                  <span className="font-bold text-slate-900">
+                    {formatCurrency(a.amount).replace("ZMW ", "")}
+                  </span>
+                </div>
+              ))}
+              <div className="flex justify-between items-center border-t border-slate-100 pt-3 mt-3">
+                <span className="text-xs font-bold text-slate-900">Gross Pay</span>
+                <span className="font-black text-slate-900 text-sm">
+                  {formatCurrency(gross).replace("ZMW ", "")}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Deductions */}
+          <div className="space-y-3">
+            <h3 className="text-[10px] font-bold text-slate-900 uppercase tracking-widest border-b border-slate-900 pb-2 mb-4">
+              Deductions
+            </h3>
+            <div className="space-y-2.5">
+              {payeRate > 0 && (
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-slate-500 font-medium">PAYE Tax</span>
+                  <span className="font-bold text-slate-900 text-red-600">
+                    {formatCurrency(paye).replace("ZMW ", "")}
+                  </span>
+                </div>
+              )}
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-500 font-medium">NAPSA</span>
+                <span className="font-bold text-slate-900 text-red-600">
+                  {formatCurrency(napsa).replace("ZMW ", "")}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-500 font-medium">NHIMA</span>
+                <span className="font-bold text-slate-900 text-red-600">
+                  {formatCurrency(nhima).replace("ZMW ", "")}
+                </span>
+              </div>
+              {deductions.map((d, i) => (
+                <div key={i} className="flex justify-between items-center text-xs">
+                  <span className="text-slate-500 font-medium">{d.type}</span>
+                  <span className="font-bold text-slate-900 text-red-600">
+                    {formatCurrency(d.amount).replace("ZMW ", "")}
+                  </span>
+                </div>
+              ))}
+              <div className="flex justify-between items-center border-t border-slate-100 pt-3 mt-3">
+                <span className="text-xs font-bold text-slate-900">Total Deductions</span>
+                <span className="font-bold text-red-600 text-sm">
+                  {formatCurrency(payslip.total_deductions).replace("ZMW ", "")}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Net Pay Highlight */}
+        <div className="bg-slate-900 rounded-2xl p-6 text-white flex justify-between items-center">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-60 mb-1">Net Pay</p>
+            <p className="text-3xl font-black tracking-tighter">
+              {formatCurrency(payslip.net_pay)}
+            </p>
+          </div>
+          <div className="text-right">
+            <div className="inline-flex items-center bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest">
+              Paid
+            </div>
+            <p className="text-[9px] opacity-40 mt-2 font-mono uppercase tracking-widest">
+              Ref: {referenceCode}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Dotted Cut Line with Semi-Circles */}
+      <div className="relative my-10">
+        <div className="absolute -left-[48px] top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-slate-50 border border-slate-200 print:bg-white" />
+        <div className="absolute -right-[48px] top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-slate-50 border border-slate-200 print:bg-white" />
+        <div className="border-t-2 border-dashed border-slate-200 w-full" />
+      </div>
+
+      {/* Footer / QR Section */}
+      <div className="flex items-center justify-between">
+        <div className="space-y-4 max-w-[60%]">
+          <div>
+            <h4 className="text-[10px] font-bold text-slate-900 uppercase tracking-widest mb-1">Verification</h4>
+            <p className="text-[11px] text-slate-500 leading-relaxed font-medium">
+              This is a digitally generated payslip. You can verify its authenticity by scanning the QR code or visiting our verification portal.
+            </p>
+          </div>
+          <div className="flex gap-4">
+            <div>
+              <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1">Bank</p>
+              <p className="text-[10px] font-bold text-slate-900">{emp?.bank_name || "—"}</p>
+            </div>
+            <div>
+              <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1">Account</p>
+              <p className="text-[10px] font-bold text-slate-900 font-mono">{emp?.account_number ? `••••${emp.account_number.slice(-4)}` : "—"}</p>
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-col items-center">
+          <div className="p-3 bg-white border border-slate-100 rounded-2xl shadow-sm">
+            <QRCodeSVG value={qrData} size={80} level="H" />
+          </div>
+          <p className="text-[8px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-3">Scan to Verify</p>
+        </div>
       </div>
     </div>
   );
@@ -501,14 +503,14 @@ function PayslipDetailPage() {
   const landscapePrintCSS = `
     @media print {
       @page {
-        size: A4 landscape;
-        margin: 0.6cm;
+        size: A4 portrait;
+        margin: 0.5cm;
       }
       body { margin: 0; padding: 0; background: white !important; }
       .print-copy-divider {
         border: none;
-        border-top: 1px dashed #999;
-        margin: 0.4cm 0;
+        border-top: 2px dashed #e2e8f0;
+        margin: 0.8cm 0;
       }
     }
   `;

@@ -34,6 +34,7 @@ interface LineItem {
   amount: number;
   isNew?: boolean;
 }
+type LineItemRecord = { id: string; type: string; amount: number | string | null };
 
 function EditEmployeePage() {
   const { employeeId } = Route.useParams();
@@ -60,14 +61,14 @@ function EditEmployeePage() {
     ]).then(([empRes, allRes, dedRes]) => {
       if (empRes.data) reset(empRes.data as EmployeeForm);
       setAllowances(
-        (allRes.data ?? []).map((a: any) => ({
+        (allRes.data ?? []).map((a: LineItemRecord) => ({
           id: a.id,
           type: a.type,
           amount: Number(a.amount),
         })),
       );
       setDeductions(
-        (dedRes.data ?? []).map((d: any) => ({
+        (dedRes.data ?? []).map((d: LineItemRecord) => ({
           id: d.id,
           type: d.type,
           amount: Number(d.amount),

@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -10,9 +10,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Printer } from "lucide-react";
+import { ArrowLeft, Printer, Download } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { createVerificationSignature } from "@/lib/utils";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/payslips/$payslipId")({
   head: () => ({
@@ -68,7 +71,9 @@ function PayslipDetailPage() {
   const [allowances, setAllowances] = useState<AllowanceRow[]>([]);
   const [deductions, setDeductions] = useState<DeductionRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [printLayout, setPrintLayout] = useState<PrintLayout>("landscape");
+  const printRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     Promise.all([
@@ -120,6 +125,50 @@ function PayslipDetailPage() {
     }).format(n);
 
   const handlePrint = () => window.print();
+
+  const handleDownloadPDF = async () => {
+    if (!printRef.current) return;
+    
+    setIsDownloading(true);
+    const toastId = toast.loading("Generating PDF...");
+    
+    try {
+      // Temporarily show the print container for capture
+      const element = printRef.current;
+      element.classList.remove("hidden");
+      element.classList.add("bg-white");
+      
+      const canvas = await html2canvas(element, {
+        scale: 2, // High quality
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff",
+      });
+      
+      element.classList.add("hidden");
+      element.classList.remove("bg-white");
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+
+      const imgWidth = 210; // A4 width in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
+      pdf.save(`Payslip-${emp?.full_name}-${period}.pdf`);
+      
+      toast.success("PDF downloaded successfully", { id: toastId });
+    } catch (error) {
+      console.error("PDF generation failed:", error);
+      toast.error("Failed to generate PDF", { id: toastId });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   if (loading)
     return (
@@ -175,69 +224,73 @@ function PayslipDetailPage() {
   const LandscapeCard = ({ copyLabel }: { copyLabel: string }) => (
     <div
       style={{ breakInside: "avoid", pageBreakInside: "avoid" }}
-      className="relative flex overflow-hidden border border-slate-200 bg-white shadow-sm print:border print:shadow-none text-sm rounded-3xl h-[12cm]"
+      className="relative flex border border-slate-200 bg-white shadow-sm print:border print:shadow-none text-sm rounded-3xl h-[10.5cm] w-[18cm] mx-auto print:scale-90"
     >
+      {/* Semi-circle masks for cut-out effect */}
+      <div className="absolute top-[-16px] left-[calc(100%-7cm)] -translate-x-1/2 h-8 w-8 rounded-full bg-slate-50 border border-slate-200 print:bg-white z-10" />
+      <div className="absolute bottom-[-16px] left-[calc(100%-7cm)] -translate-x-1/2 h-8 w-8 rounded-full bg-slate-50 border border-slate-200 print:bg-white z-10" />
+
       {/* Left Main Section */}
-      <div className="flex-1 p-8 flex flex-col justify-between">
+      <div className="flex-1 p-7 flex flex-col justify-between overflow-hidden">
         {/* Header */}
         <div className="flex justify-between items-start">
           <div>
-            <h2 className="font-bold tracking-tight text-slate-900 text-2xl leading-none">
+            <h2 className="font-bold tracking-tight text-slate-900 text-xl leading-none">
               {companyName}
             </h2>
-            <p className="text-[9px] font-bold text-blue-600 uppercase tracking-[0.2em] mt-2">
+            <p className="text-[8px] font-bold text-blue-600 uppercase tracking-[0.2em] mt-2">
               Official Payslip — {period}
             </p>
           </div>
           <div className="text-right">
-            <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Type</p>
-            <p className="text-[10px] text-slate-900 font-bold mt-1 uppercase tracking-wider italic">
+            <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest">Type</p>
+            <p className="text-[9px] text-slate-900 font-bold mt-1 uppercase tracking-wider italic">
               {copyLabel}
             </p>
           </div>
         </div>
 
         {/* Employee Details Row */}
-        <div className="grid grid-cols-3 gap-6 my-6 p-5 bg-slate-50 rounded-2xl border border-slate-100">
+        <div className="grid grid-cols-3 gap-4 my-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
           <div>
-            <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1">Employee</p>
-            <p className="font-bold text-slate-900 text-sm">{emp?.full_name ?? "—"}</p>
-            <p className="text-[10px] text-slate-500 font-medium">{emp?.position ?? "—"}</p>
+            <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mb-1">Employee</p>
+            <p className="font-bold text-slate-900 text-xs">{emp?.full_name ?? "—"}</p>
+            <p className="text-[9px] text-slate-500 font-medium">{emp?.position ?? "—"}</p>
           </div>
           <div>
-            <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1">ID Number</p>
-            <p className="font-bold text-slate-900 text-sm">{emp?.nrc_or_id ?? "—"}</p>
+            <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mb-1">ID Number</p>
+            <p className="font-bold text-slate-900 text-xs">{emp?.nrc_or_id ?? "—"}</p>
           </div>
           <div>
-            <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1">Department</p>
-            <p className="font-bold text-slate-900 text-sm">{emp?.department ?? "—"}</p>
+            <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mb-1">Department</p>
+            <p className="font-bold text-slate-900 text-xs">{emp?.department ?? "—"}</p>
           </div>
         </div>
 
         {/* Financials Row */}
-        <div className="grid grid-cols-2 gap-10">
+        <div className="grid grid-cols-2 gap-8">
           <div className="space-y-2">
-            <h3 className="text-[9px] font-bold text-slate-900 uppercase tracking-widest border-b border-slate-900 pb-1.5 mb-3">
+            <h3 className="text-[8px] font-bold text-slate-900 uppercase tracking-widest border-b border-slate-900 pb-1 mb-2">
               Earnings
             </h3>
-            <div className="space-y-1.5">
-              <div className="flex justify-between items-center text-[11px]">
+            <div className="space-y-1">
+              <div className="flex justify-between items-center text-[10px]">
                 <span className="text-slate-500 font-medium">Basic</span>
                 <span className="font-bold text-slate-900">
                   {formatCurrency(emp?.basic_salary ?? 0).replace("ZMW ", "")}
                 </span>
               </div>
               {allowances.map((a, i) => (
-                <div key={i} className="flex justify-between items-center text-[11px]">
+                <div key={i} className="flex justify-between items-center text-[10px]">
                   <span className="text-slate-500 font-medium">{a.type}</span>
                   <span className="font-bold text-slate-900">
                     {formatCurrency(a.amount).replace("ZMW ", "")}
                   </span>
                 </div>
               ))}
-              <div className="flex justify-between items-center pt-2 mt-2 border-t border-slate-100">
-                <span className="text-[11px] font-bold text-slate-900">Gross</span>
-                <span className="font-black text-slate-900 text-[12px]">
+              <div className="flex justify-between items-center pt-1.5 mt-1.5 border-t border-slate-100">
+                <span className="text-[10px] font-bold text-slate-900">Gross</span>
+                <span className="font-black text-slate-900 text-[11px]">
                   {formatCurrency(gross).replace("ZMW ", "")}
                 </span>
               </div>
@@ -245,27 +298,27 @@ function PayslipDetailPage() {
           </div>
 
           <div className="space-y-2">
-            <h3 className="text-[9px] font-bold text-slate-900 uppercase tracking-widest border-b border-slate-900 pb-1.5 mb-3">
+            <h3 className="text-[8px] font-bold text-slate-900 uppercase tracking-widest border-b border-slate-900 pb-1 mb-2">
               Deductions
             </h3>
-            <div className="space-y-1.5">
-              <div className="flex justify-between items-center text-[11px]">
+            <div className="space-y-1">
+              <div className="flex justify-between items-center text-[10px]">
                 <span className="text-slate-500 font-medium">Statutory</span>
                 <span className="font-bold text-red-600">
                   {formatCurrency(paye + napsa + nhima).replace("ZMW ", "")}
                 </span>
               </div>
               {deductions.map((d, i) => (
-                <div key={i} className="flex justify-between items-center text-[11px]">
+                <div key={i} className="flex justify-between items-center text-[10px]">
                   <span className="text-slate-500 font-medium">{d.type}</span>
                   <span className="font-bold text-red-600">
                     {formatCurrency(d.amount).replace("ZMW ", "")}
                   </span>
                 </div>
               ))}
-              <div className="flex justify-between items-center pt-2 mt-2 border-t border-slate-100">
-                <span className="text-[11px] font-bold text-slate-900">Total</span>
-                <span className="font-bold text-red-600 text-[12px]">
+              <div className="flex justify-between items-center pt-1.5 mt-1.5 border-t border-slate-100">
+                <span className="text-[10px] font-bold text-slate-900">Total</span>
+                <span className="font-bold text-red-600 text-[11px]">
                   {formatCurrency(payslip.total_deductions).replace("ZMW ", "")}
                 </span>
               </div>
@@ -274,49 +327,47 @@ function PayslipDetailPage() {
         </div>
 
         {/* Payment Footer */}
-        <div className="mt-8 flex items-center justify-between border-t border-slate-100 pt-6">
-          <div className="flex gap-6">
+        <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-4">
+          <div className="flex gap-4">
             <div>
-              <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1">Bank</p>
-              <p className="text-[10px] font-bold text-slate-900">{emp?.bank_name || "—"}</p>
+              <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mb-1">Bank</p>
+              <p className="text-[9px] font-bold text-slate-900">{emp?.bank_name || "—"}</p>
             </div>
             <div>
-              <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1">Account</p>
-              <p className="text-[10px] font-bold text-slate-900 font-mono">
+              <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mb-1">Account</p>
+              <p className="text-[9px] font-bold text-slate-900 font-mono">
                 {emp?.account_number ? `••••${emp.account_number.slice(-4)}` : "—"}
               </p>
             </div>
           </div>
-          <div className="bg-slate-900 text-white px-6 py-3 rounded-xl flex items-center gap-4">
+          <div className="bg-slate-900 text-white px-5 py-2.5 rounded-xl flex items-center gap-3">
             <div className="text-right">
-              <p className="text-[8px] uppercase tracking-widest opacity-50 font-bold">Net Pay</p>
-              <p className="text-xl font-black">{formatCurrency(payslip.net_pay)}</p>
+              <p className="text-[7px] uppercase tracking-widest opacity-50 font-bold">Net Pay</p>
+              <p className="text-lg font-black">{formatCurrency(payslip.net_pay)}</p>
             </div>
-            <div className="h-8 w-[1px] bg-white/20" />
-            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">Paid</span>
+            <div className="h-6 w-[1px] bg-white/20" />
+            <span className="text-[9px] font-black uppercase tracking-widest text-emerald-400">Paid</span>
           </div>
         </div>
       </div>
 
-      {/* Vertical Cut Line with Semi-Circles */}
-      <div className="relative h-full">
-        <div className="absolute top-[-48px] left-1/2 -translate-x-1/2 h-8 w-8 rounded-full bg-slate-50 border border-slate-200 print:bg-white" />
-        <div className="absolute bottom-[-48px] left-1/2 -translate-x-1/2 h-8 w-8 rounded-full bg-slate-50 border border-slate-200 print:bg-white" />
+      {/* Vertical Cut Line */}
+      <div className="relative h-full py-4">
         <div className="border-l-2 border-dashed border-slate-200 h-full" />
       </div>
 
       {/* Right Side QR Section */}
-      <div className="w-[7cm] bg-slate-50/50 p-8 flex flex-col items-center justify-center text-center">
-        <div className="p-4 bg-white border border-slate-100 rounded-3xl shadow-sm mb-4">
-          <QRCodeSVG value={qrData} size={110} level="H" />
+      <div className="w-[7cm] bg-slate-50/50 p-7 flex flex-col items-center justify-center text-center rounded-r-3xl overflow-hidden">
+        <div className="p-3 bg-white border border-slate-100 rounded-3xl shadow-sm mb-3">
+          <QRCodeSVG value={qrData} size={90} level="H" />
         </div>
-        <h4 className="text-[10px] font-bold text-slate-900 uppercase tracking-widest mb-2">Verify Authenticity</h4>
-        <p className="text-[9px] text-slate-500 font-medium px-4 leading-relaxed mb-6">
+        <h4 className="text-[9px] font-bold text-slate-900 uppercase tracking-widest mb-1.5">Verify Authenticity</h4>
+        <p className="text-[8px] text-slate-500 font-medium px-2 leading-relaxed mb-4">
           Scan this code to instantly verify this payslip in our secure portal.
         </p>
-        <div className="mt-auto pt-6 border-t border-slate-200 w-full">
-          <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-2">Reference Code</p>
-          <p className="font-mono text-[10px] font-bold text-slate-900 tracking-wider">
+        <div className="mt-auto pt-4 border-t border-slate-200 w-full">
+          <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Reference Code</p>
+          <p className="font-mono text-[9px] font-bold text-slate-900 tracking-wider">
             {referenceCode}
           </p>
         </div>
@@ -330,12 +381,16 @@ function PayslipDetailPage() {
   const PortraitCard = ({ copyLabel }: { copyLabel: string }) => (
     <div
       style={{ breakInside: "avoid", pageBreakInside: "avoid" }}
-      className="relative overflow-hidden border border-slate-200 bg-white shadow-sm print:border print:shadow-none p-8 text-sm rounded-3xl"
+      className="relative border border-slate-200 bg-white shadow-sm print:border print:shadow-none p-8 text-sm rounded-3xl w-[16cm] mx-auto print:scale-90"
     >
+      {/* Semi-circle masks for cut-out effect */}
+      <div className="absolute left-[-16px] bottom-[115px] h-8 w-8 rounded-full bg-slate-50 border border-slate-200 print:bg-white z-10" />
+      <div className="absolute right-[-16px] bottom-[115px] h-8 w-8 rounded-full bg-slate-50 border border-slate-200 print:bg-white z-10" />
+
       {/* Header */}
       <div className="mb-8 flex justify-between items-start">
         <div>
-          <h2 className="font-bold tracking-tight text-slate-900 text-3xl leading-none">
+          <h2 className="font-bold tracking-tight text-slate-900 text-2xl leading-none">
             {companyName}
           </h2>
           <p className="text-[10px] font-bold text-blue-600 uppercase tracking-[0.2em] mt-3">
@@ -445,7 +500,7 @@ function PayslipDetailPage() {
         <div className="bg-slate-900 rounded-2xl p-6 text-white flex justify-between items-center">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-60 mb-1">Net Pay</p>
-            <p className="text-3xl font-black tracking-tighter">
+            <p className="text-2xl font-black tracking-tighter">
               {formatCurrency(payslip.net_pay)}
             </p>
           </div>
@@ -460,10 +515,8 @@ function PayslipDetailPage() {
         </div>
       </div>
 
-      {/* Dotted Cut Line with Semi-Circles */}
-      <div className="relative my-10">
-        <div className="absolute -left-[48px] top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-slate-50 border border-slate-200 print:bg-white" />
-        <div className="absolute -right-[48px] top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-slate-50 border border-slate-200 print:bg-white" />
+      {/* Dotted Cut Line */}
+      <div className="relative my-10 px-4">
         <div className="border-t-2 border-dashed border-slate-200 w-full" />
       </div>
 
@@ -504,13 +557,24 @@ function PayslipDetailPage() {
     @media print {
       @page {
         size: A4 portrait;
-        margin: 0.5cm;
+        margin: 0;
       }
       body { margin: 0; padding: 0; background: white !important; }
+      #root { padding: 0; margin: 0; }
       .print-copy-divider {
         border: none;
         border-top: 2px dashed #e2e8f0;
-        margin: 0.8cm 0;
+        margin: 1cm 0;
+      }
+      .hidden-print { display: none !important; }
+      .print-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        width: 100%;
+        padding: 1cm 0;
       }
     }
   `;
@@ -519,9 +583,19 @@ function PayslipDetailPage() {
     @media print {
       @page {
         size: A4 portrait;
-        margin: 0.6cm;
+        margin: 0;
       }
       body { margin: 0; padding: 0; background: white !important; }
+      #root { padding: 0; margin: 0; }
+      .print-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        width: 100%;
+        padding: 1cm 0;
+      }
     }
   `;
 
@@ -542,28 +616,39 @@ function PayslipDetailPage() {
           </Link>
 
           <div className="ml-auto flex items-center gap-3">
+            {/* Download PDF button */}
+            <Button 
+              onClick={handleDownloadPDF} 
+              disabled={isDownloading}
+              variant="outline"
+              className="rounded-xl font-bold px-6 border-2"
+            >
+              <Download className="h-4 w-4 mr-2" strokeWidth={2.5} /> 
+              {isDownloading ? "Generating..." : "Download PDF"}
+            </Button>
+
             {/* Layout selector */}
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground font-medium">
-                Print layout:
+                Layout:
               </span>
               <Select
                 value={printLayout}
                 onValueChange={(v) => setPrintLayout(v as PrintLayout)}
               >
-                <SelectTrigger className="w-[180px] rounded-xl font-semibold">
+                <SelectTrigger className="w-[140px] rounded-xl font-semibold border-2">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="landscape">
-                    Landscape (2 copies)
+                    Landscape
                   </SelectItem>
-                  <SelectItem value="portrait">Portrait (1 copy)</SelectItem>
+                  <SelectItem value="portrait">Portrait</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            <Button onClick={handlePrint} className="rounded-xl font-bold px-6">
+            <Button onClick={handlePrint} className="rounded-xl font-bold px-6 shadow-md hover:shadow-lg transition-all">
               <Printer className="h-4 w-4 mr-2" strokeWidth={2.5} /> Print
             </Button>
           </div>
@@ -571,13 +656,13 @@ function PayslipDetailPage() {
 
         {/* Screen preview */}
         <div className="mb-4">
-          <p className="text-xs text-muted-foreground text-center mb-3 italic">
+          <p className="text-xs text-muted-foreground text-center mb-3 italic font-medium">
             {previewLabel}
           </p>
           {printLayout === "landscape" ? (
             <div className="mx-auto max-w-[900px] space-y-3">
               <LandscapeCard copyLabel="Employee Copy" />
-              <div className="border-t border-dashed border-gray-400 my-1" />
+              <div className="border-t border-dashed border-gray-300 my-1" />
               <LandscapeCard copyLabel="Department Copy" />
             </div>
           ) : (
@@ -594,16 +679,18 @@ function PayslipDetailPage() {
       </style>
 
       {/* ── Print output ── */}
-      <div className="hidden print:block">
-        {printLayout === "landscape" ? (
-          <>
-            <LandscapeCard copyLabel="Employee Copy" />
-            <hr className="print-copy-divider" />
-            <LandscapeCard copyLabel="Department Copy" />
-          </>
-        ) : (
-          <PortraitCard copyLabel="Employee Copy" />
-        )}
+      <div className="hidden print:block" ref={printRef}>
+        <div className="print-container">
+          {printLayout === "landscape" ? (
+            <>
+              <LandscapeCard copyLabel="Employee Copy" />
+              <div className="print-copy-divider w-[18cm]" />
+              <LandscapeCard copyLabel="Department Copy" />
+            </>
+          ) : (
+            <PortraitCard copyLabel="Employee Copy" />
+          )}
+        </div>
       </div>
     </>
   );

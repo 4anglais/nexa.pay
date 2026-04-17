@@ -87,12 +87,12 @@ function LoginPage() {
         >
           <div className="text-center">
             <h2 className="text-4xl font-black tracking-tighter">
-              {isSignUp ? "Welcome Back!" : "New Here?"}
+              {isSignUp ? "New Here?" : "Welcome Back"}
             </h2>
             <p className="mt-4 text-lg opacity-80">
               {isSignUp 
-                ? "If you already have an account, just sign in. We've missed you!" 
-                : "Sign up and start managing your company payroll with ease today."}
+                ? "Sign up and start managing your company payroll with ease today." 
+                : "If you already have an account, just sign in. We've missed you!"}
             </p>
             <Button 
               variant="secondary" 

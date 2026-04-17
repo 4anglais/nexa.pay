@@ -10,12 +10,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Printer, Download } from "lucide-react";
+import { ArrowLeft, Printer } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { createVerificationSignature } from "@/lib/utils";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
-import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/payslips/$payslipId")({
   head: () => ({
@@ -71,7 +68,6 @@ function PayslipDetailPage() {
   const [allowances, setAllowances] = useState<AllowanceRow[]>([]);
   const [deductions, setDeductions] = useState<DeductionRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isDownloading, setIsDownloading] = useState(false);
   const [printLayout, setPrintLayout] = useState<PrintLayout>("landscape");
   const printRef = useRef<HTMLDivElement>(null);
 
@@ -125,50 +121,6 @@ function PayslipDetailPage() {
     }).format(n);
 
   const handlePrint = () => window.print();
-
-  const handleDownloadPDF = async () => {
-    if (!printRef.current) return;
-    
-    setIsDownloading(true);
-    const toastId = toast.loading("Generating PDF...");
-    
-    try {
-      // Temporarily show the print container for capture
-      const element = printRef.current;
-      element.classList.remove("hidden");
-      element.classList.add("bg-white");
-      
-      const canvas = await html2canvas(element, {
-        scale: 2, // High quality
-        useCORS: true,
-        logging: false,
-        backgroundColor: "#ffffff",
-      });
-      
-      element.classList.add("hidden");
-      element.classList.remove("bg-white");
-
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a4",
-      });
-
-      const imgWidth = 210; // A4 width in mm
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
-      pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
-      pdf.save(`Payslip-${emp?.full_name}-${period}.pdf`);
-      
-      toast.success("PDF downloaded successfully", { id: toastId });
-    } catch (error) {
-      console.error("PDF generation failed:", error);
-      toast.error("Failed to generate PDF", { id: toastId });
-    } finally {
-      setIsDownloading(false);
-    }
-  };
 
   if (loading)
     return (
@@ -227,8 +179,8 @@ function PayslipDetailPage() {
       className="relative flex border border-slate-200 bg-white shadow-sm print:border print:shadow-none text-sm rounded-3xl h-[10.5cm] w-[18cm] mx-auto print:scale-90"
     >
       {/* Semi-circle masks for cut-out effect */}
-      <div className="absolute top-[-16px] left-[calc(100%-7cm)] -translate-x-1/2 h-8 w-8 rounded-full bg-slate-50 border border-slate-200 print:bg-white z-10" />
-      <div className="absolute bottom-[-16px] left-[calc(100%-7cm)] -translate-x-1/2 h-8 w-8 rounded-full bg-slate-50 border border-slate-200 print:bg-white z-10" />
+      <div className="absolute top-[-8px] right-[-4px] h-8 w-4 bg-red-600 border border-red-700 print:bg-red-600 z-10" style={{ borderRadius: '4px 0 0 4px' }} />
+      <div className="absolute bottom-[-8px] right-[-4px] h-8 w-4 bg-red-600 border border-red-700 print:bg-red-600 z-10" style={{ borderRadius: '0 4px 4px 0' }} />
 
       {/* Left Main Section */}
       <div className="flex-1 p-7 flex flex-col justify-between overflow-hidden">
@@ -357,9 +309,9 @@ function PayslipDetailPage() {
       </div>
 
       {/* Right Side QR Section */}
-      <div className="w-[7cm] bg-slate-50/50 p-7 flex flex-col items-center justify-center text-center rounded-r-3xl overflow-hidden">
+      <div className="w-[5cm] bg-slate-50/50 p-7 flex flex-col items-center justify-center text-center rounded-r-3xl overflow-hidden">
         <div className="p-3 bg-white border border-slate-100 rounded-3xl shadow-sm mb-3">
-          <QRCodeSVG value={qrData} size={90} level="H" />
+          <QRCodeSVG value={qrData} size={70} level="H" />
         </div>
         <h4 className="text-[9px] font-bold text-slate-900 uppercase tracking-widest mb-1.5">Verify Authenticity</h4>
         <p className="text-[8px] text-slate-500 font-medium px-2 leading-relaxed mb-4">
@@ -384,8 +336,8 @@ function PayslipDetailPage() {
       className="relative border border-slate-200 bg-white shadow-sm print:border print:shadow-none p-8 text-sm rounded-3xl w-[16cm] mx-auto print:scale-90"
     >
       {/* Semi-circle masks for cut-out effect */}
-      <div className="absolute left-[-16px] bottom-[115px] h-8 w-8 rounded-full bg-slate-50 border border-slate-200 print:bg-white z-10" />
-      <div className="absolute right-[-16px] bottom-[115px] h-8 w-8 rounded-full bg-slate-50 border border-slate-200 print:bg-white z-10" />
+      <div className="absolute left-[-4px] bottom-[115px] h-4 w-8 bg-red-600 border border-red-700 print:bg-red-600 z-10" style={{ borderRadius: '0 4px 4px 0' }} />
+      <div className="absolute right-[-4px] bottom-[115px] h-4 w-8 bg-red-600 border border-red-700 print:bg-red-600 z-10" style={{ borderRadius: '4px 0 0 4px' }} />
 
       {/* Header */}
       <div className="mb-8 flex justify-between items-start">
@@ -616,17 +568,6 @@ function PayslipDetailPage() {
           </Link>
 
           <div className="ml-auto flex items-center gap-3">
-            {/* Download PDF button */}
-            <Button 
-              onClick={handleDownloadPDF} 
-              disabled={isDownloading}
-              variant="outline"
-              className="rounded-xl font-bold px-6 border-2"
-            >
-              <Download className="h-4 w-4 mr-2" strokeWidth={2.5} /> 
-              {isDownloading ? "Generating..." : "Download PDF"}
-            </Button>
-
             {/* Layout selector */}
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground font-medium">

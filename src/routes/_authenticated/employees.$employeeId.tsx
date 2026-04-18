@@ -3,12 +3,23 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { supabase } from "@/integrations/supabase/client";
+import { firebase } from "@/integrations/firebase/client";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Plus, Trash2 } from "lucide-react";
+import {
+  doc,
+  getDoc,
+  setDoc,
+  deleteDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+  addDoc,
+} from "firebase/firestore";
 
 export const Route = createFileRoute("/_authenticated/employees/$employeeId")({
   component: EditEmployeePage,
@@ -34,7 +45,11 @@ interface LineItem {
   amount: number;
   isNew?: boolean;
 }
-type LineItemRecord = { id: string; type: string; amount: number | string | null };
+type LineItemRecord = {
+  id: string;
+  type: string;
+  amount: number | string | null;
+};
 
 function EditEmployeePage() {
   const { employeeId } = Route.useParams();
@@ -54,72 +69,106 @@ function EditEmployeePage() {
   });
 
   useEffect(() => {
-    Promise.all([
-      supabase.from("employees").select("*").eq("id", employeeId).single(),
-      supabase.from("allowances").select("*").eq("employee_id", employeeId),
-      supabase.from("deductions").select("*").eq("employee_id", employeeId),
-    ]).then(([empRes, allRes, dedRes]) => {
-      if (empRes.data) reset(empRes.data as EmployeeForm);
-      setAllowances(
-        (allRes.data ?? []).map((a: LineItemRecord) => ({
-          id: a.id,
-          type: a.type,
-          amount: Number(a.amount),
-        })),
-      );
-      setDeductions(
-        (dedRes.data ?? []).map((d: LineItemRecord) => ({
-          id: d.id,
-          type: d.type,
-          amount: Number(d.amount),
-        })),
-      );
-      setLoading(false);
-    });
+    const fetchData = async () => {
+      try {
+        // Fetch employee data
+        const employeeDoc = await getDoc(
+          doc(firebase.db, "employees", employeeId),
+        );
+        if (employeeDoc.exists()) {
+          reset(employeeDoc.data() as EmployeeForm);
+        }
+
+        // Fetch allowances
+        const allowancesQuery = query(
+          collection(firebase.db, "allowances"),
+          where("employee_id", "==", employeeId),
+        );
+        const allowancesSnapshot = await getDocs(allowancesQuery);
+        const allowancesData = allowancesSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          type: doc.data().type,
+          amount: Number(doc.data().amount),
+        }));
+        setAllowances(allowancesData);
+
+        // Fetch deductions
+        const deductionsQuery = query(
+          collection(firebase.db, "deductions"),
+          where("employee_id", "==", employeeId),
+        );
+        const deductionsSnapshot = await getDocs(deductionsQuery);
+        const deductionsData = deductionsSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          type: doc.data().type,
+          amount: Number(doc.data().amount),
+        }));
+        setDeductions(deductionsData);
+
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, [employeeId, reset]);
 
   const onSubmit = async (data: EmployeeForm) => {
     setError("");
-    // Update employee — also set legacy allowances column to sum
-    const totalAllowances = allowances.reduce((s, a) => s + a.amount, 0);
-    const { error: empErr } = await supabase
-      .from("employees")
-      .update({ ...data, allowances: totalAllowances })
-      .eq("id", employeeId);
-    if (empErr) {
-      setError(empErr.message);
-      return;
-    }
+    try {
+      // Update employee
+      const totalAllowances = allowances.reduce((s, a) => s + a.amount, 0);
+      await setDoc(doc(firebase.db, "employees", employeeId), {
+        ...data,
+        allowances: totalAllowances,
+      });
 
-    // Sync allowances
-    await supabase.from("allowances").delete().eq("employee_id", employeeId);
-    if (allowances.length > 0) {
-      await supabase
-        .from("allowances")
-        .insert(
-          allowances.map((a) => ({
+      // Sync allowances
+      const allowancesQuery = query(
+        collection(firebase.db, "allowances"),
+        where("employee_id", "==", employeeId),
+      );
+      const allowancesSnapshot = await getDocs(allowancesQuery);
+      allowancesSnapshot.forEach(async (doc) => {
+        await deleteDoc(doc.ref);
+      });
+
+      if (allowances.length > 0) {
+        for (const allowance of allowances) {
+          await addDoc(collection(firebase.db, "allowances"), {
             employee_id: employeeId,
-            type: a.type,
-            amount: a.amount,
-          })),
-        );
-    }
+            type: allowance.type,
+            amount: allowance.amount,
+          });
+        }
+      }
 
-    // Sync deductions
-    await supabase.from("deductions").delete().eq("employee_id", employeeId);
-    if (deductions.length > 0) {
-      await supabase
-        .from("deductions")
-        .insert(
-          deductions.map((d) => ({
+      // Sync deductions
+      const deductionsQuery = query(
+        collection(firebase.db, "deductions"),
+        where("employee_id", "==", employeeId),
+      );
+      const deductionsSnapshot = await getDocs(deductionsQuery);
+      deductionsSnapshot.forEach(async (doc) => {
+        await deleteDoc(doc.ref);
+      });
+
+      if (deductions.length > 0) {
+        for (const deduction of deductions) {
+          await addDoc(collection(firebase.db, "deductions"), {
             employee_id: employeeId,
-            type: d.type,
-            amount: d.amount,
-          })),
-        );
-    }
+            type: deduction.type,
+            amount: deduction.amount,
+          });
+        }
+      }
 
-    navigate({ to: "/employees" });
+      navigate({ to: "/employees" });
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Unknown error");
+    }
   };
 
   const addAllowance = () =>

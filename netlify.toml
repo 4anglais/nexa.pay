@@ -4,5 +4,11 @@
 
 # Environment variables section for Netlify
 # Before deploying, add these to your Netlify Site Settings > Environment Variables:
-# - VITE_SUPABASE_URL: https://vqvobiisdwidviiqcqio.supabase.co
-# - VITE_SUPABASE_PUBLISHABLE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZxdm9iaWlzZHdpZHZpaXFjcWlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4OTkyODgsImV4cCI6MjA5MTQ3NTI4OH0.ZP1obaMNNxHvltYo7fb9gqMNiglxq-NXAzvbQBGQU5g
+# - VITE_FIREBASE_API_KEY: AIzaSyA0Lh98DsRMDNm8WUzdXB8-p6arb57cDOA
+# - VITE_FIREBASE_AUTH_DOMAIN: madebyange1.firebaseapp.com
+# - VITE_FIREBASE_PROJECT_ID: madebyange1
+# - VITE_FIREBASE_STORAGE_BUCKET: madebyange1.appspot.com
+# - VITE_FIREBASE_MESSAGING_SENDER_ID: 603537844857
+# - VITE_FIREBASE_APP_ID: 1:603537844857:web:f237a1881377daed9e42a8
+# - VITE_FIREBASE_MEASUREMENT_ID: G-YJJ5414K0P
+

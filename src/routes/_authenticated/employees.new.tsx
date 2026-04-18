@@ -2,13 +2,14 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { supabase } from "@/integrations/supabase/client";
+import { firebase } from "@/integrations/firebase/client";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { collection, addDoc } from "firebase/firestore";
 
 export const Route = createFileRoute("/_authenticated/employees/new")({
   head: () => ({
@@ -49,51 +50,40 @@ function NewEmployeePage() {
 
   const onSubmit = async (data: EmployeeForm) => {
     setError("");
-    const totalAllowances = allowances.reduce((s, a) => s + a.amount, 0);
-    const { data: emp, error: empErr } = await supabase
-      .from("employees")
-      .insert({
+    try {
+      const totalAllowances = allowances.reduce((s, a) => s + a.amount, 0);
+      const employeeRef = await addDoc(collection(firebase.db, "employees"), {
         ...data,
         allowances: totalAllowances,
         account_active: Boolean(data.email),
-      })
-      .select()
-      .single();
-    if (empErr || !emp) {
-      setError(empErr?.message ?? "Failed to create employee");
-      return;
+        created_at: new Date().toISOString(),
+      });
+      // Insert allowances
+      if (allowances.length > 0) {
+        for (const allowance of allowances.filter((a) => a.type)) {
+          await addDoc(collection(firebase.db, "allowances"), {
+            employee_id: employeeRef.id,
+            type: allowance.type,
+            amount: allowance.amount,
+          });
+        }
+      }
+      // Insert deductions
+      if (deductionItems.length > 0) {
+        for (const deduction of deductionItems.filter((d) => d.type)) {
+          await addDoc(collection(firebase.db, "deductions"), {
+            employee_id: employeeRef.id,
+            type: deduction.type,
+            amount: deduction.amount,
+          });
+        }
+      }
+      navigate({ to: "/employees" });
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to create employee",
+      );
     }
-
-    // Insert allowances
-    if (allowances.length > 0) {
-      await supabase
-        .from("allowances")
-        .insert(
-          allowances
-            .filter((a) => a.type)
-            .map((a) => ({
-              employee_id: emp.id,
-              type: a.type,
-              amount: a.amount,
-            })),
-        );
-    }
-    // Insert deductions
-    if (deductionItems.length > 0) {
-      await supabase
-        .from("deductions")
-        .insert(
-          deductionItems
-            .filter((d) => d.type)
-            .map((d) => ({
-              employee_id: emp.id,
-              type: d.type,
-              amount: d.amount,
-            })),
-        );
-    }
-
-    navigate({ to: "/employees" });
   };
 
   const addAllowance = () =>

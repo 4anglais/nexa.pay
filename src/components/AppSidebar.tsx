@@ -10,8 +10,9 @@ import {
   X,
 } from "lucide-react";
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { firebase } from "@/integrations/firebase/client";
 import { Button } from "@/components/ui/button";
+import { signOut } from "firebase/auth";
 
 const navItems = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -26,7 +27,7 @@ export function AppSidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    await signOut(firebase.auth);
     window.location.href = "/login";
   };
 

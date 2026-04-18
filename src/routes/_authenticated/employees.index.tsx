@@ -1,10 +1,18 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { firebase } from "@/integrations/firebase/client";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Search, Pencil, Trash2 } from "lucide-react";
+import {
+  collection,
+  query,
+  orderBy,
+  getDocs,
+  deleteDoc,
+  doc,
+} from "firebase/firestore";
 
 export const Route = createFileRoute("/_authenticated/employees/")({
   head: () => ({
@@ -35,11 +43,14 @@ function EmployeesIndexPage() {
 
   const loadEmployees = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from("employees")
-      .select("*")
-      .order("full_name");
-    setEmployees((data as Employee[]) ?? []);
+    const employeesSnapshot = await getDocs(
+      query(collection(firebase.db, "employees"), orderBy("full_name")),
+    );
+    const employeesData = employeesSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as Employee[];
+    setEmployees(employeesData);
     setLoading(false);
   };
 
@@ -49,7 +60,7 @@ function EmployeesIndexPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this employee?")) return;
-    await supabase.from("employees").delete().eq("id", id);
+    await deleteDoc(doc(firebase.db, "employees", id));
     loadEmployees();
   };
 

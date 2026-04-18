@@ -6,12 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Loader2, Play } from "lucide-react";
-import { collection, query, getDocs, addDoc, where } from "firebase/firestore";
+import { collection, getDocs, addDoc, doc, getDoc } from "firebase/firestore";
 
 export const Route = createFileRoute("/_authenticated/payroll")({
-  head: () => ({
-    meta: [{ title: "Payroll — NexaPayslip" }],
-  }),
+  head: () => ({ meta: [{ title: "Payroll — NexaPayslip" }] }),
   component: PayrollPage,
 });
 
@@ -24,13 +22,11 @@ interface Employee {
 
 interface Deduction {
   employee_id: string;
-  type: string;
   amount: number;
 }
 
 interface Allowance {
   employee_id: string;
-  type: string;
   amount: number;
 }
 
@@ -43,60 +39,49 @@ interface CompanySettings {
 function PayrollPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [deductions, setDeductions] = useState<Deduction[]>([]);
-  const [allowanceRows, setAllowanceRows] = useState<Allowance[]>([]);
+  const [allowances, setAllowances] = useState<Allowance[]>([]);
   const [settings, setSettings] = useState<CompanySettings>({
     paye_rate: 0,
     napsa_rate: 5,
     nhima_rate: 1,
   });
+
   const [month, setMonth] = useState(
     String(new Date().getMonth() + 1).padStart(2, "0"),
   );
   const [year, setYear] = useState(new Date().getFullYear());
+
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<string | null>(null);
+
+  // 🔐 AUTH CHECK (IMPORTANT FIX)
+  const isLoggedIn = () => !!firebase.auth.currentUser;
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch employees
-        const employeesSnapshot = await getDocs(
-          collection(firebase.db, "employees"),
+        const empSnap = await getDocs(collection(firebase.db, "employees"));
+        setEmployees(
+          empSnap.docs.map((d) => ({
+            id: d.id,
+            ...(d.data() as Omit<Employee, "id">),
+          })),
         );
-        const employeesData = employeesSnapshot.docs.map(
-          (doc) => ({ id: doc.id, ...doc.data() }) as Employee,
-        );
-        setEmployees(employeesData);
 
-        // Fetch deductions
-        const deductionsSnapshot = await getDocs(
-          collection(firebase.db, "deductions"),
-        );
-        const deductionsData = deductionsSnapshot.docs.map(
-          (doc) => ({ id: doc.id, ...doc.data() }) as Deduction,
-        );
-        setDeductions(deductionsData);
+        const dedSnap = await getDocs(collection(firebase.db, "deductions"));
+        setDeductions(dedSnap.docs.map((d) => d.data() as Deduction));
 
-        // Fetch allowances
-        const allowancesSnapshot = await getDocs(
-          collection(firebase.db, "allowances"),
-        );
-        const allowancesData = allowancesSnapshot.docs.map(
-          (doc) => ({ id: doc.id, ...doc.data() }) as Allowance,
-        );
-        setAllowanceRows(allowancesData);
+        const allowSnap = await getDocs(collection(firebase.db, "allowances"));
+        setAllowances(allowSnap.docs.map((d) => d.data() as Allowance));
 
-        // Fetch company settings
-        const settingsSnapshot = await getDocs(
-          query(collection(firebase.db, "company_settings")),
-        );
-        if (!settingsSnapshot.empty) {
-          const settingsData =
-            settingsSnapshot.docs[0].data() as CompanySettings;
-          setSettings(settingsData);
+        const settingsRef = doc(firebase.db, "company_settings", "default");
+        const settingsSnap = await getDoc(settingsRef);
+
+        if (settingsSnap.exists()) {
+          setSettings(settingsSnap.data() as CompanySettings);
         }
-      } catch (error) {
-        console.error("Error fetching data:", error);
+      } catch (err) {
+        console.error("FETCH ERROR:", err);
       }
     };
 
@@ -118,96 +103,89 @@ function PayrollPage() {
     "December",
   ];
 
-  const getEmployeeGross = (emp: Employee) => {
-    const empAllowances = allowanceRows.filter((a) => a.employee_id === emp.id);
-    const totalAllowances =
-      empAllowances.length > 0
-        ? empAllowances.reduce((s, a) => s + Number(a.amount), 0)
-        : Number(emp.allowances);
-    return Number(emp.basic_salary) + totalAllowances;
+  const getGross = (emp: Employee) => {
+    const totalAllowances = allowances
+      .filter((a) => a.employee_id === emp.id)
+      .reduce((s, a) => s + Number(a.amount || 0), 0);
+
+    return Number(emp.basic_salary || 0) + totalAllowances;
   };
 
-  const getEmployeeDeductions = (emp: Employee, gross: number) => {
-    const empDed = deductions.filter((d) => d.employee_id === emp.id);
-    const customTotal = empDed.reduce((s, d) => s + Number(d.amount), 0);
+  const getDeductions = (emp: Employee, gross: number) => {
+    const custom = deductions
+      .filter((d) => d.employee_id === emp.id)
+      .reduce((s, d) => s + Number(d.amount || 0), 0);
+
     const paye = gross * (settings.paye_rate / 100);
     const napsa = gross * (settings.napsa_rate / 100);
     const nhima = gross * (settings.nhima_rate / 100);
-    return paye + napsa + nhima + customTotal;
+
+    return paye + napsa + nhima + custom;
   };
 
   const runPayroll = async () => {
-    if (employees.length === 0) return;
+    // 🔥 FIX: auth check (THIS IS YOUR MAIN ISSUE)
+    if (!isLoggedIn()) {
+      setResult("❌ You must be logged in to run payroll.");
+      return;
+    }
+
+    if (!employees.length) return;
+
     setRunning(true);
     setResult(null);
 
     try {
-      // Create payroll run
-      const payrollRunRef = await addDoc(
-        collection(firebase.db, "payroll_runs"),
-        {
-          month: months[parseInt(month) - 1],
-          year,
-          created_at: new Date().toISOString(),
-        },
-      );
-
-      const payslips = employees.map((emp) => {
-        const gross = getEmployeeGross(emp);
-        const totalDeductions = getEmployeeDeductions(emp, gross);
-        const netPay = gross - totalDeductions;
-        return {
-          employee_id: emp.id,
-          payroll_run_id: payrollRunRef.id,
-          gross_pay: gross,
-          total_deductions: totalDeductions,
-          net_pay: netPay,
-          created_at: new Date().toISOString(),
-        };
+      const runRef = await addDoc(collection(firebase.db, "payroll_runs"), {
+        month: months[parseInt(month) - 1],
+        year,
+        created_at: new Date().toISOString(),
       });
 
-      // Add payslips
-      for (const payslip of payslips) {
-        await addDoc(collection(firebase.db, "payslips"), payslip);
+      for (const emp of employees) {
+        const gross = getGross(emp);
+        const ded = getDeductions(emp, gross);
+
+        await addDoc(collection(firebase.db, "payslips"), {
+          employee_id: emp.id,
+          payroll_run_id: runRef.id,
+          gross_pay: gross,
+          total_deductions: ded,
+          net_pay: gross - ded,
+          created_at: new Date().toISOString(),
+        });
       }
 
-      setResult(
-        `Payroll run completed! ${payslips.length} payslips generated for ${months[parseInt(month) - 1]} ${year}.`,
-      );
+      setResult("✅ Payroll completed successfully.");
     } catch (err) {
+      console.error("PAYROLL ERROR:", err);
       setResult(
-        `Error: ${err instanceof Error ? err.message : "Unknown error"}`,
+        err instanceof Error ? `❌ ${err.message}` : "❌ Unknown payroll error",
       );
     } finally {
       setRunning(false);
     }
   };
 
-  const formatCurrency = (n: number) =>
+  const format = (n: number) =>
     new Intl.NumberFormat("en-ZM", {
       style: "currency",
       currency: "ZMW",
     }).format(n);
 
   return (
-    <>
-      <PageHeader
-        title="Run Payroll"
-        description="Generate payslips for your employees"
-      />
+    <div className="p-6">
+      <PageHeader title="Run Payroll" description="Generate payslips" />
 
-      <div className="mx-auto max-w-4xl space-y-6">
-        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-bold text-card-foreground">
-            Select Period
-          </h2>
-          <div className="flex flex-wrap gap-4">
-            <div className="space-y-2">
-              <Label className="font-semibold">Month</Label>
+      <div className="space-y-4">
+        <div className="border p-4 rounded-lg">
+          <div className="flex gap-4 items-end">
+            <div>
+              <Label>Month</Label>
               <select
                 value={month}
                 onChange={(e) => setMonth(e.target.value)}
-                className="h-9 rounded-md border border-input bg-background px-3 text-sm font-semibold"
+                className="border p-2 rounded"
               >
                 {months.map((m, i) => (
                   <option key={m} value={String(i + 1).padStart(2, "0")}>
@@ -216,99 +194,58 @@ function PayrollPage() {
                 ))}
               </select>
             </div>
-            <div className="space-y-2">
-              <Label className="font-semibold">Year</Label>
+
+            <div>
+              <Label>Year</Label>
               <Input
                 type="number"
                 value={year}
                 onChange={(e) => setYear(Number(e.target.value))}
-                className="w-28"
               />
             </div>
-            <div className="flex items-end">
-              <Button
-                onClick={runPayroll}
-                disabled={running || employees.length === 0}
-              >
-                {running ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Play className="h-4 w-4" strokeWidth={1.5} />
-                )}
-                Run Payroll
-              </Button>
-            </div>
+
+            <Button onClick={runPayroll} disabled={running}>
+              {running ? <Loader2 className="animate-spin" /> : <Play />}
+              Run Payroll
+            </Button>
           </div>
-          {result && (
-            <div
-              className={`mt-4 rounded-lg px-4 py-3 text-sm font-semibold ${result.startsWith("Error") ? "bg-destructive/10 text-destructive" : "bg-success/10 text-success"}`}
-            >
-              {result}
-            </div>
-          )}
+
+          {result && <p className="mt-2 font-medium">{result}</p>}
         </div>
 
-        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-bold text-card-foreground">
-            Payroll Preview ({employees.length} employees)
-          </h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="px-4 py-3 text-left font-bold text-muted-foreground">
-                    Employee
-                  </th>
-                  <th className="px-4 py-3 text-right font-bold text-muted-foreground">
-                    Gross Pay
-                  </th>
-                  <th className="px-4 py-3 text-right font-bold text-muted-foreground">
-                    Deductions
-                  </th>
-                  <th className="px-4 py-3 text-right font-bold text-muted-foreground">
-                    Net Pay
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {employees.map((emp) => {
-                  const gross = getEmployeeGross(emp);
-                  const totalDed = getEmployeeDeductions(emp, gross);
-                  return (
-                    <tr
-                      key={emp.id}
-                      className="border-b border-border last:border-0"
-                    >
-                      <td className="px-4 py-3 font-semibold text-card-foreground">
-                        {emp.full_name}
-                      </td>
-                      <td className="px-4 py-3 text-right text-card-foreground">
-                        {formatCurrency(gross)}
-                      </td>
-                      <td className="px-4 py-3 text-right text-destructive">
-                        {formatCurrency(totalDed)}
-                      </td>
-                      <td className="px-4 py-3 text-right font-bold text-success">
-                        {formatCurrency(gross - totalDed)}
-                      </td>
-                    </tr>
-                  );
-                })}
-                {employees.length === 0 && (
-                  <tr>
-                    <td
-                      colSpan={4}
-                      className="px-4 py-12 text-center font-light italic text-muted-foreground"
-                    >
-                      No employees found. Add employees first.
+        <div className="border rounded-lg p-4">
+          <h2 className="font-bold mb-2">Preview ({employees.length})</h2>
+
+          <table className="w-full text-sm">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th className="text-right">Gross</th>
+                <th className="text-right">Deductions</th>
+                <th className="text-right">Net</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {employees.map((e) => {
+                const gross = getGross(e);
+                const ded = getDeductions(e, gross);
+
+                return (
+                  <tr key={e.id}>
+                    <td>{e.full_name}</td>
+                    <td className="text-right">{format(gross)}</td>
+                    <td className="text-right">{format(ded)}</td>
+                    <td className="text-right font-bold">
+                      {format(gross - ded)}
                     </td>
                   </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
-    </>
+    </div>
   );
 }

@@ -4,15 +4,30 @@ import { getRequest } from "@tanstack/react-start/server";
 import { getAuth } from "firebase/auth";
 import { initializeApp } from "firebase/app";
 
+const requiredServerFirebaseEnvVars = [
+  "FIREBASE_API_KEY",
+  "FIREBASE_AUTH_DOMAIN",
+  "FIREBASE_PROJECT_ID",
+  "FIREBASE_STORAGE_BUCKET",
+  "FIREBASE_MESSAGING_SENDER_ID",
+  "FIREBASE_APP_ID",
+] as const;
+
+for (const key of requiredServerFirebaseEnvVars) {
+  if (!process.env[key]) {
+    throw new Error(`Missing Firebase server environment variable: ${key}`);
+  }
+}
+
 // Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyA0Lh98DsRMDNm8WUzdXB8-p6arb57cDOA",
-  authDomain: "madebyange1.firebaseapp.com",
-  projectId: "madebyange1",
-  storageBucket: "madebyange1.appspot.com",
-  messagingSenderId: "603537844857",
-  appId: "1:603537844857:web:f237a1881377daed9e42a8",
-  measurementId: "G-YJJ5414K0P",
+  apiKey: process.env.FIREBASE_API_KEY,
+  authDomain: process.env.FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.FIREBASE_PROJECT_ID,
+  storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.FIREBASE_APP_ID,
+  measurementId: process.env.FIREBASE_MEASUREMENT_ID,
 };
 
 // Initialize Firebase

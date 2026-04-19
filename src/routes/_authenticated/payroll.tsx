@@ -54,7 +54,7 @@ function PayrollPage() {
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<string | null>(null);
 
-  // 🔐 AUTH CHECK (IMPORTANT FIX)
+  // AUTH CHECK (IMPORTANT FIX)
   const isLoggedIn = () => !!firebase.auth.currentUser;
 
   useEffect(() => {
@@ -126,7 +126,7 @@ function PayrollPage() {
   const runPayroll = async () => {
     // 🔥 FIX: auth check (THIS IS YOUR MAIN ISSUE)
     if (!isLoggedIn()) {
-      setResult("❌ You must be logged in to run payroll.");
+      setResult(" You must be logged in to run payroll.");
       return;
     }
 
@@ -160,7 +160,7 @@ function PayrollPage() {
     } catch (err) {
       console.error("PAYROLL ERROR:", err);
       setResult(
-        err instanceof Error ? `❌ ${err.message}` : "❌ Unknown payroll error",
+        err instanceof Error ? ` ${err.message}` : " Unknown payroll error",
       );
     } finally {
       setRunning(false);

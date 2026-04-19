@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, ArrowLeft } from "lucide-react";
 import {
+  type AuthError,
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithEmailAndPassword,
@@ -31,6 +32,30 @@ const authSchema = z.object({
 });
 
 type AuthFormData = z.infer<typeof authSchema>;
+
+function getAuthErrorMessage(error: unknown) {
+  if (!error || typeof error !== "object" || !("code" in error)) {
+    return error instanceof Error ? error.message : "Authentication failed";
+  }
+
+  switch ((error as AuthError).code) {
+    case "auth/invalid-credential":
+    case "auth/invalid-login-credentials":
+      return "Invalid email or password, or Email/Password sign-in is not enabled in Firebase.";
+    case "auth/user-not-found":
+      return "No account exists for that email address.";
+    case "auth/wrong-password":
+      return "Incorrect password.";
+    case "auth/email-already-in-use":
+      return "An account with that email already exists.";
+    case "auth/popup-closed-by-user":
+      return "Google sign-in was cancelled before completion.";
+    case "auth/unauthorized-domain":
+      return "This domain is not authorized in Firebase Authentication.";
+    default:
+      return error instanceof Error ? error.message : "Authentication failed";
+  }
+}
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -63,9 +88,7 @@ function LoginPage() {
       await signInWithPopup(firebase.auth, provider);
       navigate({ to: "/dashboard" });
     } catch (err: unknown) {
-      setError(
-        err instanceof Error ? err.message : "Google authentication failed",
-      );
+      setError(getAuthErrorMessage(err));
     } finally {
       setIsGoogleLoading(false);
     }
@@ -89,7 +112,7 @@ function LoginPage() {
       }
       navigate({ to: "/dashboard" });
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Authentication failed");
+      setError(getAuthErrorMessage(err));
     }
   };
 

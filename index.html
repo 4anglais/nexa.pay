@@ -6,6 +6,25 @@
     <title>NexaPayslips</title>
   </head>
   <body>
+    <div id="app-fallback" style="min-height:100vh;background:#edf6ff;color:#111827;font-family:Raleway,system-ui,sans-serif;">
+      <header style="position:sticky;top:0;z-index:10;border-bottom:1px solid rgba(15,23,42,.08);background:rgba(237,246,255,.92);backdrop-filter:blur(12px);">
+        <div style="max-width:1120px;margin:0 auto;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;">
+          <strong style="font-size:1.25rem;letter-spacing:-.03em;">NexaPayslips</strong>
+          <a href="/login" style="text-decoration:none;background:#111827;color:#fff;padding:10px 16px;border-radius:999px;font-weight:700;">Sign In</a>
+        </div>
+      </header>
+      <main style="max-width:1120px;margin:0 auto;padding:72px 24px 96px;">
+        <section style="max-width:760px;">
+          <p style="margin:0 0 12px;color:#475569;font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:.8rem;">Payroll Management</p>
+          <h1 style="margin:0;font-size:clamp(2.5rem,6vw,4.75rem);line-height:1;font-weight:900;letter-spacing:-.05em;">Payroll management reimagined for speed.</h1>
+          <p style="margin:24px 0 0;color:#475569;font-size:1.125rem;line-height:1.7;">Streamline your company's payroll, generate professional payslips, and manage employees with a modern platform built for Zambia.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:16px;margin-top:32px;">
+            <a href="/login" style="text-decoration:none;background:#111827;color:#fff;padding:14px 22px;border-radius:16px;font-weight:800;">Start for free</a>
+            <span style="display:inline-flex;align-items:center;color:#64748b;font-weight:600;">Loading app...</span>
+          </div>
+        </section>
+      </main>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

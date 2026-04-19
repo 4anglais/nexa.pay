@@ -5,16 +5,26 @@ import { onAuthStateChanged } from "firebase/auth";
 
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async () => {
-    return new Promise((resolve, reject) => {
-      const unsubscribe = onAuthStateChanged(firebase.auth, (user) => {
+    if ("authStateReady" in firebase.auth) {
+      await firebase.auth.authStateReady();
+
+      if (!firebase.auth.currentUser) {
+        throw redirect({ to: "/login" });
+      }
+
+      return;
+    }
+
+    await new Promise<void>((resolve) => {
+      const unsubscribe = onAuthStateChanged(firebase.auth, () => {
         unsubscribe();
-        if (user) {
-          resolve();
-        } else {
-          reject(redirect({ to: "/login" }));
-        }
+        resolve();
       });
     });
+
+    if (!firebase.auth.currentUser) {
+      throw redirect({ to: "/login" });
+    }
   },
   component: AuthenticatedLayout,
 });

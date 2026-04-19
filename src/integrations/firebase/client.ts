@@ -15,17 +15,31 @@ const firebaseConfig = {
   measurementId: "G-YJJ5414K0P",
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+let appInstance: ReturnType<typeof initializeApp> | null = null;
+let authInstance: ReturnType<typeof getAuth> | null = null;
+let dbInstance: ReturnType<typeof getFirestore> | null = null;
+let storageInstance: ReturnType<typeof getStorage> | null = null;
 
-// Initialize Firebase services
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const storage = getStorage(app);
+function getAppInstance() {
+  if (!appInstance) {
+    appInstance = initializeApp(firebaseConfig);
+  }
 
-// Export a single object for convenience
+  return appInstance;
+}
+
+// Lazily initialize Firebase so public routes can render even if auth is never used.
 export const firebase = {
-  auth,
-  db,
-  storage,
+  get auth() {
+    authInstance ??= getAuth(getAppInstance());
+    return authInstance;
+  },
+  get db() {
+    dbInstance ??= getFirestore(getAppInstance());
+    return dbInstance;
+  },
+  get storage() {
+    storageInstance ??= getStorage(getAppInstance());
+    return storageInstance;
+  },
 };

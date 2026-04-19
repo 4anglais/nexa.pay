@@ -6,14 +6,27 @@ import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
 
+const requiredAdminEnvVars = [
+  "FIREBASE_PROJECT_ID",
+  "FIREBASE_STORAGE_BUCKET",
+  "FIREBASE_CLIENT_EMAIL",
+  "FIREBASE_PRIVATE_KEY",
+] as const;
+
+for (const key of requiredAdminEnvVars) {
+  if (!process.env[key]) {
+    throw new Error(`Missing Firebase admin environment variable: ${key}`);
+  }
+}
+
 // Initialize Firebase Admin SDK
 const adminApp = initializeApp({
   credential: cert({
-    projectId: "madebyange1",
+    projectId: process.env.FIREBASE_PROJECT_ID,
     clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
     privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
   }),
-  storageBucket: "madebyange1.appspot.com",
+  storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
 });
 
 // Initialize Firebase Admin services

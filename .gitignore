@@ -10,6 +10,7 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+coverage
 .output
 .vinxi
 .tanstack/**
@@ -17,10 +18,28 @@ dist-ssr
 *.local
 .env
 .env.*
+*.tmp
+*.temp
+*.bak
+*.orig
+*.rej
+*.pid
+tmp/
+temp/
 
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars
+.netlify/
+.firebase/
+.vercel/
+
+# Local-only notes and scratch docs
+*.local.md
+*.notes.md
+NOTES.md
+SCRATCH.md
+TODO.local.md
 
 # Editor directories and files
 .vscode/*

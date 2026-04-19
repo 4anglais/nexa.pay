@@ -21,12 +21,12 @@ function LandingPage() {
             <a href="#pricing" className="transition-colors hover:text-primary/60">Pricing</a>
           </nav>
           <div className="flex items-center gap-4">
-            <Link to="/login">
-              <Button variant="ghost" size="sm" className="font-semibold">Sign In</Button>
-            </Link>
-            <Link to="/login">
-              <Button size="sm" className="font-bold">Get Started</Button>
-            </Link>
+            <Button asChild variant="ghost" size="sm" className="font-semibold">
+              <Link to="/login">Sign In</Link>
+            </Button>
+            <Button asChild size="sm" className="font-bold">
+              <Link to="/login">Get Started</Link>
+            </Button>
           </div>
         </div>
       </header>
@@ -44,11 +44,11 @@ function LandingPage() {
                 Streamline your company's payroll, generate professional payslips, and manage employees with the most modern platform built for Zambia.
               </p>
               <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-                <Link to="/login">
-                  <Button size="lg" className="h-12 px-8 text-base font-bold">
+                <Button asChild size="lg" className="h-12 px-8 text-base font-bold">
+                  <Link to="/login">
                     Start for free <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
                 <p className="text-sm text-muted-foreground">No credit card required</p>
               </div>
             </div>
@@ -122,11 +122,9 @@ function LandingPage() {
                 Join hundreds of businesses using NexaPayslips to manage their payroll efficiently every month.
               </p>
               <div className="mt-10 flex justify-center">
-                <Link to="/login">
-                  <Button size="lg" variant="secondary" className="h-12 px-8 font-bold text-primary">
-                    Create your account now
-                  </Button>
-                </Link>
+                <Button asChild size="lg" variant="secondary" className="h-12 px-8 font-bold text-primary">
+                  <Link to="/login">Create your account now</Link>
+                </Button>
               </div>
             </div>
           </div>

@@ -1,18 +1,17 @@
 # NexaPayslips
 
-NexaPayslips is a payroll web app built for Zambian businesses. It handles the day-to-day flow of keeping employee records, configuring statutory rates, running payroll, generating payslips, and verifying payslips through QR-based validation.
+NexaPayslips is a payroll web app built for businesses. It handles the day-to-day flow of keeping employee records, configuring statutory rates, running payroll, generating payslips.
 
-The project is built with React 19, TanStack Router, Vite, Tailwind CSS, and Firebase. The frontend talks directly to Firebase Auth and Firestore, with an admin client available for server-side work when needed.
+The project is built with React 19, TanStack Router, Vite, Tailwind CSS, and Firebase. The frontend talks directly to Firebase Auth and Firestore, with an admin client available for server-side when needed.
 
 ## What the app does
 
-- Public landing page for the product
 - Email/password and Google sign-in with Firebase Authentication
 - Employee management with salary, allowance, and deduction data
 - Company payroll settings for PAYE, NAPSA, and NHIMA rates
 - Payroll run screen with a live gross/deductions/net preview
 - Payslip history and individual payslip viewing
-- QR verification page to confirm whether a payslip is valid
+- QR verification page to confirm whether a payslip is valid (Coming soon)
 
 ## Stack
 
@@ -117,9 +116,8 @@ At minimum, the payroll flow expects:
 
 ## Notes on the current implementation
 
-- The app is strongly oriented around Zambian payroll terminology and currency (`ZMW`).
+- The app is strongly oriented around small business payroll terminology and currency (`ZMW`).
 - Payslip verification is handled through a signature built into the QR payload.
-- The Netlify config is already set to build from `dist` using `npm run build`.
 - There is no test suite wired up yet, so changes are currently validated by running the app and checking flows manually.
 
 ## Scripts

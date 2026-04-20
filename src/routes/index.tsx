@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Button } from "@/components/ui/button";
 import {
   ArrowRight,
   CheckCircle2,
@@ -7,8 +6,12 @@ import {
   Zap,
   Calculator,
   Users,
-  ArrowUpRight,
+  FileText,
+  Mail,
+  Lock,
+  ChevronRight,
 } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
 
 import { MAINTENANCE_MODE } from "@/config/app";
 
@@ -16,41 +19,81 @@ export const Route = createFileRoute("/")({
   component: LandingPage,
 });
 
+// ─── Data ─────────────────────────────────────────────────────────────────────
+const SLIDES = [
+  {
+    icon: Calculator,
+    title: "Smart Payroll Runs",
+    desc: "Run full payroll — salaries, PAYE, NAPSA & NHIMA — in under 60 seconds. Zero spreadsheets.",
+    accent: "#38bdf8",
+  },
+  {
+    icon: FileText,
+    title: "PDF Payslip Generation",
+    desc: "Beautiful, compliant PDF payslips generated instantly and ready to download or share.",
+    accent: "#a78bfa",
+  },
+  {
+    icon: Mail,
+    title: "Email Delivery",
+    desc: "Deliver payslips directly to every employee inbox with one click. No manual sending.",
+    accent: "#34d399",
+  },
+  {
+    icon: Users,
+    title: "Employee Management",
+    desc: "Centralised employee records, contract history and payroll data — always up to date.",
+    accent: "#fb923c",
+  },
+  {
+    icon: Lock,
+    title: "Secure & Encrypted",
+    desc: "End-to-end encrypted payroll data with automated backups. Your data stays safe.",
+    accent: "#f472b6",
+  },
+];
+
 const FEATURES = [
   {
-    title: "Smart Payroll Runs",
-    desc: "Automated salary, PAYE, NAPSA & NHIMA calculations — no spreadsheets.",
     icon: Calculator,
+    title: "Smart Payroll Runs",
+    desc: "Automated salary, PAYE, NAPSA & NHIMA calculations — no spreadsheets, no errors.",
+    accent: "#38bdf8",
     tag: "Core",
   },
   {
-    title: "Employee Management",
-    desc: "Centralised employee records, contracts and payroll history in one place.",
     icon: Users,
+    title: "Employee Management",
+    desc: "Centralised records, contracts and payroll history in one beautiful interface.",
+    accent: "#a78bfa",
     tag: "Core",
   },
   {
-    title: "Payslip Generation",
-    desc: "Professional, downloadable PDF payslips generated in seconds.",
     icon: Zap,
+    title: "Instant Payslips",
+    desc: "Professional, branded PDF payslips generated and delivered in seconds.",
+    accent: "#34d399",
     tag: "Output",
   },
   {
-    title: "Compliance Ready",
-    desc: "Built end-to-end for Zambian statutory regulations and filing periods.",
     icon: Shield,
+    title: "ZRA Compliant",
+    desc: "Built end-to-end for Zambian statutory regulations and all filing periods.",
+    accent: "#fb923c",
     tag: "Legal",
   },
   {
-    title: "Instant Sharing",
-    desc: "Deliver payslips directly to employee inboxes or download in bulk.",
-    icon: CheckCircle2,
+    icon: Mail,
+    title: "One-click Delivery",
+    desc: "Email payslips to every employee simultaneously with a single action.",
+    accent: "#f472b6",
     tag: "Output",
   },
   {
-    title: "Secure Storage",
-    desc: "End-to-end encrypted payroll data with automated backup support.",
-    icon: Shield,
+    icon: Lock,
+    title: "Encrypted Storage",
+    desc: "Bank-grade security with end-to-end encryption and automated backups.",
+    accent: "#facc15",
     tag: "Security",
   },
 ];
@@ -61,326 +104,1153 @@ const STATS = [
   { value: "0 ZMW", label: "Setup fee" },
 ];
 
+// ─── Shared glass styles ──────────────────────────────────────────────────────
+const glass: React.CSSProperties = {
+  background: "rgba(255,255,255,0.06)",
+  backdropFilter: "blur(20px) saturate(180%)",
+  WebkitBackdropFilter: "blur(20px) saturate(180%)",
+  border: "1px solid rgba(255,255,255,0.13)",
+  boxShadow:
+    "0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.16)",
+};
+
+const glassStrong: React.CSSProperties = {
+  background: "rgba(255,255,255,0.09)",
+  backdropFilter: "blur(32px) saturate(200%)",
+  WebkitBackdropFilter: "blur(32px) saturate(200%)",
+  border: "1px solid rgba(255,255,255,0.18)",
+  boxShadow:
+    "0 16px 48px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.20)",
+};
+
+// ─── Global keyframes injected once ──────────────────────────────────────────
+const GLOBAL_CSS = `
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+  @keyframes orbFloat {
+    0%,100% { transform:translate(0,0) scale(1); }
+    33%      { transform:translate(40px,-30px) scale(1.05); }
+    66%      { transform:translate(-20px,20px) scale(0.97); }
+  }
+  @keyframes fadeSlideUp {
+    from { opacity:0; transform:translateY(28px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+  @keyframes shimmer {
+    0%   { background-position:-200% center; }
+    100% { background-position:200% center; }
+  }
+  @keyframes pulse-ring {
+    0%,100% { transform:scale(1); opacity:0.7; }
+    50%     { transform:scale(1.4); opacity:0; }
+  }
+  @keyframes ticker {
+    0%   { transform:translateX(0); }
+    100% { transform:translateX(-50%); }
+  }
+  @keyframes slideReveal {
+    from { opacity:0; transform:translateY(12px) scale(0.98); }
+    to   { opacity:1; transform:translateY(0) scale(1); }
+  }
+  /* Apple-style scroll reveal */
+  .feat-card {
+    opacity: 0;
+    transform: translateY(60px) scale(0.96);
+    transition: opacity 0.75s cubic-bezier(.16,1,.3,1),
+                transform 0.75s cubic-bezier(.16,1,.3,1),
+                box-shadow 0.3s ease;
+  }
+  .feat-card.visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  .feat-card:hover {
+    transform: translateY(-5px) scale(1.01) !important;
+  }
+  .feat-section-title {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.9s cubic-bezier(.16,1,.3,1), transform 0.9s cubic-bezier(.16,1,.3,1);
+  }
+  .feat-section-title.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
+
+// ─── Orbs ─────────────────────────────────────────────────────────────────────
+function Orbs() {
+  return (
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        overflow: "hidden",
+        pointerEvents: "none",
+      }}
+      aria-hidden
+    >
+      <div
+        style={{
+          position: "absolute",
+          width: 700,
+          height: 700,
+          borderRadius: "50%",
+          top: "-15%",
+          left: "-10%",
+          background:
+            "radial-gradient(circle, rgba(56,189,248,0.16) 0%, transparent 70%)",
+          animation: "orbFloat 14s ease-in-out infinite",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          width: 600,
+          height: 600,
+          borderRadius: "50%",
+          bottom: "-10%",
+          right: "-8%",
+          background:
+            "radial-gradient(circle, rgba(167,139,250,0.16) 0%, transparent 70%)",
+          animation: "orbFloat 18s ease-in-out infinite reverse",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          width: 400,
+          height: 400,
+          borderRadius: "50%",
+          top: "40%",
+          left: "38%",
+          background:
+            "radial-gradient(circle, rgba(52,211,153,0.10) 0%, transparent 70%)",
+          animation: "orbFloat 22s ease-in-out infinite",
+        }}
+      />
+    </div>
+  );
+}
+
+// ─── Ticker ───────────────────────────────────────────────────────────────────
+const TICKER_ITEMS = [
+  "Payroll in 60 seconds",
+  "ZRA Compliant",
+  "PDF Payslips",
+  "PAYE · NAPSA · NHIMA",
+  "Built for Zambia",
+  "Zero setup fee",
+  "Encrypted storage",
+  "One-click delivery",
+];
+
+function Ticker() {
+  const items = [...TICKER_ITEMS, ...TICKER_ITEMS];
+  return (
+    <div
+      style={{
+        overflow: "hidden",
+        borderTop: "1px solid rgba(255,255,255,0.07)",
+        borderBottom: "1px solid rgba(255,255,255,0.07)",
+        padding: "10px 0",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          gap: "3rem",
+          width: "max-content",
+          animation: "ticker 30s linear infinite",
+        }}
+      >
+        {items.map((item, i) => (
+          <span
+            key={i}
+            style={{
+              fontSize: "0.68rem",
+              fontFamily: "monospace",
+              letterSpacing: "0.14em",
+              textTransform: "uppercase",
+              color: "rgba(255,255,255,0.3)",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {item}
+            <span
+              style={{ marginLeft: "3rem", color: "rgba(255,255,255,0.12)" }}
+            >
+              ·
+            </span>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Maintenance carousel ─────────────────────────────────────────────────────
+function MaintenanceCarousel() {
+  const [active, setActive] = useState(0);
+  const [leaving, setLeaving] = useState(false);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setLeaving(true);
+      setTimeout(() => {
+        setActive((p) => (p + 1) % SLIDES.length);
+        setLeaving(false);
+      }, 380);
+    }, 5000);
+    return () => clearInterval(id);
+  }, []);
+
+  const slide = SLIDES[active];
+  const Icon = slide.icon;
+
+  return (
+    <div style={{ width: "100%", maxWidth: 420 }}>
+      <div
+        style={{
+          ...glassStrong,
+          borderRadius: 24,
+          padding: "2rem",
+          transition: "opacity 0.38s ease, transform 0.38s ease",
+          opacity: leaving ? 0 : 1,
+          transform: leaving
+            ? "translateY(14px) scale(0.97)"
+            : "translateY(0) scale(1)",
+        }}
+      >
+        <div
+          style={{
+            width: 52,
+            height: 52,
+            borderRadius: 14,
+            background: `${slide.accent}18`,
+            border: `1px solid ${slide.accent}44`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: "1.25rem",
+            boxShadow: `0 4px 20px ${slide.accent}22`,
+          }}
+        >
+          <Icon size={22} color={slide.accent} />
+        </div>
+        <h3
+          style={{
+            fontSize: "1.15rem",
+            fontWeight: 600,
+            color: "rgba(255,255,255,0.95)",
+            marginBottom: "0.55rem",
+            letterSpacing: "-0.02em",
+          }}
+        >
+          {slide.title}
+        </h3>
+        <p
+          style={{
+            fontSize: "0.875rem",
+            lineHeight: 1.65,
+            color: "rgba(255,255,255,0.5)",
+            margin: 0,
+          }}
+        >
+          {slide.desc}
+        </p>
+      </div>
+
+      {/* Progress dots */}
+      <div
+        style={{
+          display: "flex",
+          gap: 6,
+          justifyContent: "center",
+          marginTop: "1.25rem",
+        }}
+      >
+        {SLIDES.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => setActive(i)}
+            style={{
+              width: i === active ? 24 : 7,
+              height: 7,
+              borderRadius: 99,
+              border: "none",
+              cursor: "pointer",
+              transition: "all 0.35s ease",
+              background:
+                i === active
+                  ? "rgba(255,255,255,0.8)"
+                  : "rgba(255,255,255,0.2)",
+              padding: 0,
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Scroll-reveal feature card ───────────────────────────────────────────────
+function FeatureCard({
+  icon: Icon,
+  title,
+  desc,
+  accent,
+  delay,
+}: {
+  icon: React.ElementType;
+  title: string;
+  desc: string;
+  accent: string;
+  delay: number;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          el.classList.add("visible");
+          obs.unobserve(el);
+        }
+      },
+      { threshold: 0.15 },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      className="feat-card"
+      style={{
+        ...glass,
+        borderRadius: 20,
+        padding: "1.6rem",
+        transitionDelay: `${delay}ms`,
+        cursor: "default",
+      }}
+    >
+      <div
+        style={{
+          width: 44,
+          height: 44,
+          borderRadius: 13,
+          background: `${accent}15`,
+          border: `1px solid ${accent}35`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          marginBottom: "1.1rem",
+          boxShadow: `0 4px 16px ${accent}18`,
+        }}
+      >
+        <Icon size={19} color={accent} />
+      </div>
+      <h3
+        style={{
+          fontSize: "0.95rem",
+          fontWeight: 600,
+          color: "rgba(255,255,255,0.92)",
+          marginBottom: "0.45rem",
+          letterSpacing: "-0.015em",
+        }}
+      >
+        {title}
+      </h3>
+      <p
+        style={{
+          fontSize: "0.82rem",
+          lineHeight: 1.65,
+          color: "rgba(255,255,255,0.45)",
+          margin: 0,
+        }}
+      >
+        {desc}
+      </p>
+    </div>
+  );
+}
+
+// ─── Stat glass card ──────────────────────────────────────────────────────────
+function StatCard({ value, label }: { value: string; label: string }) {
+  return (
+    <div
+      style={{
+        ...glass,
+        borderRadius: 16,
+        padding: "1.4rem 1rem",
+        textAlign: "center",
+        flex: 1,
+      }}
+    >
+      <div
+        style={{
+          fontSize: "clamp(1.5rem,3.5vw,2rem)",
+          fontWeight: 700,
+          letterSpacing: "-0.04em",
+          background:
+            "linear-gradient(135deg,#fff 0%,rgba(255,255,255,0.55) 100%)",
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+          backgroundClip: "text",
+        }}
+      >
+        {value}
+      </div>
+      <div
+        style={{
+          fontSize: "0.65rem",
+          fontFamily: "monospace",
+          letterSpacing: "0.1em",
+          textTransform: "uppercase",
+          color: "rgba(255,255,255,0.35)",
+          marginTop: "0.3rem",
+        }}
+      >
+        {label}
+      </div>
+    </div>
+  );
+}
+
+// ─── Scroll-reveal section title ──────────────────────────────────────────────
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          el.classList.add("visible");
+          obs.unobserve(el);
+        }
+      },
+      { threshold: 0.2 },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+  return (
+    <div ref={ref} className="feat-section-title">
+      {children}
+    </div>
+  );
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
 function LandingPage() {
-  // 🔥 Maintenance Mode
+  const bgStyle: React.CSSProperties = {
+    minHeight: "100vh",
+    background:
+      "linear-gradient(135deg, #080d1a 0%, #0c1526 45%, #0f172a 100%)",
+    color: "#fff",
+    fontFamily: "'Outfit', 'SF Pro Display', system-ui, sans-serif",
+    position: "relative",
+    overflowX: "hidden",
+  };
+
+  // ── MAINTENANCE ─────────────────────────────────────────────────────────────
   if (MAINTENANCE_MODE) {
     return (
-      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-6 py-12">
-        {/* Background grid */}
+      <div style={bgStyle}>
+        <style>{GLOBAL_CSS}</style>
+        <Orbs />
+        <Ticker />
+
         <div
-          className="pointer-events-none absolute inset-0 opacity-50"
           style={{
-            backgroundImage:
-              "linear-gradient(hsl(var(--border)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--border)) 1px, transparent 1px)",
-            backgroundSize: "40px 40px",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            minHeight: "calc(100vh - 40px)",
+            padding: "3rem 1.5rem",
+            gap: "2.5rem",
+            position: "relative",
+            zIndex: 10,
           }}
-        />
-        {/* Background circles */}
-        <div className="pointer-events-none absolute left-1/2 top-1/2 h-[480px] w-[480px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-border" />
-        <div className="pointer-events-none absolute left-1/2 top-1/2 h-[320px] w-[320px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-border" />
+        >
+          <div
+            style={{
+              textAlign: "center",
+              animation: "fadeSlideUp 0.7s ease both",
+            }}
+          >
+            <div
+              style={{
+                fontFamily: "monospace",
+                fontSize: "0.68rem",
+                letterSpacing: "0.2em",
+                textTransform: "uppercase",
+                color: "rgba(255,255,255,0.3)",
+                marginBottom: "1rem",
+              }}
+            >
+              NexaPayslips
+            </div>
 
-        <div className="relative z-10 flex w-full max-w-[480px] flex-col items-center text-center">
-          <p className="mb-5 text-[13px] uppercase tracking-[0.12em] text-muted-foreground">
-            NexaPayslips
-          </p>
-
-          <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-border bg-muted px-4 py-1.5">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-destructive opacity-60" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-destructive" />
-            </span>
-            <span className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-              Maintenance in progress
-            </span>
-          </div>
-
-          <h1 className="mb-4 text-[42px] font-normal leading-[1.15] tracking-tight text-foreground">
-            Back <em className="italic text-muted-foreground">shortly</em>,
-            <br />
-            better than ever.
-          </h1>
-
-          <p className="mb-10 max-w-sm text-[15px] font-light leading-relaxed text-muted-foreground">
-            We are upgrading the system to deliver a faster, more reliable
-            payroll experience.
-          </p>
-
-          <div className="mb-10 w-full overflow-hidden rounded-xl border border-border bg-muted/50">
-            {[
-              { num: "01", label: "Faster payroll processing" },
-              { num: "02", label: "PDF payslip generation" },
-              { num: "03", label: "Email delivery system" },
-            ].map((item, i, arr) => (
-              <div
-                key={item.num}
-                className={`flex items-center gap-3 px-5 py-3.5 text-left ${
-                  i < arr.length - 1 ? "border-b border-border" : ""
-                }`}
+            {/* Pulsing badge */}
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                ...glass,
+                borderRadius: 99,
+                padding: "6px 18px",
+                marginBottom: "1.5rem",
+              }}
+            >
+              <span
+                style={{
+                  position: "relative",
+                  display: "inline-flex",
+                  width: 8,
+                  height: 8,
+                }}
               >
-                <span className="min-w-[20px] font-mono text-[11px] text-muted-foreground/60">
-                  {item.num}
-                </span>
-                <span className="flex-1 text-sm text-foreground">
-                  {item.label}
-                </span>
-                <span className="rounded bg-emerald-500/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
-                  Deploying
-                </span>
-              </div>
-            ))}
+                <span
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    borderRadius: "50%",
+                    background: "#f87171",
+                    animation: "pulse-ring 2s ease-in-out infinite",
+                  }}
+                />
+                <span
+                  style={{
+                    position: "relative",
+                    width: 8,
+                    height: 8,
+                    borderRadius: "50%",
+                    background: "#ef4444",
+                    display: "inline-block",
+                  }}
+                />
+              </span>
+              <span
+                style={{
+                  fontFamily: "monospace",
+                  fontSize: "0.62rem",
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                  color: "rgba(255,255,255,0.5)",
+                }}
+              >
+                Maintenance in progress
+              </span>
+            </div>
+
+            <h1
+              style={{
+                fontSize: "clamp(2.4rem,6vw,4rem)",
+                fontWeight: 700,
+                lineHeight: 1.08,
+                letterSpacing: "-0.04em",
+                margin: 0,
+              }}
+            >
+              Back{" "}
+              <em
+                style={{
+                  fontStyle: "italic",
+                  fontWeight: 300,
+                  background: "linear-gradient(90deg,#7dd3fc,#a78bfa,#7dd3fc)",
+                  backgroundSize: "200% auto",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                  animation: "shimmer 4s linear infinite",
+                }}
+              >
+                shortly
+              </em>
+              ,
+              <br />
+              <span
+                style={{ color: "rgba(255,255,255,0.28)", fontWeight: 300 }}
+              >
+                better than ever.
+              </span>
+            </h1>
+            <p
+              style={{
+                marginTop: "1rem",
+                fontSize: "0.9rem",
+                color: "rgba(255,255,255,0.4)",
+                maxWidth: 360,
+                lineHeight: 1.65,
+              }}
+            >
+              We are upgrading the system to deliver a faster, more reliable
+              payroll experience.
+            </p>
           </div>
 
-          <div className="mb-8 flex w-full items-center gap-3">
-            <div className="h-px flex-1 bg-border" />
-            <span className="font-mono text-[11px] tracking-wide text-muted-foreground/60">
-              Expected downtime: 2 – 5 days
+          <div
+            style={{
+              animation: "fadeSlideUp 0.7s 0.2s ease both",
+              width: "100%",
+              maxWidth: 420,
+              display: "flex",
+              justifyContent: "center",
+            }}
+          >
+            <MaintenanceCarousel />
+          </div>
+
+          <div
+            style={{
+              textAlign: "center",
+              animation: "fadeSlideUp 0.7s 0.4s ease both",
+            }}
+          >
+            <div
+              style={{
+                ...glass,
+                borderRadius: 12,
+                padding: "9px 20px",
+                display: "inline-block",
+                marginBottom: "0.75rem",
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: "monospace",
+                  fontSize: "0.65rem",
+                  letterSpacing: "0.08em",
+                  color: "rgba(255,255,255,0.4)",
+                }}
+              >
+                Expected downtime: 2 – 5 days
+              </span>
+            </div>
+            <br />
+            <span
+              style={{
+                fontFamily: "monospace",
+                fontSize: "0.65rem",
+                color: "rgba(255,255,255,0.25)",
+              }}
+            >
+              Questions? angelphiri.2021@gmail.com
             </span>
-            <div className="h-px flex-1 bg-border" />
           </div>
-
-          <p className="font-mono text-xs text-muted-foreground/50">
-            Questions? angelphiri.2021@gmail.com
-          </p>
         </div>
       </div>
     );
   }
 
+  // ── LANDING ──────────────────────────────────────────────────────────────────
   return (
-    <div className="flex min-h-screen flex-col bg-background text-foreground">
+    <div style={bgStyle}>
+      <style>{GLOBAL_CSS}</style>
+      <Orbs />
+
       {/* Navbar */}
-      <header className="fixed top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-md">
-        <div className="container mx-auto flex h-14 items-center justify-between px-4 sm:px-6">
-          <span className="font-mono text-sm font-semibold tracking-tight">
+      <header
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 100,
+          ...glass,
+          borderRadius: 0,
+          borderLeft: "none",
+          borderRight: "none",
+          borderTop: "none",
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 1100,
+            margin: "0 auto",
+            padding: "0 1.5rem",
+            height: 56,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <span
+            style={{
+              fontFamily: "monospace",
+              fontSize: "0.82rem",
+              letterSpacing: "0.06em",
+              fontWeight: 600,
+              color: "rgba(255,255,255,0.9)",
+            }}
+          >
             NexaPayslips
           </span>
 
-          <nav className="hidden items-center gap-8 text-[13px] text-muted-foreground md:flex">
-            <a
-              href="#features"
-              className="transition-colors hover:text-foreground"
-            >
-              Features
-            </a>
-            <a
-              href="#stats"
-              className="transition-colors hover:text-foreground"
-            >
-              Why us
-            </a>
-            <a href="#cta" className="transition-colors hover:text-foreground">
-              Pricing
-            </a>
+          <nav style={{ display: "flex", gap: "2rem" }}>
+            {[
+              ["Features", "#features"],
+              ["Why us", "#stats"],
+              ["Pricing", "#cta"],
+            ].map(([label, href]) => (
+              <a
+                key={label}
+                href={href}
+                style={{
+                  fontSize: "0.8rem",
+                  color: "rgba(255,255,255,0.42)",
+                  textDecoration: "none",
+                  transition: "color 0.2s",
+                }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.color = "rgba(255,255,255,0.9)")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.color = "rgba(255,255,255,0.42)")
+                }
+              >
+                {label}
+              </a>
+            ))}
           </nav>
 
-          <div className="flex items-center gap-2">
-            <Button asChild variant="ghost" size="sm" className="text-[13px]">
-              <Link to="/login">Sign in</Link>
-            </Button>
-            <Button asChild size="sm" className="text-[13px]">
-              <Link to="/login">
-                Get started <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
-              </Link>
-            </Button>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <Link
+              to="/login"
+              style={{
+                fontSize: "0.78rem",
+                color: "rgba(255,255,255,0.45)",
+                textDecoration: "none",
+                padding: "6px 14px",
+                borderRadius: 10,
+                transition: "all 0.2s",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLAnchorElement).style.color = "#fff";
+                (e.currentTarget as HTMLAnchorElement).style.background =
+                  "rgba(255,255,255,0.08)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLAnchorElement).style.color =
+                  "rgba(255,255,255,0.45)";
+                (e.currentTarget as HTMLAnchorElement).style.background =
+                  "transparent";
+              }}
+            >
+              Sign in
+            </Link>
+            <Link
+              to="/login"
+              style={{
+                fontSize: "0.78rem",
+                color: "#fff",
+                textDecoration: "none",
+                padding: "7px 16px",
+                borderRadius: 10,
+                background: "rgba(255,255,255,0.11)",
+                border: "1px solid rgba(255,255,255,0.18)",
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+                transition: "all 0.2s",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLAnchorElement).style.background =
+                  "rgba(255,255,255,0.18)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLAnchorElement).style.background =
+                  "rgba(255,255,255,0.11)";
+              }}
+            >
+              Get started <ChevronRight size={13} />
+            </Link>
           </div>
         </div>
       </header>
 
-      <main className="flex-1 pt-14">
+      <main style={{ position: "relative", zIndex: 10, paddingTop: 56 }}>
         {/* Hero */}
-        <section className="relative overflow-hidden border-b border-border">
-          {/* Dot grid */}
+        <section
+          style={{
+            maxWidth: 1100,
+            margin: "0 auto",
+            padding: "clamp(5rem,12vh,9rem) 1.5rem 5rem",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            textAlign: "center",
+            gap: "1.5rem",
+          }}
+        >
           <div
-            className="pointer-events-none absolute inset-0 opacity-[0.35]"
             style={{
-              backgroundImage:
-                "radial-gradient(circle, hsl(var(--border)) 1px, transparent 1px)",
-              backgroundSize: "24px 24px",
+              ...glass,
+              borderRadius: 99,
+              padding: "5px 16px",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 7,
+              animation: "fadeSlideUp 0.7s ease both",
             }}
-          />
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-background via-transparent to-background" />
-
-          <div className="container relative mx-auto px-4 py-28 sm:px-6 sm:py-36">
-            {/* Eyebrow */}
-            <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-border bg-muted/60 px-3.5 py-1">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-              <span className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-                Built for Zambia
-              </span>
-            </div>
-
-            <h1 className="max-w-3xl text-[clamp(2.4rem,6vw,4.5rem)] font-bold leading-[1.08] tracking-tight">
-              Payroll that runs{" "}
-              <span className="relative inline-block">
-                <span className="relative z-10">as fast</span>
-                <span
-                  className="absolute bottom-1 left-0 -z-0 h-[0.18em] w-full rounded-full bg-primary/20"
-                  aria-hidden
-                />
-              </span>{" "}
-              <br className="hidden sm:block" />
-              <span className="text-muted-foreground font-normal">
-                as your business.
-              </span>
-            </h1>
-
-            <p className="mt-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-              Generate compliant payslips, manage employees and automate PAYE,
-              NAPSA & NHIMA calculations — all in one place.
-            </p>
-
-            <div className="mt-10 flex flex-wrap items-center gap-3">
-              <Button asChild size="lg" className="rounded-lg px-6">
-                <Link to="/login">
-                  Start for free <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-              <Button
-                asChild
-                variant="outline"
-                size="lg"
-                className="rounded-lg px-6"
-              >
-                <a href="#features">See features</a>
-              </Button>
-            </div>
+          >
+            <span
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: "50%",
+                background: "#34d399",
+                display: "inline-block",
+              }}
+            />
+            <span
+              style={{
+                fontFamily: "monospace",
+                fontSize: "0.6rem",
+                letterSpacing: "0.14em",
+                textTransform: "uppercase",
+                color: "rgba(255,255,255,0.45)",
+              }}
+            >
+              Built for Zambia
+            </span>
           </div>
-        </section>
 
-        {/* Stats bar */}
-        <section id="stats" className="border-b border-border bg-muted/30">
-          <div className="container mx-auto grid grid-cols-3 divide-x divide-border px-4 sm:px-6">
+          <h1
+            style={{
+              fontSize: "clamp(2.8rem,7.5vw,5.5rem)",
+              fontWeight: 800,
+              lineHeight: 1.05,
+              letterSpacing: "-0.048em",
+              margin: 0,
+              animation: "fadeSlideUp 0.7s 0.1s ease both",
+            }}
+          >
+            Payroll that moves{" "}
+            <span
+              style={{
+                background:
+                  "linear-gradient(90deg,#7dd3fc 0%,#818cf8 50%,#c084fc 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}
+            >
+              at the speed
+            </span>
+            <br />
+            <span style={{ color: "rgba(255,255,255,0.28)", fontWeight: 300 }}>
+              of your business.
+            </span>
+          </h1>
+
+          <p
+            style={{
+              fontSize: "clamp(0.9rem,2vw,1.05rem)",
+              color: "rgba(255,255,255,0.42)",
+              maxWidth: 500,
+              lineHeight: 1.75,
+              margin: 0,
+              animation: "fadeSlideUp 0.7s 0.2s ease both",
+            }}
+          >
+            Generate compliant payslips, manage employees and automate PAYE,
+            NAPSA & NHIMA calculations — all in one place.
+          </p>
+
+          <div
+            style={{
+              display: "flex",
+              gap: 12,
+              flexWrap: "wrap",
+              justifyContent: "center",
+              animation: "fadeSlideUp 0.7s 0.3s ease both",
+            }}
+          >
+            <Link
+              to="/login"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 7,
+                padding: "13px 28px",
+                borderRadius: 14,
+                background:
+                  "linear-gradient(135deg,rgba(125,211,252,0.22) 0%,rgba(129,140,248,0.22) 100%)",
+                border: "1px solid rgba(125,211,252,0.32)",
+                color: "#fff",
+                fontSize: "0.9rem",
+                fontWeight: 600,
+                textDecoration: "none",
+                backdropFilter: "blur(12px)",
+                transition: "all 0.25s ease",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLAnchorElement).style.transform =
+                  "translateY(-2px)";
+                (e.currentTarget as HTMLAnchorElement).style.boxShadow =
+                  "0 14px 36px rgba(125,211,252,0.2)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLAnchorElement).style.transform =
+                  "translateY(0)";
+                (e.currentTarget as HTMLAnchorElement).style.boxShadow = "none";
+              }}
+            >
+              Start for free <ArrowRight size={16} />
+            </Link>
+            <a
+              href="#features"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 7,
+                padding: "13px 28px",
+                borderRadius: 14,
+                ...glass,
+                color: "rgba(255,255,255,0.65)",
+                fontSize: "0.9rem",
+                fontWeight: 500,
+                textDecoration: "none",
+                transition: "all 0.25s ease",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLAnchorElement).style.color = "#fff";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLAnchorElement).style.color =
+                  "rgba(255,255,255,0.65)";
+              }}
+            >
+              See features
+            </a>
+          </div>
+
+          {/* Stats */}
+          <div
+            style={{
+              display: "flex",
+              gap: 12,
+              flexWrap: "wrap",
+              justifyContent: "center",
+              marginTop: "1rem",
+              width: "100%",
+              maxWidth: 460,
+              animation: "fadeSlideUp 0.7s 0.4s ease both",
+            }}
+          >
             {STATS.map((s) => (
-              <div
-                key={s.label}
-                className="flex flex-col items-center gap-1 py-8"
-              >
-                <span className="text-2xl font-bold tracking-tight sm:text-3xl">
-                  {s.value}
-                </span>
-                <span className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-                  {s.label}
-                </span>
-              </div>
+              <StatCard key={s.label} {...s} />
             ))}
           </div>
         </section>
 
-        {/* Features */}
-        <section id="features" className="border-b border-border py-24">
-          <div className="container mx-auto px-4 sm:px-6">
-            <div className="mb-14 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <p className="mb-2 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-                  Features
-                </p>
-                <h2 className="text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
-                  Everything to run payroll,
-                  <br />
-                  <span className="font-normal text-muted-foreground">
-                    nothing you don't need.
-                  </span>
-                </h2>
-              </div>
-              <Button
-                asChild
-                variant="ghost"
-                size="sm"
-                className="self-start sm:self-auto"
-              >
-                <Link to="/login">
-                  Explore all <ArrowUpRight className="ml-1 h-3.5 w-3.5" />
-                </Link>
-              </Button>
-            </div>
+        <Ticker />
 
-            <div className="grid gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
-              {FEATURES.map((f) => (
-                <div
-                  key={f.title}
-                  className="group flex flex-col gap-4 bg-background p-7 transition-colors hover:bg-muted/50"
+        {/* Features — Apple-style scroll reveal */}
+        <section
+          id="features"
+          style={{ maxWidth: 1100, margin: "0 auto", padding: "6rem 1.5rem" }}
+        >
+          <SectionTitle>
+            <div style={{ textAlign: "center", marginBottom: "3.5rem" }}>
+              <p
+                style={{
+                  fontFamily: "monospace",
+                  fontSize: "0.6rem",
+                  letterSpacing: "0.18em",
+                  textTransform: "uppercase",
+                  color: "rgba(255,255,255,0.28)",
+                  marginBottom: 14,
+                }}
+              >
+                Features
+              </p>
+              <h2
+                style={{
+                  fontSize: "clamp(1.9rem,4.5vw,3rem)",
+                  fontWeight: 700,
+                  letterSpacing: "-0.038em",
+                  margin: 0,
+                  lineHeight: 1.12,
+                }}
+              >
+                Everything to run payroll,
+                <br />
+                <span
+                  style={{ color: "rgba(255,255,255,0.28)", fontWeight: 300 }}
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-muted transition-colors group-hover:border-primary/40 group-hover:bg-primary/5">
-                      <f.icon className="h-4 w-4" />
-                    </div>
-                    <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/50">
-                      {f.tag}
-                    </span>
-                  </div>
-                  <div>
-                    <h3 className="mb-1.5 font-semibold leading-snug">
-                      {f.title}
-                    </h3>
-                    <p className="text-[13.5px] leading-relaxed text-muted-foreground">
-                      {f.desc}
-                    </p>
-                  </div>
-                </div>
-              ))}
+                  nothing you don't need.
+                </span>
+              </h2>
             </div>
+          </SectionTitle>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns:
+                "repeat(auto-fill, minmax(min(100%,280px),1fr))",
+              gap: 16,
+            }}
+          >
+            {FEATURES.map((f, i) => (
+              <FeatureCard key={f.title} {...f} delay={i * 90} />
+            ))}
           </div>
         </section>
 
         {/* CTA */}
-        <section id="cta" className="py-28">
-          <div className="container mx-auto px-4 sm:px-6">
-            <div className="relative overflow-hidden rounded-2xl border border-border bg-muted/40 px-8 py-16 text-center sm:px-16">
-              <div
-                className="pointer-events-none absolute inset-0 opacity-20"
-                style={{
-                  backgroundImage:
-                    "linear-gradient(hsl(var(--border)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--border)) 1px, transparent 1px)",
-                  backgroundSize: "32px 32px",
-                }}
-              />
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-background/60 via-transparent to-background/60" />
-
-              <div className="relative z-10">
-                <p className="mb-3 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-                  Get started today
-                </p>
-                <h2 className="mx-auto max-w-xl text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
-                  Ready to simplify your payroll?
-                </h2>
-                <p className="mx-auto mt-4 max-w-md text-[15px] leading-relaxed text-muted-foreground">
-                  Join companies across Zambia running accurate, compliant
-                  payroll in under a minute.
-                </p>
-                <div className="mt-9 flex flex-wrap justify-center gap-3">
-                  <Button asChild size="lg" className="rounded-lg px-7">
-                    <Link to="/login">
-                      Create free account{" "}
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Link>
-                  </Button>
-                </div>
-              </div>
-            </div>
+        <section
+          id="cta"
+          style={{ maxWidth: 1100, margin: "0 auto 5rem", padding: "0 1.5rem" }}
+        >
+          <div
+            style={{
+              ...glassStrong,
+              borderRadius: 28,
+              padding: "clamp(2.5rem,6vw,4.5rem) clamp(1.5rem,5vw,4rem)",
+              textAlign: "center",
+              position: "relative",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                width: 500,
+                height: 500,
+                borderRadius: "50%",
+                background:
+                  "radial-gradient(circle,rgba(129,140,248,0.10) 0%,transparent 65%)",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%,-50%)",
+                pointerEvents: "none",
+              }}
+            />
+            <p
+              style={{
+                fontFamily: "monospace",
+                fontSize: "0.6rem",
+                letterSpacing: "0.16em",
+                textTransform: "uppercase",
+                color: "rgba(255,255,255,0.28)",
+                marginBottom: "1rem",
+              }}
+            >
+              Get started today
+            </p>
+            <h2
+              style={{
+                fontSize: "clamp(1.8rem,4vw,2.8rem)",
+                fontWeight: 700,
+                letterSpacing: "-0.035em",
+                marginBottom: "1rem",
+              }}
+            >
+              Ready to simplify your payroll?
+            </h2>
+            <p
+              style={{
+                fontSize: "0.88rem",
+                color: "rgba(255,255,255,0.4)",
+                maxWidth: 400,
+                margin: "0 auto 2rem",
+                lineHeight: 1.7,
+              }}
+            >
+              Join companies across Zambia running accurate, compliant payroll
+              in under a minute.
+            </p>
+            <Link
+              to="/login"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "13px 30px",
+                borderRadius: 14,
+                background:
+                  "linear-gradient(135deg,rgba(125,211,252,0.2) 0%,rgba(192,132,252,0.2) 100%)",
+                border: "1px solid rgba(192,132,252,0.32)",
+                color: "#fff",
+                fontSize: "0.9rem",
+                fontWeight: 600,
+                textDecoration: "none",
+                backdropFilter: "blur(12px)",
+                transition: "all 0.25s ease",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLAnchorElement).style.transform =
+                  "translateY(-2px)";
+                (e.currentTarget as HTMLAnchorElement).style.boxShadow =
+                  "0 16px 40px rgba(192,132,252,0.22)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLAnchorElement).style.transform =
+                  "translateY(0)";
+                (e.currentTarget as HTMLAnchorElement).style.boxShadow = "none";
+              }}
+            >
+              Create free account <ArrowRight size={16} />
+            </Link>
           </div>
         </section>
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border py-8">
-        <div className="container mx-auto flex flex-col items-center justify-between gap-4 px-4 sm:flex-row sm:px-6">
-          <span className="font-mono text-[12px] text-muted-foreground/60">
-            © {new Date().getFullYear()} NexaPayslips. All rights reserved.
-          </span>
-          <div className="flex gap-6 font-mono text-[12px] text-muted-foreground/60">
-            <a href="#" className="transition-colors hover:text-foreground">
-              Privacy
-            </a>
-            <a href="#" className="transition-colors hover:text-foreground">
-              Terms
-            </a>
+      <footer
+        style={{
+          borderTop: "1px solid rgba(255,255,255,0.07)",
+          padding: "1.5rem",
+          maxWidth: 1100,
+          margin: "0 auto",
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: "1rem",
+        }}
+      >
+        <span
+          style={{
+            fontFamily: "monospace",
+            fontSize: "0.65rem",
+            color: "rgba(255,255,255,0.2)",
+          }}
+        >
+          © {new Date().getFullYear()} NexaPayslips. All rights reserved.
+        </span>
+        <div style={{ display: "flex", gap: "1.5rem" }}>
+          {["Privacy", "Terms", "Contact"].map((item) => (
             <a
-              href="mailto:angelphiri.2021@gmail.com"
-              className="transition-colors hover:text-foreground"
+              key={item}
+              href="#"
+              style={{
+                fontFamily: "monospace",
+                fontSize: "0.65rem",
+                color: "rgba(255,255,255,0.22)",
+                textDecoration: "none",
+                transition: "color 0.2s",
+              }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.color = "rgba(255,255,255,0.7)")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.color = "rgba(255,255,255,0.22)")
+              }
             >
-              Contact
+              {item}
             </a>
-          </div>
+          ))}
         </div>
       </footer>
     </div>

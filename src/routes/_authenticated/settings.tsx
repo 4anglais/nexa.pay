@@ -9,14 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Save } from "lucide-react";
-import {
-  collection,
-  query,
-  getDocs,
-  setDoc,
-  doc,
-  addDoc,
-} from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { onAuthStateChanged, User } from "firebase/auth";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({
@@ -36,9 +30,9 @@ type SettingsForm = z.infer<typeof settingsSchema>;
 
 function SettingsPage() {
   const [loading, setLoading] = useState(true);
-  const [settingsId, setSettingsId] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
+  const [user, setUser] = useState<User | null>(null);
 
   const {
     register,
@@ -49,41 +43,43 @@ function SettingsPage() {
     resolver: zodResolver(settingsSchema),
   });
 
+  // 🔥 AUTH SAFE LISTENER (FIXES YOUR ISSUE)
   useEffect(() => {
-    const fetchSettings = async () => {
-      try {
-        const settingsSnapshot = await getDocs(
-          query(collection(firebase.db, "company_settings")),
-        );
-        if (!settingsSnapshot.empty) {
-          const settingsData = settingsSnapshot.docs[0].data() as SettingsForm;
-          setSettingsId(settingsSnapshot.docs[0].id);
-          reset(settingsData);
-        }
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching settings:", error);
-        setLoading(false);
-      }
-    };
+    const unsubscribe = onAuthStateChanged(firebase.auth, async (u) => {
+      setUser(u);
+      setLoading(false);
 
-    fetchSettings();
+      if (u) {
+        try {
+          const ref = doc(firebase.db, "company_settings", u.uid);
+          const snap = await getDoc(ref);
+
+          if (snap.exists()) {
+            reset(snap.data() as SettingsForm);
+          }
+        } catch (err) {
+          console.error("Error loading settings:", err);
+        }
+      }
+    });
+
+    return () => unsubscribe();
   }, [reset]);
 
+  // 🔥 SAVE SETTINGS (SAFE)
   const onSubmit = async (data: SettingsForm) => {
     setError("");
     setSaved(false);
 
     try {
-      if (settingsId) {
-        await setDoc(doc(firebase.db, "company_settings", settingsId), data);
-      } else {
-        const newDocRef = await addDoc(
-          collection(firebase.db, "company_settings"),
-          data,
-        );
-        setSettingsId(newDocRef.id);
+      if (!user) {
+        throw new Error("Authentication not ready. Please wait...");
       }
+
+      await setDoc(doc(firebase.db, "company_settings", user.uid), {
+        ...data,
+        userId: user.uid,
+      });
 
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
@@ -92,10 +88,11 @@ function SettingsPage() {
     }
   };
 
-  if (loading)
+  if (loading) {
     return (
       <div className="py-12 text-center text-muted-foreground">Loading...</div>
     );
+  }
 
   return (
     <>
@@ -110,18 +107,17 @@ function SettingsPage() {
             {error}
           </div>
         )}
+
         {saved && (
-          <div className="mb-4 rounded-lg bg-success/10 px-4 py-3 text-sm font-semibold text-success">
+          <div className="mb-4 rounded-lg bg-green-500/10 px-4 py-3 text-sm font-semibold text-green-600">
             Settings saved successfully!
           </div>
         )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="company_name" className="font-semibold">
-              Company Name
-            </Label>
-            <Input id="company_name" {...register("company_name")} />
+            <Label>Company Name</Label>
+            <Input {...register("company_name")} />
             {errors.company_name && (
               <p className="text-xs text-destructive">
                 {errors.company_name.message}
@@ -129,67 +125,28 @@ function SettingsPage() {
             )}
           </div>
 
-          <div className="space-y-4">
-            <h3 className="text-sm font-bold text-card-foreground">
-              Statutory Deduction Rates (%)
-            </h3>
-            <div className="grid gap-4 sm:grid-cols-3">
-              <div className="space-y-2">
-                <Label htmlFor="paye_rate" className="font-semibold">
-                  PAYE Rate
-                </Label>
-                <Input
-                  id="paye_rate"
-                  type="number"
-                  step="0.01"
-                  {...register("paye_rate")}
-                />
-                {errors.paye_rate && (
-                  <p className="text-xs text-destructive">
-                    {errors.paye_rate.message}
-                  </p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="napsa_rate" className="font-semibold">
-                  NAPSA Rate
-                </Label>
-                <Input
-                  id="napsa_rate"
-                  type="number"
-                  step="0.01"
-                  {...register("napsa_rate")}
-                />
-                {errors.napsa_rate && (
-                  <p className="text-xs text-destructive">
-                    {errors.napsa_rate.message}
-                  </p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="nhima_rate" className="font-semibold">
-                  NHIMA Rate
-                </Label>
-                <Input
-                  id="nhima_rate"
-                  type="number"
-                  step="0.01"
-                  {...register("nhima_rate")}
-                />
-                {errors.nhima_rate && (
-                  <p className="text-xs text-destructive">
-                    {errors.nhima_rate.message}
-                  </p>
-                )}
-              </div>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="space-y-2">
+              <Label>PAYE Rate</Label>
+              <Input type="number" step="0.01" {...register("paye_rate")} />
+            </div>
+
+            <div className="space-y-2">
+              <Label>NAPSA Rate</Label>
+              <Input type="number" step="0.01" {...register("napsa_rate")} />
+            </div>
+
+            <div className="space-y-2">
+              <Label>NHIMA Rate</Label>
+              <Input type="number" step="0.01" {...register("nhima_rate")} />
             </div>
           </div>
 
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type="submit" disabled={isSubmitting || !user}>
             {isSubmitting ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <Save className="h-4 w-4" strokeWidth={1.5} />
+              <Save className="h-4 w-4" />
             )}
             Save Settings
           </Button>

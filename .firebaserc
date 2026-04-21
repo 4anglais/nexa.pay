@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "madebyange1"
+  },
+  "targets": {
+    "madebyange1": {
+      "hosting": {
+        "nexapay": [
+          "nexapay"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}

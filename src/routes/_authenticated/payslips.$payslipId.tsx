@@ -38,6 +38,7 @@ interface PayslipDetail {
   pdf_url: string | null;
   employee_id: string;
   payroll_run_id: string;
+  userId: string;
   employees: {
     full_name: string;
     nrc_or_id: string;
@@ -81,63 +82,105 @@ function PayslipDetailPage() {
 
   useEffect(() => {
     const fetchData = async () => {
+      // FIX: wait for auth to be ready before fetching
+      const user = await new Promise<typeof firebase.auth.currentUser>(
+        (resolve) => {
+          const unsub = firebase.auth.onAuthStateChanged((u) => {
+            unsub();
+            resolve(u);
+          });
+        },
+      );
+
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
       try {
         const payslipDoc = await getDoc(
           doc(firebase.db, "payslips", payslipId),
         );
-        if (payslipDoc.exists()) {
-          const payslipData = payslipDoc.data() as PayslipDetail;
-          setPayslip(payslipData);
+        if (!payslipDoc.exists()) {
+          setLoading(false);
+          return;
+        }
 
+        const payslipData: PayslipDetail = {
+          id: payslipDoc.id,
+          ...(payslipDoc.data() as Omit<PayslipDetail, "id">),
+          employees: null,
+          payroll_runs: null,
+        };
+
+        // Fetch employee
+        if (payslipData.employee_id) {
           const employeeDoc = await getDoc(
             doc(firebase.db, "employees", payslipData.employee_id),
           );
           if (employeeDoc.exists()) {
-            payslipData.employees = employeeDoc.data() as any;
+            payslipData.employees =
+              employeeDoc.data() as PayslipDetail["employees"];
           }
+        }
 
+        // Fetch payroll run
+        if (payslipData.payroll_run_id) {
           const payrollRunDoc = await getDoc(
             doc(firebase.db, "payroll_runs", payslipData.payroll_run_id),
           );
           if (payrollRunDoc.exists()) {
-            payslipData.payroll_runs = payrollRunDoc.data() as any;
+            payslipData.payroll_runs = payrollRunDoc.data() as {
+              month: string;
+              year: number;
+            };
           }
+        }
 
-          const allowancesQuery = query(
+        setPayslip(payslipData);
+
+        // Fetch allowances
+        const allowancesSnapshot = await getDocs(
+          query(
             collection(firebase.db, "allowances"),
             where("employee_id", "==", payslipData.employee_id),
-            where("userId", "==", firebase.auth.currentUser?.uid),
-          );
-          const allowancesSnapshot = await getDocs(allowancesQuery);
-          const allowancesData = allowancesSnapshot.docs.map((doc) => ({
-            type: doc.data().type,
-            amount: Number(doc.data().amount),
-          }));
-          setAllowances(allowancesData);
+            where("userId", "==", user.uid),
+          ),
+        );
+        setAllowances(
+          allowancesSnapshot.docs.map((d) => ({
+            type: d.data().type,
+            amount: Number(d.data().amount),
+          })),
+        );
 
-          const deductionsQuery = query(
+        // Fetch deductions
+        const deductionsSnapshot = await getDocs(
+          query(
             collection(firebase.db, "deductions"),
             where("employee_id", "==", payslipData.employee_id),
-            where("userId", "==", firebase.auth.currentUser?.uid),
-          );
-          const deductionsSnapshot = await getDocs(deductionsQuery);
-          const deductionsData = deductionsSnapshot.docs.map((doc) => ({
-            type: doc.data().type,
-            amount: Number(doc.data().amount),
-          }));
-          setDeductions(deductionsData);
-        }
+            where("userId", "==", user.uid),
+          ),
+        );
+        setDeductions(
+          deductionsSnapshot.docs.map((d) => ({
+            type: d.data().type,
+            amount: Number(d.data().amount),
+          })),
+        );
 
-        const companyQuery = query(collection(firebase.db, "company_settings"));
-        const companySnapshot = await getDocs(companyQuery);
-        if (!companySnapshot.empty) {
-          const companyData = companySnapshot.docs[0].data() as CompanySettings;
-          setCompany(companyData);
+        // FIX: fetch company_settings by uid (doc ID), not a collection scan.
+        // The old query(collection(...)) hit ALL docs and the security rules denied
+        // it because resource.data.userId != request.auth.uid for other users' docs.
+        const companyDoc = await getDoc(
+          doc(firebase.db, "company_settings", user.uid),
+        );
+        if (companyDoc.exists()) {
+          setCompany(companyDoc.data() as CompanySettings);
         }
-
-        setLoading(false);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Error fetching payslip data:", error);
+      } finally {
         setLoading(false);
       }
     };
@@ -153,12 +196,14 @@ function PayslipDetailPage() {
 
   const handlePrint = () => window.print();
 
-  if (loading)
+  if (loading) {
     return (
-      <div className="py-12 text-center text-muted-foreground">
-        Loading payslip...
+      <div className="flex flex-col items-center justify-center py-20 gap-3">
+        <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+        <p className="text-sm text-muted-foreground">Loading payslip…</p>
       </div>
     );
+  }
 
   if (!payslip) {
     return (
@@ -200,7 +245,6 @@ function PayslipDetailPage() {
       style={{ breakInside: "avoid", pageBreakInside: "avoid" }}
       className="relative flex border border-slate-200 bg-white shadow-sm print:border print:shadow-none text-sm rounded-3xl h-[10.5cm] w-[18cm] mx-auto print:scale-90"
     >
-      {/* Ticket notch — top (centered on the divider line) */}
       <div
         className="absolute w-5 h-5 rounded-full z-20"
         style={{
@@ -210,7 +254,6 @@ function PayslipDetailPage() {
           border: "2px dashed #94a3b8",
         }}
       />
-      {/* Ticket notch — bottom */}
       <div
         className="absolute w-5 h-5 rounded-full z-20"
         style={{
@@ -221,9 +264,7 @@ function PayslipDetailPage() {
         }}
       />
 
-      {/* Left Main Section */}
       <div className="flex-1 p-6 flex flex-col justify-between overflow-hidden min-w-0">
-        {/* Header */}
         <div className="flex justify-between items-start">
           <div>
             <h2 className="font-bold tracking-tight text-slate-900 text-xl leading-none">
@@ -243,7 +284,6 @@ function PayslipDetailPage() {
           </div>
         </div>
 
-        {/* Employee Details */}
         <div className="grid grid-cols-3 gap-3 my-3 p-3 bg-slate-50 rounded-2xl border border-slate-100">
           <div>
             <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mb-1">
@@ -274,7 +314,6 @@ function PayslipDetailPage() {
           </div>
         </div>
 
-        {/* Financials */}
         <div className="grid grid-cols-2 gap-6">
           <div>
             <h3 className="text-[8px] font-bold text-slate-900 uppercase tracking-widest border-b border-slate-900 pb-1 mb-2">
@@ -343,7 +382,6 @@ function PayslipDetailPage() {
           </div>
         </div>
 
-        {/* Payment Footer */}
         <div className="flex items-center justify-between border-t border-slate-100 pt-3 mt-2">
           <div className="flex gap-4 items-end">
             <div>
@@ -385,7 +423,6 @@ function PayslipDetailPage() {
         </div>
       </div>
 
-      {/* Vertical Dashed Divider */}
       <div
         className="flex-shrink-0 flex items-center justify-center py-4"
         style={{ width: "18px" }}
@@ -393,13 +430,10 @@ function PayslipDetailPage() {
         <div className="border-l-2 border-dashed border-slate-300 h-full" />
       </div>
 
-      {/* Right Barcode Strip */}
       <div className="w-[3.2cm] bg-slate-50/60 flex flex-col items-center justify-between py-5 px-2 rounded-r-3xl overflow-hidden">
         <p className="text-[6px] font-bold text-slate-400 uppercase tracking-[0.15em]">
           Verify
         </p>
-
-        {/* Rotated barcode to fit vertical strip */}
         <div
           className="flex-1 flex items-center justify-center"
           style={{ overflow: "hidden", width: "100%" }}
@@ -421,8 +455,6 @@ function PayslipDetailPage() {
             />
           </div>
         </div>
-
-        {/* Reference under barcode */}
         <div className="text-center">
           <p className="text-[6px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">
             Ref
@@ -443,9 +475,7 @@ function PayslipDetailPage() {
       style={{ breakInside: "avoid", pageBreakInside: "avoid" }}
       className="relative border border-slate-200 bg-white shadow-sm print:border print:shadow-none text-sm rounded-3xl w-[16cm] mx-auto print:scale-90"
     >
-      {/* Main content area */}
       <div className="p-8 pb-0">
-        {/* Header */}
         <div className="mb-6 flex justify-between items-start">
           <div>
             <h2 className="font-bold tracking-tight text-slate-900 text-2xl leading-none">
@@ -466,7 +496,6 @@ function PayslipDetailPage() {
           </div>
         </div>
 
-        {/* Employee Details */}
         <div className="grid grid-cols-2 gap-y-5 gap-x-8 mb-6 pb-6 border-b border-slate-100">
           <div>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
@@ -492,7 +521,6 @@ function PayslipDetailPage() {
           </div>
         </div>
 
-        {/* Financials */}
         <div className="grid grid-cols-2 gap-10 mb-6">
           <div>
             <h3 className="text-[10px] font-bold text-slate-900 uppercase tracking-widest border-b border-slate-900 pb-2 mb-3">
@@ -575,7 +603,6 @@ function PayslipDetailPage() {
           </div>
         </div>
 
-        {/* Net Pay */}
         <div className="bg-slate-900 rounded-2xl p-5 text-white flex justify-between items-center mb-0">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-60 mb-1">
@@ -596,9 +623,7 @@ function PayslipDetailPage() {
         </div>
       </div>
 
-      {/* Ticket Divider with semi-circle notches at card edges */}
       <div className="relative my-0 -mx-0 py-6">
-        {/* Left notch */}
         <div
           className="absolute w-5 h-5 rounded-full z-20"
           style={{
@@ -609,7 +634,6 @@ function PayslipDetailPage() {
             border: "2px dashed #94a3b8",
           }}
         />
-        {/* Right notch */}
         <div
           className="absolute w-5 h-5 rounded-full z-20"
           style={{
@@ -620,11 +644,9 @@ function PayslipDetailPage() {
             border: "2px dashed #94a3b8",
           }}
         />
-        {/* Dashed line */}
         <div className="border-t-2 border-dashed border-slate-200 mx-8" />
       </div>
 
-      {/* Barcode Footer */}
       <div className="px-8 pb-6 flex items-center justify-between gap-6">
         <div className="space-y-3 flex-1 min-w-0">
           <p className="text-[11px] text-slate-500 leading-relaxed font-medium">
@@ -652,8 +674,6 @@ function PayslipDetailPage() {
             </div>
           </div>
         </div>
-
-        {/* Barcode */}
         <div className="flex flex-col items-center flex-shrink-0">
           <div className="bg-white rounded-xl overflow-hidden">
             <Barcode
@@ -677,32 +697,16 @@ function PayslipDetailPage() {
     </div>
   );
 
-  /* ─────────────────────────────────────────────
-     Print CSS
-  ───────────────────────────────────────────── */
   const commonPrintCSS = `
     @media print {
-      @page {
-        size: A4 portrait;
-        margin: 0;
-      }
+      @page { size: A4 portrait; margin: 0; }
       body { margin: 0; padding: 0; background: white !important; }
       #root { padding: 0; margin: 0; }
-      .print-copy-divider {
-        border: none;
-        border-top: 2px dashed #e2e8f0;
-        margin: 0.8cm 0;
-      }
+      .print-copy-divider { border: none; border-top: 2px dashed #e2e8f0; margin: 0.8cm 0; }
       .hidden-print { display: none !important; }
       .print-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-height: 100vh;
-        width: 100%;
-        padding: 1cm 0;
-        gap: 0;
+        display: flex; flex-direction: column; align-items: center;
+        justify-content: center; min-height: 100vh; width: 100%; padding: 1cm 0; gap: 0;
       }
     }
   `;
@@ -714,7 +718,6 @@ function PayslipDetailPage() {
 
   return (
     <>
-      {/* Screen controls */}
       <div className="print:hidden">
         <div className="mb-6 flex items-center gap-3 flex-wrap">
           <Link to="/payslips">
@@ -751,7 +754,6 @@ function PayslipDetailPage() {
           </div>
         </div>
 
-        {/* Screen preview */}
         <div className="mb-4">
           <p className="text-xs text-muted-foreground text-center mb-4 italic font-medium">
             {previewLabel}
@@ -772,7 +774,6 @@ function PayslipDetailPage() {
 
       <style>{commonPrintCSS}</style>
 
-      {/* Print output */}
       <div className="hidden print:block" ref={printRef}>
         <div className="print-container">
           {printLayout === "landscape" ? (

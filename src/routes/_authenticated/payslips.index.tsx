@@ -2,16 +2,16 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { firebase } from "@/integrations/firebase/client";
 import { PageHeader } from "@/components/PageHeader";
-import { FileText, Eye } from "lucide-react";
+import { FileText, Eye, ChevronDown, ChevronRight, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   collection,
   query,
-  orderBy,
   getDocs,
   where,
   doc,
   getDoc,
+  deleteDoc,
 } from "firebase/firestore";
 
 export const Route = createFileRoute("/_authenticated/payslips/")({
@@ -46,79 +46,103 @@ function PayslipsPage() {
   );
   const [loading, setLoading] = useState(true);
   const [uid, setUid] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
+  /* ───────────────── AUTH ───────────────── */
   useEffect(() => {
     const unsub = firebase.auth.onAuthStateChanged((user) => {
       setUid(user?.uid ?? null);
     });
-
     return () => unsub();
   }, []);
 
+  /* ───────────────── FETCH ───────────────── */
   useEffect(() => {
     if (!uid) return;
 
     const fetchPayslips = async () => {
+      setLoading(true);
+
       try {
-        const payslipsQuery = query(
-          collection(firebase.db, "payslips"),
-          where("userId", "==", uid),
-          orderBy("created_at", "desc"),
+        const snapshot = await getDocs(
+          query(
+            collection(firebase.db, "payslips"),
+            where("userId", "==", uid),
+          ),
         );
 
-        const snapshot = await getDocs(payslipsQuery);
+        const employeeIds = new Set<string>();
+        const runIds = new Set<string>();
 
-        const payslipsData: PayslipRow[] = [];
-
-        for (const d of snapshot.docs) {
+        const rawPayslips: PayslipRow[] = snapshot.docs.map((d) => {
           const data = d.data() as Omit<PayslipRow, "id">;
 
-          const payslip: PayslipRow = {
-            id: d.id,
-            ...data,
-          };
+          if (data.employee_id) employeeIds.add(data.employee_id);
+          if (data.payroll_run_id) runIds.add(data.payroll_run_id);
 
-          if (payslip.employee_id) {
-            const empSnap = await getDoc(
-              doc(firebase.db, "employees", payslip.employee_id),
-            );
-            if (empSnap.exists()) {
-              payslip.employees = empSnap.data() as any;
-            }
-          }
+          return { id: d.id, ...data };
+        });
 
-          if (payslip.payroll_run_id) {
-            const runSnap = await getDoc(
-              doc(firebase.db, "payroll_runs", payslip.payroll_run_id),
-            );
-            if (runSnap.exists()) {
-              payslip.payroll_runs = runSnap.data() as any;
-            }
-          }
+        rawPayslips.sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+        );
 
-          payslipsData.push(payslip);
-        }
+        const empMap = new Map<string, { full_name: string }>();
+
+        await Promise.all(
+          Array.from(employeeIds).map(async (id) => {
+            try {
+              const snap = await getDoc(doc(firebase.db, "employees", id));
+              if (snap.exists() && snap.data().userId === uid) {
+                empMap.set(id, { full_name: snap.data().full_name });
+              }
+            } catch {}
+          }),
+        );
+
+        const runMap = new Map<string, { month: string; year: number }>();
+
+        await Promise.all(
+          Array.from(runIds).map(async (id) => {
+            try {
+              const snap = await getDoc(doc(firebase.db, "payroll_runs", id));
+              if (snap.exists() && snap.data().userId === uid) {
+                runMap.set(id, {
+                  month: snap.data().month,
+                  year: snap.data().year,
+                });
+              }
+            } catch {}
+          }),
+        );
 
         const map = new Map<string, EmployeePayslips>();
 
-        payslipsData.forEach((ps) => {
-          const empId = ps.employee_id;
-          const name = ps.employees?.full_name || "Unknown";
+        for (const ps of rawPayslips) {
+          ps.employees = empMap.get(ps.employee_id);
+          ps.payroll_runs = runMap.get(ps.payroll_run_id);
 
-          if (!map.has(empId)) {
-            map.set(empId, {
-              employeeId: empId,
+          const name = ps.employees?.full_name ?? "Unknown Employee";
+
+          if (!map.has(ps.employee_id)) {
+            map.set(ps.employee_id, {
+              employeeId: ps.employee_id,
               employeeName: name,
               payslips: [],
             });
           }
 
-          map.get(empId)!.payslips.push(ps);
-        });
+          map.get(ps.employee_id)!.payslips.push(ps);
+        }
 
-        setEmployeePayslips(Array.from(map.values()));
+        const result = Array.from(map.values());
+
+        setEmployeePayslips(result);
+        setExpanded(new Set(result.map((e) => e.employeeId)));
       } catch (error) {
-        console.error("Error fetching payslips:", error);
+        console.error(error);
       } finally {
         setLoading(false);
       }
@@ -127,48 +151,141 @@ function PayslipsPage() {
     fetchPayslips();
   }, [uid]);
 
-  const formatCurrency = (n: number) =>
+  /* ───────────────── DELETE ───────────────── */
+  const handleDelete = async (payslipId: string) => {
+    if (!confirm("Delete this payslip permanently?")) return;
+
+    try {
+      setDeletingId(payslipId);
+
+      await deleteDoc(doc(firebase.db, "payslips", payslipId));
+
+      // remove from UI instantly
+      setEmployeePayslips((prev) =>
+        prev
+          .map((emp) => ({
+            ...emp,
+            payslips: emp.payslips.filter((p) => p.id !== payslipId),
+          }))
+          .filter((emp) => emp.payslips.length > 0),
+      );
+    } catch (err) {
+      console.error("Delete failed:", err);
+      alert("Failed to delete payslip");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  /* ───────────────── HELPERS ───────────────── */
+  const fmt = (n: number) =>
     new Intl.NumberFormat("en-ZM", {
       style: "currency",
       currency: "ZMW",
     }).format(n);
 
+  const toggleExpand = (id: string) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const totalPayslips = employeePayslips.reduce(
+    (s, e) => s + e.payslips.length,
+    0,
+  );
+
+  /* ───────────────── UI ───────────────── */
   return (
-    <>
+    <div className="space-y-6">
       <PageHeader
         title="Payslips"
         description="View generated payslip history"
       />
 
       {loading ? (
-        <div className="p-6">Loading...</div>
+        <div className="py-20 text-center">Loading…</div>
       ) : employeePayslips.length === 0 ? (
-        <div className="p-6">No payslips found</div>
+        <div className="py-20 text-center">No payslips</div>
       ) : (
-        employeePayslips.map((employee) => (
-          <div key={employee.employeeId} className="p-4 border-b">
-            <h3>{employee.employeeName}</h3>
-
-            {employee.payslips.map((ps) => (
-              <div key={ps.id} className="border p-3 mt-2">
-                <div>
-                  {ps.payroll_runs?.month} {ps.payroll_runs?.year}
-                </div>
-
-                <div>Gross: {formatCurrency(ps.gross_pay)}</div>
-                <div>Deductions: {formatCurrency(ps.total_deductions)}</div>
-                <div>Net: {formatCurrency(ps.net_pay)}</div>
-
-                <Link to="/payslips/$payslipId" params={{ payslipId: ps.id }}>
-                  <Button size="sm">
-                    <Eye /> View
-                  </Button>
-                </Link>
-              </div>
-            ))}
+        <>
+          <div className="flex gap-3 text-xs">
+            <span>{employeePayslips.length} employees</span>
+            <span>{totalPayslips} payslips</span>
           </div>
-        ))
+
+          {employeePayslips.map((emp) => {
+            const isOpen = expanded.has(emp.employeeId);
+
+            return (
+              <div key={emp.employeeId} className="border rounded-2xl">
+                <button
+                  onClick={() => toggleExpand(emp.employeeId)}
+                  className="w-full flex justify-between p-4"
+                >
+                  <div>
+                    <p className="font-semibold">{emp.employeeName}</p>
+                    <p className="text-xs">{emp.payslips.length} payslips</p>
+                  </div>
+
+                  {isOpen ? <ChevronDown /> : <ChevronRight />}
+                </button>
+
+                {isOpen &&
+                  emp.payslips.map((ps) => (
+                    <div
+                      key={ps.id}
+                      className="border-t p-4 flex justify-between items-center"
+                    >
+                      <div>
+                        <p className="font-semibold">
+                          {ps.payroll_runs
+                            ? `${ps.payroll_runs.month}/${ps.payroll_runs.year}`
+                            : "—"}
+                        </p>
+                        <p className="text-xs">
+                          {new Date(ps.created_at).toLocaleDateString("en-ZM")}
+                        </p>
+                      </div>
+
+                      <div className="flex gap-6 text-xs">
+                        <span>{fmt(ps.gross_pay)}</span>
+                        <span className="text-red-500">
+                          -{fmt(ps.total_deductions)}
+                        </span>
+                        <span className="text-green-600 font-bold">
+                          {fmt(ps.net_pay)}
+                        </span>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Link
+                          to="/payslips/$payslipId"
+                          params={{ payslipId: ps.id }}
+                        >
+                          <Button size="sm" variant="outline">
+                            <Eye className="h-3.5 w-3.5" />
+                          </Button>
+                        </Link>
+
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleDelete(ps.id)}
+                          disabled={deletingId === ps.id}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            );
+          })}
+        </>
       )}
-    </>
+    </div>
   );
 }

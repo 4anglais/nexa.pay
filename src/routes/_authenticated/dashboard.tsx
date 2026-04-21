@@ -2,8 +2,15 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { firebase } from "@/integrations/firebase/client";
 import { PageHeader } from "@/components/PageHeader";
-import { StatCard } from "@/components/StatCard";
-import { Users, Banknote, FileText, TrendingUp } from "lucide-react";
+import {
+  Users,
+  Banknote,
+  FileText,
+  TrendingUp,
+  ArrowRight,
+  Activity,
+  ChevronRight,
+} from "lucide-react";
 import { collection, getDocs, query, where } from "firebase/firestore";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -15,6 +22,84 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   }),
   component: DashboardPage,
 });
+
+const statConfig = [
+  {
+    key: "totalEmployees",
+    title: "Total Employees",
+    icon: Users,
+    description: "Active staff",
+    format: (v: number) => String(v),
+    gradient: "from-violet-500/20 to-purple-500/10",
+    iconColor: "text-violet-500",
+    iconBg: "bg-violet-500/10",
+    border: "border-violet-500/20",
+  },
+  {
+    key: "monthlyPayroll",
+    title: "Monthly Payroll",
+    icon: Banknote,
+    description: "Total disbursement",
+    format: (v: number) =>
+      new Intl.NumberFormat("en-ZM", {
+        style: "currency",
+        currency: "ZMW",
+      }).format(v),
+    gradient: "from-emerald-500/20 to-teal-500/10",
+    iconColor: "text-emerald-500",
+    iconBg: "bg-emerald-500/10",
+    border: "border-emerald-500/20",
+  },
+  {
+    key: "payslipsGenerated",
+    title: "Payslips Generated",
+    icon: FileText,
+    description: "Total documents",
+    format: (v: number) => String(v),
+    gradient: "from-sky-500/20 to-blue-500/10",
+    iconColor: "text-sky-500",
+    iconBg: "bg-sky-500/10",
+    border: "border-sky-500/20",
+  },
+  {
+    key: "payrollRuns",
+    title: "Payroll Runs",
+    icon: TrendingUp,
+    description: "Completed cycles",
+    format: (v: number) => String(v),
+    gradient: "from-amber-500/20 to-orange-500/10",
+    iconColor: "text-amber-500",
+    iconBg: "bg-amber-500/10",
+    border: "border-amber-500/20",
+  },
+];
+
+const quickActions = [
+  {
+    to: "/employees",
+    icon: Users,
+    label: "Manage Employees",
+    description: "Add, edit, or remove staff",
+    iconColor: "text-violet-500",
+    iconBg: "bg-violet-500/10",
+  },
+  {
+    to: "/payroll",
+    icon: Banknote,
+    label: "Run Payroll",
+    description: "Process this month's salaries",
+    iconColor: "text-emerald-500",
+    iconBg: "bg-emerald-500/10",
+  },
+  {
+    to: "/payslips",
+    icon: FileText,
+    label: "View Payslips",
+    description: "Browse generated documents",
+    iconColor: "text-sky-500",
+    iconBg: "bg-sky-500/10",
+  },
+];
 
 function DashboardPage() {
   const [stats, setStats] = useState({
@@ -30,34 +115,28 @@ function DashboardPage() {
         const uid = firebase.auth.currentUser?.uid;
         if (!uid) return;
 
-        // Retrieve employees from Firestore
         const employeesSnapshot = await getDocs(
           query(
             collection(firebase.db, "employees"),
             where("userId", "==", uid),
           ),
         );
-
         const employees = employeesSnapshot.docs.map((doc) => doc.data());
 
-        // Retrieve payslips from Firestore
         const payslipsSnapshot = await getDocs(
           query(
             collection(firebase.db, "payslips"),
             where("userId", "==", uid),
           ),
         );
-
         const payslips = payslipsSnapshot.docs.map((doc) => doc.data());
 
-        // Retrieve payroll runs from Firestore
         const runsSnapshot = await getDocs(
           query(
             collection(firebase.db, "payroll_runs"),
             where("userId", "==", uid),
           ),
         );
-
         const runs = runsSnapshot.docs.map((doc) => doc.data());
 
         const monthlyPayroll = employees.reduce(
@@ -80,85 +159,131 @@ function DashboardPage() {
     loadStats();
   }, []);
 
-  const formatCurrency = (n: number) =>
-    new Intl.NumberFormat("en-ZM", {
-      style: "currency",
-      currency: "ZMW",
-    }).format(n);
+  const currentMonth = new Date().toLocaleString("default", {
+    month: "long",
+    year: "numeric",
+  });
 
   return (
-    <>
-      <PageHeader
-        title="Dashboard"
-        description="Welcome to NexaPayslip — your payroll overview"
-      />
-
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          title="Total Employees"
-          value={String(stats.totalEmployees)}
-          icon={Users}
-        />
-        <StatCard
-          title="Monthly Payroll"
-          value={formatCurrency(stats.monthlyPayroll)}
-          icon={Banknote}
-        />
-        <StatCard
-          title="Payslips Generated"
-          value={String(stats.payslipsGenerated)}
-          icon={FileText}
-        />
-        <StatCard
-          title="Payroll Runs"
-          value={String(stats.payrollRuns)}
-          icon={TrendingUp}
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-widest">
+          <Activity className="h-3 w-3" />
+          <span>{currentMonth}</span>
+        </div>
+        <PageHeader
+          title="Dashboard"
+          description="Welcome to NexaPayslip — your payroll overview"
         />
       </div>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-2">
-        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-bold text-card-foreground">
-            Recent Activity
-          </h2>
-          <p className="text-sm font-light italic text-muted-foreground">
-            No recent payroll activity. Create your first payroll run to get
-            started.
-          </p>
-        </div>
-
-        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-bold text-card-foreground">
-            Quick Actions
-          </h2>
-
-          <div className="space-y-3">
-            <Link
-              to="/employees"
-              className="flex items-center gap-3 rounded-lg border p-3 text-sm font-semibold hover:bg-accent"
+      {/* Stat Cards */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {statConfig.map(
+          ({
+            key,
+            title,
+            icon: Icon,
+            description,
+            format,
+            gradient,
+            iconColor,
+            iconBg,
+            border,
+          }) => (
+            <div
+              key={key}
+              className={`relative overflow-hidden rounded-2xl border ${border} bg-gradient-to-br ${gradient} p-5 shadow-sm backdrop-blur-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5`}
             >
-              <Users className="h-4 w-4" />
-              Manage Employees
-            </Link>
+              <div className="pointer-events-none absolute -right-4 -top-4 h-24 w-24 rounded-full bg-white/5 blur-xl" />
 
+              <div className="flex items-start justify-between">
+                <div className={`rounded-xl ${iconBg} p-2.5`}>
+                  <Icon className={`h-4 w-4 ${iconColor}`} />
+                </div>
+                <span className="text-xs text-muted-foreground font-medium">
+                  {description}
+                </span>
+              </div>
+
+              <div className="mt-4">
+                <p className="text-2xl font-bold tracking-tight text-foreground">
+                  {format(stats[key as keyof typeof stats] as number)}
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">{title}</p>
+              </div>
+            </div>
+          ),
+        )}
+      </div>
+
+      {/* Bottom Row */}
+      <div className="grid gap-6 lg:grid-cols-5">
+        {/* Recent Activity */}
+        <div className="lg:col-span-3 rounded-2xl border border-border bg-card p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-base font-semibold text-card-foreground">
+              Recent Activity
+            </h2>
+            <span className="text-xs text-muted-foreground bg-muted px-2.5 py-1 rounded-full">
+              0 events
+            </span>
+          </div>
+
+          <div className="flex flex-col items-center justify-center py-10 gap-3 text-center">
+            <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+              <Activity className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-card-foreground">
+                No activity yet
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Create your first payroll run to start seeing activity here.
+              </p>
+            </div>
             <Link
               to="/payroll"
-              className="flex items-center gap-3 rounded-lg border p-3 text-sm font-semibold hover:bg-accent"
+              className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
             >
-              <Banknote className="h-4 w-4" />
-              Run Payroll
-            </Link>
-
-            <Link
-              to="/payslips"
-              className="flex items-center gap-3 rounded-lg border p-3 text-sm font-semibold hover:bg-accent"
-            >
-              <FileText className="h-4 w-4" />
-              View Payslips
+              Run Payroll <ArrowRight className="h-3 w-3" />
             </Link>
           </div>
         </div>
+
+        {/* Quick Actions */}
+        <div className="lg:col-span-2 rounded-2xl border border-border bg-card p-6 shadow-sm">
+          <h2 className="text-base font-semibold text-card-foreground mb-5">
+            Quick Actions
+          </h2>
+
+          <div className="space-y-2">
+            {quickActions.map(
+              ({ to, icon: Icon, label, description, iconColor, iconBg }) => (
+                <Link
+                  key={to}
+                  to={to}
+                  className="group flex items-center gap-3 rounded-xl border border-border/60 p-3.5 transition-all duration-150 hover:bg-accent hover:border-border hover:shadow-sm"
+                >
+                  <div className={`rounded-lg ${iconBg} p-2 shrink-0`}>
+                    <Icon className={`h-4 w-4 ${iconColor}`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-card-foreground truncate">
+                      {label}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {description}
+                    </p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0 transition-transform group-hover:translate-x-0.5" />
+                </Link>
+              ),
+            )}
+          </div>
+        </div>
       </div>
-    </>
+    </div>
   );
 }

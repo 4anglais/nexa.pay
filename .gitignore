@@ -7,45 +7,38 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
+# Dependencies
+node_modules/
+
+# Build outputs
 dist
 dist-ssr
-coverage
+build/
 .output
 .vinxi
 .tanstack/**
 .nitro
-*.local
+
+# Env files (VERY IMPORTANT)
 .env
 .env.*
-*.tmp
-*.temp
-*.bak
-*.orig
-*.rej
-*.pid
-tmp/
-temp/
+*.local
 
-# Wrangler / Cloudflare
+# Cloudflare / Wrangler
 .wrangler/
 .dev.vars
-.netlify/
-.firebase/
-.vercel/
 
-# Local-only notes and scratch docs
-*.local.md
-*.notes.md
-NOTES.md
-SCRATCH.md
-TODO.local.md
-
-# Editor directories and files
+# Editor
 .vscode/*
 !.vscode/extensions.json
+!.vscode/settings.json
 .idea
+
+# OS
 .DS_Store
+Thumbs.db
+
+# Misc
 *.suo
 *.ntvs*
 *.njsproj

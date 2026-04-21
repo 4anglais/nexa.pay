@@ -4,7 +4,7 @@ import { firebase } from "@/integrations/firebase/client";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { Users, Banknote, FileText, TrendingUp } from "lucide-react";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, query, where } from "firebase/firestore";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -27,23 +27,39 @@ function DashboardPage() {
   useEffect(() => {
     async function loadStats() {
       try {
-        // Fetch employees
+        const uid = firebase.auth.currentUser?.uid;
+        if (!uid) return;
+
+        // EMPLOYEES
         const employeesSnapshot = await getDocs(
-          collection(firebase.db, "employees"),
+          query(
+            collection(firebase.db, "employees"),
+            where("userId", "==", uid),
+          ),
         );
+
         const employees = employeesSnapshot.docs.map((doc) => doc.data());
 
-        // Fetch payslips
+        // PAYSLIPS
         const payslipsSnapshot = await getDocs(
-          collection(firebase.db, "payslips"),
+          query(
+            collection(firebase.db, "payslips"),
+            where("userId", "==", uid),
+          ),
         );
+
         const payslips = payslipsSnapshot.docs.map((doc) => doc.data());
 
-        // Fetch payroll runs
+        // PAYROLL RUNS
         const runsSnapshot = await getDocs(
-          collection(firebase.db, "payroll_runs"),
+          query(
+            collection(firebase.db, "payroll_runs"),
+            where("userId", "==", uid),
+          ),
         );
+
         const runs = runsSnapshot.docs.map((doc) => doc.data());
+
         const monthlyPayroll = employees.reduce(
           (sum, e) =>
             sum + Number(e.basic_salary || 0) + Number(e.allowances || 0),
@@ -60,6 +76,7 @@ function DashboardPage() {
         console.error("Error loading stats:", error);
       }
     }
+
     loadStats();
   }, []);
 
@@ -109,31 +126,35 @@ function DashboardPage() {
             started.
           </p>
         </div>
+
         <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
           <h2 className="mb-4 text-lg font-bold text-card-foreground">
             Quick Actions
           </h2>
+
           <div className="space-y-3">
             <Link
               to="/employees"
-              className="flex items-center gap-3 rounded-lg border border-border p-3 text-sm font-semibold transition-colors hover:bg-accent"
+              className="flex items-center gap-3 rounded-lg border p-3 text-sm font-semibold hover:bg-accent"
             >
-              <Users className="h-4 w-4 text-foreground" strokeWidth={1.5} />
-              <span className="text-card-foreground">Manage Employees</span>
+              <Users className="h-4 w-4" />
+              Manage Employees
             </Link>
+
             <Link
               to="/payroll"
-              className="flex items-center gap-3 rounded-lg border border-border p-3 text-sm font-semibold transition-colors hover:bg-accent"
+              className="flex items-center gap-3 rounded-lg border p-3 text-sm font-semibold hover:bg-accent"
             >
-              <Banknote className="h-4 w-4 text-foreground" strokeWidth={1.5} />
-              <span className="text-card-foreground">Run Payroll</span>
+              <Banknote className="h-4 w-4" />
+              Run Payroll
             </Link>
+
             <Link
               to="/payslips"
-              className="flex items-center gap-3 rounded-lg border border-border p-3 text-sm font-semibold transition-colors hover:bg-accent"
+              className="flex items-center gap-3 rounded-lg border p-3 text-sm font-semibold hover:bg-accent"
             >
-              <FileText className="h-4 w-4 text-foreground" strokeWidth={1.5} />
-              <span className="text-card-foreground">View Payslips</span>
+              <FileText className="h-4 w-4" />
+              View Payslips
             </Link>
           </div>
         </div>

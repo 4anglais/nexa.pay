@@ -1,0 +1,32 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow read/write for company_settings only if userId matches the authenticated user
+    match /company_settings/{document} {
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow write: if request.auth != null && request.resource.data.userId == request.auth.uid;
+    }
+
+    // Ensure all other collections are user-scoped
+    match /employees/{document} {
+      allow read, write: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+    match /payroll_runs/{document} {
+      allow read, write: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+    match /payslips/{document} {
+      allow read, write: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+    match /deductions/{document} {
+      allow read, write: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+    match /allowances/{document} {
+      allow read, write: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+  }
+}
+

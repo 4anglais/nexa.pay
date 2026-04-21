@@ -3,64 +3,84 @@ import { useEffect, useState } from "react";
 import { firebase } from "@/integrations/firebase/client";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Loader2, Play } from "lucide-react";
-import { collection, getDocs, addDoc, doc, getDoc } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  addDoc,
+  doc,
+  getDoc,
+  query,
+  where,
+} from "firebase/firestore";
 
 export const Route = createFileRoute("/_authenticated/payroll")({
-  head: () => ({ meta: [{ title: "Payroll — NexaPayslip" }] }),
   component: PayrollPage,
 });
 
-interface Employee {
+// Types
+type Employee = {
   id: string;
   full_name: string;
   basic_salary: number;
-  allowances: number;
-}
+};
 
-interface Deduction {
+type Allowance = {
   employee_id: string;
   amount: number;
-}
+};
 
-interface Allowance {
+type Deduction = {
   employee_id: string;
   amount: number;
-}
+};
 
-interface CompanySettings {
+type Settings = {
   paye_rate: number;
   napsa_rate: number;
   nhima_rate: number;
-}
+};
 
 function PayrollPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [deductions, setDeductions] = useState<Deduction[]>([]);
   const [allowances, setAllowances] = useState<Allowance[]>([]);
-  const [settings, setSettings] = useState<CompanySettings>({
+  const [settings, setSettings] = useState<Settings>({
     paye_rate: 0,
     napsa_rate: 5,
     nhima_rate: 1,
   });
 
-  const [month, setMonth] = useState(
-    String(new Date().getMonth() + 1).padStart(2, "0"),
-  );
-  const [year, setYear] = useState(new Date().getFullYear());
+  const [month] = useState(String(new Date().getMonth() + 1).padStart(2, "0"));
+  const [year] = useState(new Date().getFullYear());
 
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<string | null>(null);
 
-  // AUTH CHECK (IMPORTANT FIX)
-  const isLoggedIn = () => !!firebase.auth.currentUser;
+  const [uid, setUid] = useState<string | null>(null);
+
+  // ✅ FIX: wait for auth properly
+  useEffect(() => {
+    const unsub = firebase.auth.onAuthStateChanged((user) => {
+      setUid(user?.uid ?? null);
+    });
+
+    return () => unsub();
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!uid) return;
+
       try {
-        const empSnap = await getDocs(collection(firebase.db, "employees"));
+        // EMPLOYEES
+        const empSnap = await getDocs(
+          query(
+            collection(firebase.db, "employees"),
+            where("userId", "==", uid),
+          ),
+        );
+
         setEmployees(
           empSnap.docs.map((d) => ({
             id: d.id,
@@ -68,40 +88,41 @@ function PayrollPage() {
           })),
         );
 
-        const dedSnap = await getDocs(collection(firebase.db, "deductions"));
+        // DEDUCTIONS
+        const dedSnap = await getDocs(
+          query(
+            collection(firebase.db, "deductions"),
+            where("userId", "==", uid),
+          ),
+        );
+
         setDeductions(dedSnap.docs.map((d) => d.data() as Deduction));
 
-        const allowSnap = await getDocs(collection(firebase.db, "allowances"));
+        // ALLOWANCES
+        const allowSnap = await getDocs(
+          query(
+            collection(firebase.db, "allowances"),
+            where("userId", "==", uid),
+          ),
+        );
+
         setAllowances(allowSnap.docs.map((d) => d.data() as Allowance));
 
-        const settingsRef = doc(firebase.db, "company_settings", "default");
-        const settingsSnap = await getDoc(settingsRef);
+        // SETTINGS
+        const settingsSnap = await getDoc(
+          doc(firebase.db, "company_settings", uid),
+        );
 
         if (settingsSnap.exists()) {
-          setSettings(settingsSnap.data() as CompanySettings);
+          setSettings(settingsSnap.data() as Settings);
         }
       } catch (err) {
-        console.error("FETCH ERROR:", err);
+        console.error("Firestore load error:", err);
       }
     };
 
     fetchData();
-  }, []);
-
-  const months = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
+  }, [uid]);
 
   const getGross = (emp: Employee) => {
     const totalAllowances = allowances
@@ -116,28 +137,32 @@ function PayrollPage() {
       .filter((d) => d.employee_id === emp.id)
       .reduce((s, d) => s + Number(d.amount || 0), 0);
 
-    const paye = gross * (settings.paye_rate / 100);
-    const napsa = gross * (settings.napsa_rate / 100);
-    const nhima = gross * (settings.nhima_rate / 100);
-
-    return paye + napsa + nhima + custom;
+    return (
+      gross * (settings.paye_rate / 100) +
+      gross * (settings.napsa_rate / 100) +
+      gross * (settings.nhima_rate / 100) +
+      custom
+    );
   };
 
   const runPayroll = async () => {
-    // 🔥 FIX: auth check (THIS IS YOUR MAIN ISSUE)
-    if (!isLoggedIn()) {
-      setResult(" You must be logged in to run payroll.");
+    if (!uid) {
+      setResult("Not logged in");
       return;
     }
 
-    if (!employees.length) return;
+    if (!employees.length) {
+      setResult("No employees found");
+      return;
+    }
 
     setRunning(true);
     setResult(null);
 
     try {
       const runRef = await addDoc(collection(firebase.db, "payroll_runs"), {
-        month: months[parseInt(month) - 1],
+        userId: uid,
+        month,
         year,
         created_at: new Date().toISOString(),
       });
@@ -147,6 +172,7 @@ function PayrollPage() {
         const ded = getDeductions(emp, gross);
 
         await addDoc(collection(firebase.db, "payslips"), {
+          userId: uid,
           employee_id: emp.id,
           payroll_run_id: runRef.id,
           gross_pay: gross,
@@ -156,96 +182,52 @@ function PayrollPage() {
         });
       }
 
-      setResult("✅ Payroll completed successfully.");
-    } catch (err) {
-      console.error("PAYROLL ERROR:", err);
-      setResult(
-        err instanceof Error ? ` ${err.message}` : " Unknown payroll error",
-      );
+      setResult("Payroll completed successfully");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Payroll error";
+      setResult(message);
     } finally {
       setRunning(false);
     }
   };
 
-  const format = (n: number) =>
-    new Intl.NumberFormat("en-ZM", {
-      style: "currency",
-      currency: "ZMW",
-    }).format(n);
-
   return (
     <div className="p-6">
-      <PageHeader title="Run Payroll" description="Generate payslips" />
+      <PageHeader title="Run Payroll" />
 
-      <div className="space-y-4">
-        <div className="border p-4 rounded-lg">
-          <div className="flex gap-4 items-end">
-            <div>
-              <Label>Month</Label>
-              <select
-                value={month}
-                onChange={(e) => setMonth(e.target.value)}
-                className="border p-2 rounded"
-              >
-                {months.map((m, i) => (
-                  <option key={m} value={String(i + 1).padStart(2, "0")}>
-                    {m}
-                  </option>
-                ))}
-              </select>
-            </div>
+      <Button onClick={runPayroll} disabled={running}>
+        {running ? <Loader2 className="animate-spin" /> : <Play />}
+        Run Payroll
+      </Button>
 
-            <div>
-              <Label>Year</Label>
-              <Input
-                type="number"
-                value={year}
-                onChange={(e) => setYear(Number(e.target.value))}
-              />
-            </div>
+      {result && <p>{result}</p>}
 
-            <Button onClick={runPayroll} disabled={running}>
-              {running ? <Loader2 className="animate-spin" /> : <Play />}
-              Run Payroll
-            </Button>
-          </div>
+      <table className="w-full text-sm mt-4">
+        <thead>
+          <tr>
+            <th>Employee</th>
+            <th className="text-right">Gross</th>
+            <th className="text-right">Deductions</th>
+            <th className="text-right">Net</th>
+          </tr>
+        </thead>
 
-          {result && <p className="mt-2 font-medium">{result}</p>}
-        </div>
+        <tbody>
+          {employees.map((e) => {
+            const gross = getGross(e);
+            const ded = getDeductions(e, gross);
 
-        <div className="border rounded-lg p-4">
-          <h2 className="font-bold mb-2">Preview ({employees.length})</h2>
-
-          <table className="w-full text-sm">
-            <thead>
-              <tr>
-                <th>Employee</th>
-                <th className="text-right">Gross</th>
-                <th className="text-right">Deductions</th>
-                <th className="text-right">Net</th>
+            return (
+              <tr key={e.id}>
+                <td>{e.full_name}</td>
+                <td className="text-right">{gross}</td>
+                <td className="text-right">{ded}</td>
+                <td className="text-right">{gross - ded}</td>
               </tr>
-            </thead>
-
-            <tbody>
-              {employees.map((e) => {
-                const gross = getGross(e);
-                const ded = getDeductions(e, gross);
-
-                return (
-                  <tr key={e.id}>
-                    <td>{e.full_name}</td>
-                    <td className="text-right">{format(gross)}</td>
-                    <td className="text-right">{format(ded)}</td>
-                    <td className="text-right font-bold">
-                      {format(gross - ded)}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 }

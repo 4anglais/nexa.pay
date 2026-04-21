@@ -106,6 +106,7 @@ function PayslipDetailPage() {
           const allowancesQuery = query(
             collection(firebase.db, "allowances"),
             where("employee_id", "==", payslipData.employee_id),
+            where("userId", "==", firebase.auth.currentUser?.uid),
           );
           const allowancesSnapshot = await getDocs(allowancesQuery);
           const allowancesData = allowancesSnapshot.docs.map((doc) => ({
@@ -117,6 +118,7 @@ function PayslipDetailPage() {
           const deductionsQuery = query(
             collection(firebase.db, "deductions"),
             where("employee_id", "==", payslipData.employee_id),
+            where("userId", "==", firebase.auth.currentUser?.uid),
           );
           const deductionsSnapshot = await getDocs(deductionsQuery);
           const deductionsData = deductionsSnapshot.docs.map((doc) => ({

@@ -51,7 +51,7 @@ function NewEmployeePage() {
     resolver: zodResolver(employeeSchema),
   });
 
-  // 🔥 FIXED ONLY (no UI changes)
+  // Handle form submission
   const onSubmit = async (data: EmployeeForm) => {
     setError("");
 
@@ -62,16 +62,16 @@ function NewEmployeePage() {
         throw new Error("User not authenticated. Please login again.");
       }
 
-      // EMPLOYEE (IMPORTANT FIX: userId added)
+      // Add employee to Firestore
       const employeeRef = await addDoc(collection(firebase.db, "employees"), {
         ...data,
-        userId: user.uid, // 🔥 REQUIRED FOR RULES
+        userId: user.uid, // Required for Firestore rules
         allowances: allowances.reduce((s, a) => s + a.amount, 0),
         account_active: Boolean(data.email),
         created_at: new Date().toISOString(),
       });
 
-      // ALLOWANCES (FIX: userId added)
+      // Add allowances to Firestore
       for (const allowance of allowances.filter((a) => a.type)) {
         await addDoc(collection(firebase.db, "allowances"), {
           employee_id: employeeRef.id,
@@ -81,7 +81,7 @@ function NewEmployeePage() {
         });
       }
 
-      // DEDUCTIONS (FIX: userId added)
+      // Add deductions to Firestore
       for (const deduction of deductionItems.filter((d) => d.type)) {
         await addDoc(collection(firebase.db, "deductions"), {
           employee_id: employeeRef.id,

@@ -43,7 +43,7 @@ function SettingsPage() {
     resolver: zodResolver(settingsSchema),
   });
 
-  // 🔥 AUTH SAFE LISTENER (FIXES YOUR ISSUE)
+  // Listen for authentication state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(firebase.auth, async (u) => {
       setUser(u);
@@ -66,7 +66,7 @@ function SettingsPage() {
     return () => unsubscribe();
   }, [reset]);
 
-  // 🔥 SAVE SETTINGS (SAFE)
+  // Save settings to Firestore
   const onSubmit = async (data: SettingsForm) => {
     setError("");
     setSaved(false);

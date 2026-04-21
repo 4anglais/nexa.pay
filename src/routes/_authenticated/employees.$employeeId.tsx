@@ -68,7 +68,7 @@ function EditEmployeePage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch employee
+        // Retrieve employee data from Firestore
         const employeeDoc = await getDoc(
           doc(firebase.db, "employees", employeeId),
         );
@@ -77,7 +77,7 @@ function EditEmployeePage() {
           reset(employeeDoc.data() as EmployeeForm);
         }
 
-        // Fetch allowances
+        // Retrieve allowances for the employee
         const allowancesQuery = query(
           collection(firebase.db, "allowances"),
           where("employee_id", "==", employeeId),
@@ -93,7 +93,7 @@ function EditEmployeePage() {
           })),
         );
 
-        // Fetch deductions
+        // Retrieve deductions for the employee
         const deductionsQuery = query(
           collection(firebase.db, "deductions"),
           where("employee_id", "==", employeeId),
@@ -121,7 +121,7 @@ function EditEmployeePage() {
   const onSubmit = async (data: EmployeeForm) => {
     setError("");
 
-    // Get authenticated user
+    // Retrieve the currently authenticated user
     const auth = getAuth();
     const user = auth.currentUser;
 
@@ -133,13 +133,13 @@ function EditEmployeePage() {
     try {
       const totalAllowances = allowances.reduce((s, a) => s + a.amount, 0);
 
-      // Update employee
+      // Save updated employee details to Firestore
       await setDoc(doc(firebase.db, "employees", employeeId), {
         ...data,
         allowances: totalAllowances,
       });
 
-      // Remove existing allowances
+      // Clear existing allowances for the employee
       const allowancesQuery = query(
         collection(firebase.db, "allowances"),
         where("employee_id", "==", employeeId),
@@ -152,7 +152,7 @@ function EditEmployeePage() {
         await deleteDoc(d.ref);
       });
 
-      // Add allowances
+      // Add updated allowances to Firestore
       for (const allowance of allowances) {
         await addDoc(collection(firebase.db, "allowances"), {
           employee_id: employeeId,
@@ -162,7 +162,7 @@ function EditEmployeePage() {
         });
       }
 
-      // Remove existing deductions
+      // Clear existing deductions for the employee
       const deductionsQuery = query(
         collection(firebase.db, "deductions"),
         where("employee_id", "==", employeeId),
@@ -175,7 +175,7 @@ function EditEmployeePage() {
         await deleteDoc(d.ref);
       });
 
-      // Add deductions
+      // Add updated deductions to Firestore
       for (const deduction of deductions) {
         await addDoc(collection(firebase.db, "deductions"), {
           employee_id: employeeId,

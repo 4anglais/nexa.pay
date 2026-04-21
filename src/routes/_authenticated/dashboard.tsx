@@ -30,7 +30,7 @@ function DashboardPage() {
         const uid = firebase.auth.currentUser?.uid;
         if (!uid) return;
 
-        // EMPLOYEES
+        // Retrieve employees from Firestore
         const employeesSnapshot = await getDocs(
           query(
             collection(firebase.db, "employees"),
@@ -40,7 +40,7 @@ function DashboardPage() {
 
         const employees = employeesSnapshot.docs.map((doc) => doc.data());
 
-        // PAYSLIPS
+        // Retrieve payslips from Firestore
         const payslipsSnapshot = await getDocs(
           query(
             collection(firebase.db, "payslips"),
@@ -50,7 +50,7 @@ function DashboardPage() {
 
         const payslips = payslipsSnapshot.docs.map((doc) => doc.data());
 
-        // PAYROLL RUNS
+        // Retrieve payroll runs from Firestore
         const runsSnapshot = await getDocs(
           query(
             collection(firebase.db, "payroll_runs"),

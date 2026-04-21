@@ -18,28 +18,28 @@ export const Route = createFileRoute("/_authenticated/payroll")({
   component: PayrollPage,
 });
 
-// Types
-type Employee = {
+// Define types for payroll data
+interface Employee {
   id: string;
   full_name: string;
   basic_salary: number;
-};
+}
 
-type Allowance = {
+interface Allowance {
   employee_id: string;
   amount: number;
-};
+}
 
-type Deduction = {
+interface Deduction {
   employee_id: string;
   amount: number;
-};
+}
 
-type Settings = {
+interface Settings {
   paye_rate: number;
   napsa_rate: number;
   nhima_rate: number;
-};
+}
 
 function PayrollPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -59,7 +59,7 @@ function PayrollPage() {
 
   const [uid, setUid] = useState<string | null>(null);
 
-  // ✅ FIX: wait for auth properly
+  // Listen for authentication state changes
   useEffect(() => {
     const unsub = firebase.auth.onAuthStateChanged((user) => {
       setUid(user?.uid ?? null);
@@ -73,7 +73,7 @@ function PayrollPage() {
       if (!uid) return;
 
       try {
-        // EMPLOYEES
+        // Fetch employees from Firestore
         const empSnap = await getDocs(
           query(
             collection(firebase.db, "employees"),
@@ -88,7 +88,7 @@ function PayrollPage() {
           })),
         );
 
-        // DEDUCTIONS
+        // Fetch deductions from Firestore
         const dedSnap = await getDocs(
           query(
             collection(firebase.db, "deductions"),
@@ -98,7 +98,7 @@ function PayrollPage() {
 
         setDeductions(dedSnap.docs.map((d) => d.data() as Deduction));
 
-        // ALLOWANCES
+        // Fetch allowances from Firestore
         const allowSnap = await getDocs(
           query(
             collection(firebase.db, "allowances"),
@@ -108,7 +108,7 @@ function PayrollPage() {
 
         setAllowances(allowSnap.docs.map((d) => d.data() as Allowance));
 
-        // SETTINGS
+        // Fetch company settings from Firestore
         const settingsSnap = await getDoc(
           doc(firebase.db, "company_settings", uid),
         );

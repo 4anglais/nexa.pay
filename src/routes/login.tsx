@@ -4,176 +4,54 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { firebase } from "@/integrations/firebase/client";
-import { Loader2, ArrowLeft, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import {
-  type AuthError,
-  createUserWithEmailAndPassword,
+  Loader2,
+  Eye,
+  EyeOff,
+  ArrowLeft,
+  Sparkles,
+  ShieldCheck,
+  Zap,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
   GoogleAuthProvider,
+  createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signInWithPopup,
 } from "firebase/auth";
 
 export const Route = createFileRoute("/login")({
-  head: () => ({
-    meta: [
-      { title: "Login — NexaPayslips" },
-      { name: "description", content: "Sign in to your NexaPayslips account" },
-    ],
-  }),
   component: LoginPage,
 });
 
-const authSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+const schema = z.object({
+  email: z.string().email("Enter a valid email"),
+  password: z.string().min(6, "At least 6 characters"),
 });
-type AuthFormData = z.infer<typeof authSchema>;
 
-function getAuthErrorMessage(error: unknown) {
-  if (!error || typeof error !== "object" || !("code" in error))
-    return error instanceof Error ? error.message : "Authentication failed";
-  switch ((error as AuthError).code) {
-    case "auth/invalid-credential":
-    case "auth/invalid-login-credentials":
-      return "Invalid email or password.";
-    case "auth/user-not-found":
-      return "No account found for that email.";
-    case "auth/wrong-password":
-      return "Incorrect password.";
-    case "auth/email-already-in-use":
-      return "An account with that email already exists.";
-    case "auth/popup-closed-by-user":
-      return "Google sign-in was cancelled.";
-    case "auth/unauthorized-domain":
-      return "This domain is not authorized in Firebase.";
-    default:
-      return error instanceof Error ? error.message : "Authentication failed";
-  }
-}
+type FormData = z.infer<typeof schema>;
 
-// ─── Palette ──────────────────────────────────────────────────────────────────
-const C = {
-  teal: "#2dd4bf",
-  tealDim: "#14b8a6",
-  tealGlow: "rgba(45,212,191,0.15)",
-  tealBorder: "rgba(45,212,191,0.28)",
-  silver: "rgba(220,228,235,0.90)",
-  silverMid: "rgba(190,202,212,0.55)",
-  silverDim: "rgba(160,175,188,0.32)",
-  bg0: "#080e14",
-  bg1: "#0b1520",
-  bg2: "#0e1c2a",
-  white10: "rgba(255,255,255,0.10)",
-  white14: "rgba(255,255,255,0.14)",
-};
+const loginFeatures = [
+  { icon: Zap, label: "Instant payroll processing" },
+  { icon: ShieldCheck, label: "Bank-grade security" },
+  { icon: Sparkles, label: "Smart ZRA compliance" },
+];
 
-const glass: React.CSSProperties = {
-  background: "rgba(14,28,42,0.55)",
-  backdropFilter: "blur(20px) saturate(160%)",
-  WebkitBackdropFilter: "blur(20px) saturate(160%)",
-  border: `1px solid ${C.white14}`,
-  boxShadow:
-    "0 8px 32px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.09)",
-};
-
-const glassStrong: React.CSSProperties = {
-  background: "rgba(11,21,32,0.72)",
-  backdropFilter: "blur(40px) saturate(180%)",
-  WebkitBackdropFilter: "blur(40px) saturate(180%)",
-  border: `1px solid ${C.white14}`,
-  boxShadow:
-    "0 24px 64px rgba(0,0,0,0.50), inset 0 1px 0 rgba(255,255,255,0.10)",
-};
-
-const LOGIN_CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
-  @keyframes orbFloat {
-    0%,100% { transform:translate(0,0) scale(1); }
-    33%      { transform:translate(36px,-28px) scale(1.04); }
-    66%      { transform:translate(-18px,18px) scale(0.97); }
-  }
-  @keyframes fadeSlideUp {
-    from { opacity:0; transform:translateY(22px); }
-    to   { opacity:1; transform:translateY(0); }
-  }
-  @keyframes panelIn {
-    from { opacity:0; transform:translateX(18px); }
-    to   { opacity:1; transform:translateX(0); }
-  }
-  @keyframes shimmer {
-    0%   { background-position:-200% center; }
-    100% { background-position:200% center; }
-  }
-  @keyframes spin { to { transform:rotate(360deg); } }
-
-  .lp-input {
-    width:100%; height:48px;
-    background: rgba(14,28,42,0.60);
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 12px;
-    color: rgba(220,228,235,0.90);
-    font-size: 0.88rem;
-    font-family: 'Outfit', system-ui, sans-serif;
-    padding: 0 14px 0 44px;
-    outline: none;
-    box-sizing: border-box;
-    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
-  }
-  .lp-input::placeholder { color: rgba(160,175,188,0.30); }
-  .lp-input:focus {
-    border-color: rgba(45,212,191,0.45);
-    box-shadow: 0 0 0 3px rgba(45,212,191,0.10);
-    background: rgba(14,28,42,0.80);
-  }
-  .lp-input.pr { padding-right: 44px; }
-
-  .lp-btn-primary {
-    width:100%; height:48px; border-radius:12px; border:none; cursor:pointer;
-    background: #2dd4bf;
-    color: #080e14; font-size:0.9rem; font-weight:700;
-    font-family:'Outfit',system-ui,sans-serif;
-    display:flex; align-items:center; justify-content:center; gap:8px;
-    box-shadow: 0 4px 20px rgba(45,212,191,0.28);
-    transition: all 0.22s ease;
-  }
-  .lp-btn-primary:hover:not(:disabled) {
-    background: #14b8a6;
-    transform: translateY(-2px);
-    box-shadow: 0 10px 28px rgba(45,212,191,0.38);
-  }
-  .lp-btn-primary:disabled { opacity:0.45; cursor:not-allowed; }
-
-  .lp-btn-google {
-    width:100%; height:48px; border-radius:12px; cursor:pointer;
-    background: rgba(14,28,42,0.50);
-    border: 1px solid rgba(255,255,255,0.12);
-    color: rgba(190,202,212,0.75); font-size:0.88rem; font-weight:500;
-    font-family:'Outfit',system-ui,sans-serif;
-    display:flex; align-items:center; justify-content:center; gap:10px;
-    transition: all 0.22s ease;
-  }
-  .lp-btn-google:hover:not(:disabled) {
-    background: rgba(14,28,42,0.80);
-    border-color: rgba(255,255,255,0.20);
-    color: rgba(220,228,235,0.90);
-  }
-  .lp-btn-google:disabled { opacity:0.45; cursor:not-allowed; }
-
-  .lp-toggle {
-    background:none; border:none; cursor:pointer; padding:0;
-    color: #2dd4bf; font-size:0.82rem; font-weight:600;
-    font-family:'Outfit',system-ui,sans-serif;
-    transition: color 0.2s;
-  }
-  .lp-toggle:hover { color: #67e8f9; text-decoration:underline; }
-  .spin { animation: spin 1s linear infinite; }
-`;
+const signupFeatures = [
+  { icon: Sparkles, label: "Free to get started" },
+  { icon: Zap, label: "First payslip in 5 minutes" },
+  { icon: ShieldCheck, label: "NAPSA & NHIMA built-in" },
+];
 
 function LoginPage() {
   const navigate = useNavigate();
   const [error, setError] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const {
@@ -181,632 +59,402 @@ function LoginPage() {
     handleSubmit,
     formState: { errors, isSubmitting },
     reset,
-  } = useForm<AuthFormData>({ resolver: zodResolver(authSchema) });
+  } = useForm<FormData>({ resolver: zodResolver(schema) });
 
-  const toggleMode = () => {
-    setIsSignUp(!isSignUp);
+  const switchMode = (val: boolean) => {
+    setIsSignUp(val);
     setError("");
     reset();
   };
 
-  const handleGoogleAuth = async () => {
+  const handleGoogle = async () => {
     setError("");
-    setIsGoogleLoading(true);
+    setGoogleLoading(true);
     try {
-      const p = new GoogleAuthProvider();
-      p.setCustomParameters({ prompt: "select_account" });
-      await signInWithPopup(firebase.auth, p);
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: "select_account" });
+      await signInWithPopup(firebase.auth, provider);
       navigate({ to: "/dashboard" });
-    } catch (e) {
-      setError(getAuthErrorMessage(e));
+    } catch (e: any) {
+      setError(e.message || "Google sign-in failed");
     } finally {
-      setIsGoogleLoading(false);
+      setGoogleLoading(false);
     }
   };
 
-  const onSubmit = async (data: AuthFormData) => {
+  const onSubmit = async (data: FormData) => {
     setError("");
+    setLoading(true);
     try {
-      if (isSignUp)
+      if (isSignUp) {
         await createUserWithEmailAndPassword(
           firebase.auth,
           data.email,
           data.password,
         );
-      else
+      } else {
         await signInWithEmailAndPassword(
           firebase.auth,
           data.email,
           data.password,
         );
+      }
       navigate({ to: "/dashboard" });
-    } catch (e) {
-      setError(getAuthErrorMessage(e));
+    } catch (e: any) {
+      setError(e.message || "Authentication failed");
+    } finally {
+      setLoading(false);
     }
   };
 
-  return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: `linear-gradient(150deg,${C.bg0} 0%,${C.bg1} 50%,${C.bg2} 100%)`,
-        fontFamily: "'Outfit','SF Pro Display',system-ui,sans-serif",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "1.5rem",
-        position: "relative",
-        overflow: "hidden",
-      }}
-    >
-      <style>{LOGIN_CSS}</style>
+  const features = isSignUp ? signupFeatures : loginFeatures;
 
-      {/* Orbs */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          overflow: "hidden",
-          pointerEvents: "none",
-        }}
-        aria-hidden
-      >
-        <div
-          style={{
-            position: "absolute",
-            width: 600,
-            height: 600,
-            borderRadius: "50%",
-            top: "-18%",
-            left: "-10%",
-            background:
-              "radial-gradient(circle,rgba(20,184,166,0.12) 0%,transparent 68%)",
-            animation: "orbFloat 16s ease-in-out infinite",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            width: 500,
-            height: 500,
-            borderRadius: "50%",
-            bottom: "-14%",
-            right: "-8%",
-            background:
-              "radial-gradient(circle,rgba(45,212,191,0.08) 0%,transparent 68%)",
-            animation: "orbFloat 20s ease-in-out infinite reverse",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            width: 320,
-            height: 320,
-            borderRadius: "50%",
-            top: "35%",
-            right: "22%",
-            background:
-              "radial-gradient(circle,rgba(190,202,212,0.04) 0%,transparent 68%)",
-            animation: "orbFloat 26s ease-in-out infinite",
-          }}
-        />
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Ambient blobs — teal/emerald matches the app's accent palette */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute -top-40 -left-40 h-[480px] w-[480px] rounded-full bg-teal-500/[0.07] blur-3xl" />
+        <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-emerald-500/[0.07] blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-72 w-72 rounded-full bg-teal-400/[0.04] blur-3xl" />
       </div>
 
-      {/* Back */}
-      <Link
-        to="/"
-        style={{
-          position: "absolute",
-          top: 22,
-          left: 22,
-          zIndex: 50,
-          display: "inline-flex",
-          alignItems: "center",
-          gap: 6,
-          fontSize: "0.76rem",
-          color: C.silverDim,
-          textDecoration: "none",
-          ...glass,
-          borderRadius: 10,
-          padding: "6px 12px",
-          transition: "all 0.2s",
-        }}
-        onMouseEnter={(e) => {
-          (e.currentTarget as HTMLAnchorElement).style.color = C.silver;
-          (e.currentTarget as HTMLAnchorElement).style.borderColor =
-            C.tealBorder;
-        }}
-        onMouseLeave={(e) => {
-          (e.currentTarget as HTMLAnchorElement).style.color = C.silverDim;
-          (e.currentTarget as HTMLAnchorElement).style.borderColor = C.white14;
-        }}
-      >
-        <ArrowLeft size={13} /> Back
-      </Link>
-
-      {/* Main card */}
-      <div
-        style={{
-          position: "relative",
-          zIndex: 10,
-          display: "flex",
-          width: "100%",
-          maxWidth: 940,
-          minHeight: 575,
-          borderRadius: 26,
-          overflow: "hidden",
-          ...glassStrong,
-          animation: "fadeSlideUp 0.65s ease both",
-        }}
-      >
-        {/* Left — branding */}
-        <div
-          style={{
-            width: "42%",
-            flexShrink: 0,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "3rem 2.5rem",
-            borderRight: `1px solid ${C.white10}`,
-            background: "rgba(8,14,20,0.35)",
-            position: "relative",
-            overflow: "hidden",
-          }}
-        >
-          {/* teal orb inside panel */}
+      {/* Card */}
+      <div className="relative w-full max-w-[860px] min-h-[580px] rounded-3xl border border-border bg-card shadow-2xl flex overflow-hidden">
+        {/* ── LEFT PANEL ── */}
+        <div className="relative hidden md:flex w-[44%] flex-shrink-0 flex-col overflow-hidden">
+          {/* Background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-teal-950/40 via-background/10 to-background dark:from-teal-950/60" />
+          {/* Subtle grid using border token */}
           <div
+            className="absolute inset-0 opacity-40"
             style={{
-              position: "absolute",
-              width: 380,
-              height: 380,
-              borderRadius: "50%",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%,-50%)",
-              background: `radial-gradient(circle,${C.tealGlow} 0%,transparent 65%)`,
-              pointerEvents: "none",
-              transition: "opacity 0.8s",
+              backgroundImage:
+                "linear-gradient(hsl(var(--border)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--border)) 1px, transparent 1px)",
+              backgroundSize: "36px 36px",
             }}
           />
+          {/* Teal glow */}
+          <div className="absolute -top-20 -left-20 h-72 w-72 rounded-full bg-teal-500/[0.12] blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 right-4 h-48 w-48 rounded-full bg-emerald-500/[0.08] blur-2xl pointer-events-none" />
+          {/* Progressive blur at right edge — blends into right panel */}
+          <div className="absolute inset-y-0 right-0 w-14 bg-gradient-to-r from-transparent to-card/80 pointer-events-none z-10" />
 
-          <div style={{ position: "relative", zIndex: 2, textAlign: "center" }}>
+          <div className="relative z-20 flex flex-col justify-between h-full p-10">
             {/* Logo */}
-            <div
-              style={{
-                width: 62,
-                height: 62,
-                borderRadius: 18,
-                background: C.tealGlow,
-                border: `1px solid ${C.tealBorder}`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                margin: "0 auto 1.6rem",
-                boxShadow: `0 8px 28px rgba(45,212,191,0.18), inset 0 1px 0 rgba(255,255,255,0.12)`,
-              }}
-            >
-              <span
-                style={{
-                  fontSize: "1.55rem",
-                  fontWeight: 800,
-                  letterSpacing: "-0.04em",
-                  color: C.teal,
-                }}
-              >
+            <div className="flex items-center gap-2.5">
+              <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center text-white font-black text-base shadow-md shadow-teal-500/25">
                 N
+              </div>
+              <span className="text-sm font-bold text-foreground tracking-tight">
+                NexaPayslip
               </span>
             </div>
 
-            <p
-              style={{
-                fontFamily: "monospace",
-                fontSize: "0.6rem",
-                letterSpacing: "0.18em",
-                textTransform: "uppercase",
-                color: C.silverDim,
-                marginBottom: "0.45rem",
-              }}
-            >
-              NexaPayslips
-            </p>
+            {/* Headline — cross-fades on mode switch */}
+            <div className="flex flex-col gap-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-teal-500 transition-all duration-500">
+                {isSignUp ? "Join today" : "Payroll made simple"}
+              </p>
 
-            <h2
-              style={{
-                fontSize: "clamp(1.55rem,2.5vw,2.1rem)",
-                fontWeight: 700,
-                letterSpacing: "-0.038em",
-                lineHeight: 1.1,
-                margin: "0 0 0.9rem",
-                color: C.silver,
-              }}
-            >
-              {isSignUp ? "Start your journey" : "Welcome back"}
-            </h2>
-            <p
-              style={{
-                fontSize: "0.83rem",
-                color: C.silverMid,
-                lineHeight: 1.65,
-                maxWidth: 210,
-                margin: "0 auto 1.8rem",
-              }}
-            >
-              {isSignUp
-                ? "Join companies across Zambia managing payroll with ease."
-                : "Sign in to manage your payroll, employees and payslips."}
-            </p>
-
-            <button
-              onClick={toggleMode}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-                padding: "9px 22px",
-                borderRadius: 11,
-                background: "rgba(45,212,191,0.08)",
-                border: `1px solid ${C.tealBorder}`,
-                color: C.teal,
-                fontSize: "0.82rem",
-                fontWeight: 500,
-                fontFamily: "'Outfit',system-ui,sans-serif",
-                cursor: "pointer",
-                transition: "all 0.2s",
-                letterSpacing: "-0.01em",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.background =
-                  C.tealGlow;
-                (e.currentTarget as HTMLButtonElement).style.boxShadow =
-                  `0 4px 16px rgba(45,212,191,0.18)`;
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.background =
-                  "rgba(45,212,191,0.08)";
-                (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
-              }}
-            >
-              {isSignUp ? "Already have an account?" : "New here? Sign up"}
-            </button>
-
-            {/* Tag pills */}
-            <div
-              style={{
-                display: "flex",
-                gap: 5,
-                justifyContent: "center",
-                marginTop: "2.2rem",
-                flexWrap: "wrap",
-              }}
-            >
-              {["PAYE", "NAPSA", "NHIMA", "PDF"].map((t) => (
-                <span
-                  key={t}
+              {/* Fixed-height container so layout doesn't shift */}
+              <div className="relative h-[92px]">
+                <div
+                  className="absolute inset-0 transition-all duration-500"
                   style={{
-                    fontFamily: "monospace",
-                    fontSize: "0.56rem",
-                    letterSpacing: "0.1em",
-                    padding: "3px 8px",
-                    borderRadius: 6,
-                    background: "rgba(45,212,191,0.06)",
-                    border: `1px solid rgba(45,212,191,0.16)`,
-                    color: `rgba(45,212,191,0.45)`,
+                    opacity: isSignUp ? 0 : 1,
+                    transform: isSignUp ? "translateX(-24px)" : "translateX(0)",
+                    transitionTimingFunction: "cubic-bezier(0.76,0,0.24,1)",
                   }}
                 >
-                  {t}
-                </span>
+                  <h1 className="text-[38px] font-bold leading-[1.08] tracking-tight text-foreground">
+                    Welcome
+                    <br />
+                    <span className="bg-gradient-to-r from-teal-500 to-emerald-400 bg-clip-text text-transparent">
+                      back.
+                    </span>
+                  </h1>
+                </div>
+                <div
+                  className="absolute inset-0 transition-all duration-500"
+                  style={{
+                    opacity: isSignUp ? 1 : 0,
+                    transform: isSignUp ? "translateX(0)" : "translateX(24px)",
+                    transitionTimingFunction: "cubic-bezier(0.76,0,0.24,1)",
+                  }}
+                >
+                  <h1 className="text-[38px] font-bold leading-[1.08] tracking-tight text-foreground">
+                    New
+                    <br />
+                    <span className="bg-gradient-to-r from-teal-500 to-emerald-400 bg-clip-text text-transparent">
+                      here?
+                    </span>
+                  </h1>
+                </div>
+              </div>
+
+              <p className="text-sm text-muted-foreground leading-relaxed max-w-[210px] transition-all duration-500">
+                {isSignUp
+                  ? "Set up your company payroll in minutes — no spreadsheets, no stress."
+                  : "Your payroll dashboard is ready. Pick up right where you left off."}
+              </p>
+            </div>
+
+            {/* Feature bullets */}
+            <div className="flex flex-col gap-3">
+              {features.map(({ icon: Icon, label }) => (
+                <div key={label} className="flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-lg bg-teal-500/10 border border-teal-500/20 flex items-center justify-center shrink-0">
+                    <Icon className="h-3.5 w-3.5 text-teal-500" />
+                  </div>
+                  <span className="text-xs text-muted-foreground font-medium">
+                    {label}
+                  </span>
+                </div>
               ))}
             </div>
           </div>
         </div>
 
-        {/* Right — form */}
-        <div
-          style={{
-            flex: 1,
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            padding: "3rem clamp(1.5rem,4vw,3.5rem)",
-            animation: "panelIn 0.5s 0.15s ease both",
-          }}
-        >
-          <div style={{ maxWidth: 350, width: "100%" }}>
-            <h2
-              style={{
-                fontSize: "1.65rem",
-                fontWeight: 700,
-                letterSpacing: "-0.038em",
-                margin: "0 0 0.35rem",
-                color: C.silver,
-              }}
-            >
-              {isSignUp ? "Create account" : "Sign in"}
-            </h2>
-            <p
-              style={{
-                fontSize: "0.82rem",
-                color: C.silverMid,
-                margin: "0 0 1.8rem",
-              }}
-            >
-              {isSignUp
-                ? "Enter your details to get started"
-                : "Enter your credentials to continue"}
-            </p>
+        {/* ── RIGHT PANEL ── */}
+        <div className="flex-1 relative overflow-hidden">
+          {/* LOGIN */}
+          <div
+            className="absolute inset-0 flex flex-col justify-center px-10 py-10 transition-all duration-500"
+            style={{
+              opacity: isSignUp ? 0 : 1,
+              transform: isSignUp ? "translateX(20px)" : "translateX(0)",
+              transitionTimingFunction: "cubic-bezier(0.76,0,0.24,1)",
+              pointerEvents: isSignUp ? "none" : "auto",
+            }}
+          >
+            <AuthForm
+              mode="login"
+              error={!isSignUp ? error : ""}
+              onGoogle={handleGoogle}
+              googleLoading={googleLoading}
+              register={register}
+              errors={errors}
+              isSubmitting={isSubmitting}
+              loading={loading}
+              showPassword={showPassword}
+              setShowPassword={setShowPassword}
+              handleSubmit={handleSubmit}
+              onSubmit={onSubmit}
+              onSwitch={() => switchMode(true)}
+            />
+          </div>
 
-            {/* Error */}
-            {error && (
-              <div
-                style={{
-                  background: "rgba(239,68,68,0.10)",
-                  border: "1px solid rgba(239,68,68,0.25)",
-                  borderRadius: 11,
-                  padding: "9px 14px",
-                  marginBottom: "1.1rem",
-                  fontSize: "0.81rem",
-                  color: "rgba(252,165,165,0.88)",
-                }}
-              >
-                {error}
-              </div>
-            )}
-
-            {/* Google */}
-            <button
-              className="lp-btn-google"
-              onClick={handleGoogleAuth}
-              disabled={isSubmitting || isGoogleLoading}
-              style={{ marginBottom: "1.1rem" }}
-            >
-              {isGoogleLoading ? (
-                <Loader2 size={17} className="spin" />
-              ) : (
-                <>
-                  <svg width="17" height="17" viewBox="0 0 24 24" aria-hidden>
-                    <path
-                      d="M21.35 11.1H12v2.98h5.38c-.23 1.48-1.07 2.74-2.28 3.59v2.98h3.69c2.16-1.99 3.41-4.93 3.41-8.4 0-.71-.06-1.41-.17-2.05Z"
-                      fill="#4285F4"
-                    />
-                    <path
-                      d="M12 21c2.7 0 4.96-.9 6.61-2.43l-3.69-2.98c-1.03.69-2.34 1.1-3.92 1.1-3 0-5.54-2.02-6.45-4.74H.74v3.08A9.99 9.99 0 0 0 12 21Z"
-                      fill="#34A853"
-                    />
-                    <path
-                      d="M5.55 11.95A6 6 0 0 1 5.2 10c0-.68.12-1.34.35-1.95V4.97H.74A10 10 0 0 0 0 10c0 1.62.39 3.15 1.08 4.5l4.47-2.55Z"
-                      fill="#FBBC05"
-                    />
-                    <path
-                      d="M12 3.98c1.47 0 2.79.51 3.82 1.5l2.86-2.86C16.95.99 14.69 0 12 0A9.99 9.99 0 0 0 .74 4.97l4.81 3.08c.91-2.72 3.45-4.07 6.45-4.07Z"
-                      fill="#EA4335"
-                    />
-                  </svg>
-                  Continue with Google
-                </>
-              )}
-            </button>
-
-            {/* Divider */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                marginBottom: "1.1rem",
-              }}
-            >
-              <div style={{ flex: 1, height: "1px", background: C.white10 }} />
-              <span
-                style={{
-                  fontFamily: "monospace",
-                  fontSize: "0.58rem",
-                  letterSpacing: "0.12em",
-                  textTransform: "uppercase",
-                  color: C.silverDim,
-                }}
-              >
-                or
-              </span>
-              <div style={{ flex: 1, height: "1px", background: C.white10 }} />
-            </div>
-
-            {/* Form */}
-            <form
-              onSubmit={handleSubmit(onSubmit)}
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "0.85rem",
-              }}
-            >
-              {/* Email */}
-              <div>
-                <label
-                  style={{
-                    display: "block",
-                    fontSize: "0.73rem",
-                    fontWeight: 600,
-                    color: C.silverMid,
-                    marginBottom: 5,
-                    letterSpacing: "0.02em",
-                  }}
-                >
-                  Email
-                </label>
-                <div style={{ position: "relative" }}>
-                  <Mail
-                    size={14}
-                    style={{
-                      position: "absolute",
-                      left: 14,
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      color: C.silverDim,
-                      pointerEvents: "none",
-                    }}
-                  />
-                  <input
-                    className="lp-input"
-                    type="email"
-                    placeholder="admin@company.com"
-                    {...register("email")}
-                  />
-                </div>
-                {errors.email && (
-                  <p
-                    style={{
-                      fontSize: "0.7rem",
-                      color: "rgba(252,165,165,0.82)",
-                      marginTop: 3,
-                    }}
-                  >
-                    {errors.email.message}
-                  </p>
-                )}
-              </div>
-
-              {/* Password */}
-              <div>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginBottom: 5,
-                  }}
-                >
-                  <label
-                    style={{
-                      fontSize: "0.73rem",
-                      fontWeight: 600,
-                      color: C.silverMid,
-                      letterSpacing: "0.02em",
-                    }}
-                  >
-                    Password
-                  </label>
-                  {!isSignUp && (
-                    <button
-                      type="button"
-                      style={{
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        fontSize: "0.7rem",
-                        color: `rgba(45,212,191,0.65)`,
-                        fontFamily: "'Outfit',system-ui,sans-serif",
-                        padding: 0,
-                        transition: "color 0.2s",
-                      }}
-                      onMouseEnter={(e) => {
-                        (e.currentTarget as HTMLButtonElement).style.color =
-                          C.teal;
-                      }}
-                      onMouseLeave={(e) => {
-                        (e.currentTarget as HTMLButtonElement).style.color =
-                          `rgba(45,212,191,0.65)`;
-                      }}
-                    >
-                      Forgot password?
-                    </button>
-                  )}
-                </div>
-                <div style={{ position: "relative" }}>
-                  <Lock
-                    size={14}
-                    style={{
-                      position: "absolute",
-                      left: 14,
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      color: C.silverDim,
-                      pointerEvents: "none",
-                    }}
-                  />
-                  <input
-                    className="lp-input pr"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="••••••••"
-                    {...register("password")}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    style={{
-                      position: "absolute",
-                      right: 13,
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      color: C.silverDim,
-                      display: "flex",
-                      alignItems: "center",
-                      padding: 0,
-                      transition: "color 0.2s",
-                    }}
-                    onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLButtonElement).style.color =
-                        C.silver;
-                    }}
-                    onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLButtonElement).style.color =
-                        C.silverDim;
-                    }}
-                  >
-                    {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
-                  </button>
-                </div>
-                {errors.password && (
-                  <p
-                    style={{
-                      fontSize: "0.7rem",
-                      color: "rgba(252,165,165,0.82)",
-                      marginTop: 3,
-                    }}
-                  >
-                    {errors.password.message}
-                  </p>
-                )}
-              </div>
-
-              <button
-                type="submit"
-                className="lp-btn-primary"
-                disabled={isSubmitting || isGoogleLoading}
-                style={{ marginTop: "0.2rem" }}
-              >
-                {isSubmitting ? (
-                  <Loader2 size={17} className="spin" />
-                ) : isSignUp ? (
-                  "Create account"
-                ) : (
-                  "Sign in"
-                )}
-              </button>
-            </form>
-
-            <p
-              style={{
-                marginTop: "1.4rem",
-                textAlign: "center",
-                fontSize: "0.78rem",
-                color: C.silverDim,
-              }}
-            >
-              {isSignUp
-                ? "Already have an account? "
-                : "Don't have an account? "}
-              <button className="lp-toggle" onClick={toggleMode}>
-                {isSignUp ? "Sign in" : "Sign up"}
-              </button>
-            </p>
+          {/* SIGNUP */}
+          <div
+            className="absolute inset-0 flex flex-col justify-center px-10 py-10 transition-all duration-500"
+            style={{
+              opacity: isSignUp ? 1 : 0,
+              transform: isSignUp ? "translateX(0)" : "translateX(-20px)",
+              transitionTimingFunction: "cubic-bezier(0.76,0,0.24,1)",
+              pointerEvents: isSignUp ? "auto" : "none",
+            }}
+          >
+            <AuthForm
+              mode="signup"
+              error={isSignUp ? error : ""}
+              onGoogle={handleGoogle}
+              googleLoading={googleLoading}
+              register={register}
+              errors={errors}
+              isSubmitting={isSubmitting}
+              loading={loading}
+              showPassword={showPassword}
+              setShowPassword={setShowPassword}
+              handleSubmit={handleSubmit}
+              onSubmit={onSubmit}
+              onSwitch={() => switchMode(false)}
+            />
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function AuthForm({
+  mode,
+  error,
+  onGoogle,
+  googleLoading,
+  register,
+  errors,
+  isSubmitting,
+  loading,
+  showPassword,
+  setShowPassword,
+  handleSubmit,
+  onSubmit,
+  onSwitch,
+}: {
+  mode: "login" | "signup";
+  error: string;
+  onGoogle: () => void;
+  googleLoading: boolean;
+  register: any;
+  errors: any;
+  isSubmitting: boolean;
+  loading: boolean;
+  showPassword: boolean;
+  setShowPassword: (v: boolean) => void;
+  handleSubmit: any;
+  onSubmit: any;
+  onSwitch: () => void;
+}) {
+  const isSignUp = mode === "signup";
+
+  return (
+    <div className="w-full max-w-[320px] mx-auto">
+      {isSignUp ? (
+        <button
+          onClick={onSwitch}
+          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors mb-8 font-medium"
+        >
+          <ArrowLeft className="h-3 w-3" /> Back to login
+        </button>
+      ) : (
+        <Link
+          to="/"
+          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors mb-8 font-medium"
+        >
+          <ArrowLeft className="h-3 w-3" /> Home
+        </Link>
+      )}
+
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-teal-500 mb-2">
+        {isSignUp ? "Get started" : "Sign in"}
+      </p>
+      <h2 className="text-2xl font-bold text-foreground tracking-tight mb-1.5">
+        {isSignUp ? "Create your account" : "Good to see you"}
+      </h2>
+      <p className="text-sm text-muted-foreground mb-7 leading-relaxed">
+        {isSignUp
+          ? "Join thousands of Zambian businesses on NexaPayslip."
+          : "Enter your credentials to access your dashboard."}
+      </p>
+
+      {error && (
+        <div className="mb-5 rounded-xl border border-destructive/30 bg-destructive/10 px-3.5 py-3 text-xs font-medium text-destructive">
+          {error}
+        </div>
+      )}
+
+      {/* Google */}
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full gap-2.5 rounded-xl mb-5 font-semibold"
+        onClick={onGoogle}
+        disabled={googleLoading}
+      >
+        {googleLoading ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <svg width="16" height="16" viewBox="0 0 24 24" className="shrink-0">
+            <path
+              fill="#4285F4"
+              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+            />
+            <path
+              fill="#34A853"
+              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+            />
+            <path
+              fill="#FBBC05"
+              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+            />
+            <path
+              fill="#EA4335"
+              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+            />
+          </svg>
+        )}
+        {isSignUp ? "Sign up with Google" : "Continue with Google"}
+      </Button>
+
+      {/* Divider */}
+      <div className="flex items-center gap-3 mb-5">
+        <div className="flex-1 h-px bg-border" />
+        <span className="text-xs text-muted-foreground font-medium">or</span>
+        <div className="flex-1 h-px bg-border" />
+      </div>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div className="space-y-1.5">
+          <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Email
+          </Label>
+          <Input
+            placeholder="you@company.com"
+            className="rounded-xl"
+            {...register("email")}
+          />
+          {errors.email && (
+            <p className="text-xs text-destructive font-medium">
+              {errors.email.message}
+            </p>
+          )}
+        </div>
+
+        <div className="space-y-1.5">
+          <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Password
+          </Label>
+          <div className="relative">
+            <Input
+              placeholder={isSignUp ? "Min. 6 characters" : "••••••••"}
+              type={showPassword ? "text" : "password"}
+              className="rounded-xl pr-10"
+              {...register("password")}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {showPassword ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+            </button>
+          </div>
+          {errors.password && (
+            <p className="text-xs text-destructive font-medium">
+              {errors.password.message}
+            </p>
+          )}
+        </div>
+
+        <Button
+          type="submit"
+          disabled={isSubmitting || loading}
+          className="w-full rounded-xl gap-2 font-semibold bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white shadow-lg shadow-teal-500/20 border-0 mt-1"
+        >
+          {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+          {loading
+            ? isSignUp
+              ? "Creating account…"
+              : "Signing in…"
+            : isSignUp
+              ? "Create Account"
+              : "Sign In"}
+        </Button>
+      </form>
+
+      <p className="mt-6 text-center text-xs text-muted-foreground">
+        {isSignUp ? "Already have an account? " : "Don't have an account? "}
+        <button
+          onClick={onSwitch}
+          className="font-bold text-teal-500 hover:text-teal-400 transition-colors"
+        >
+          {isSignUp ? "Sign in" : "Create one →"}
+        </button>
+      </p>
     </div>
   );
 }

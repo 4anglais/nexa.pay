@@ -30,10 +30,12 @@ const statConfig = [
     icon: Users,
     description: "Active staff",
     format: (v: number) => String(v),
-    gradient: "from-violet-500/20 to-purple-500/10",
-    iconColor: "text-violet-500",
-    iconBg: "bg-violet-500/10",
-    border: "border-violet-500/20",
+    // Teal — matches login accent
+    gradient: "from-teal-500/20 to-teal-500/5",
+    iconColor: "text-teal-500",
+    iconBg: "bg-teal-500/10",
+    border: "border-teal-500/20",
+    glow: "bg-teal-500/10",
   },
   {
     key: "monthlyPayroll",
@@ -45,10 +47,12 @@ const statConfig = [
         style: "currency",
         currency: "ZMW",
       }).format(v),
-    gradient: "from-emerald-500/20 to-teal-500/10",
+    // Emerald — second login accent
+    gradient: "from-emerald-500/20 to-emerald-500/5",
     iconColor: "text-emerald-500",
     iconBg: "bg-emerald-500/10",
     border: "border-emerald-500/20",
+    glow: "bg-emerald-500/10",
   },
   {
     key: "payslipsGenerated",
@@ -56,10 +60,11 @@ const statConfig = [
     icon: FileText,
     description: "Total documents",
     format: (v: number) => String(v),
-    gradient: "from-sky-500/20 to-blue-500/10",
+    gradient: "from-sky-500/20 to-sky-500/5",
     iconColor: "text-sky-500",
     iconBg: "bg-sky-500/10",
     border: "border-sky-500/20",
+    glow: "bg-sky-500/10",
   },
   {
     key: "payrollRuns",
@@ -67,10 +72,11 @@ const statConfig = [
     icon: TrendingUp,
     description: "Completed cycles",
     format: (v: number) => String(v),
-    gradient: "from-amber-500/20 to-orange-500/10",
+    gradient: "from-amber-500/20 to-amber-500/5",
     iconColor: "text-amber-500",
     iconBg: "bg-amber-500/10",
     border: "border-amber-500/20",
+    glow: "bg-amber-500/10",
   },
 ];
 
@@ -80,8 +86,9 @@ const quickActions = [
     icon: Users,
     label: "Manage Employees",
     description: "Add, edit, or remove staff",
-    iconColor: "text-violet-500",
-    iconBg: "bg-violet-500/10",
+    iconColor: "text-teal-500",
+    iconBg: "bg-teal-500/10",
+    hoverBorder: "hover:border-teal-500/30",
   },
   {
     to: "/payroll",
@@ -90,6 +97,7 @@ const quickActions = [
     description: "Process this month's salaries",
     iconColor: "text-emerald-500",
     iconBg: "bg-emerald-500/10",
+    hoverBorder: "hover:border-emerald-500/30",
   },
   {
     to: "/payslips",
@@ -98,6 +106,7 @@ const quickActions = [
     description: "Browse generated documents",
     iconColor: "text-sky-500",
     iconBg: "bg-sky-500/10",
+    hoverBorder: "hover:border-sky-500/30",
   },
 ];
 
@@ -191,12 +200,16 @@ function DashboardPage() {
             iconColor,
             iconBg,
             border,
+            glow,
           }) => (
             <div
               key={key}
               className={`relative overflow-hidden rounded-2xl border ${border} bg-gradient-to-br ${gradient} p-5 shadow-sm backdrop-blur-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5`}
             >
-              <div className="pointer-events-none absolute -right-4 -top-4 h-24 w-24 rounded-full bg-white/5 blur-xl" />
+              {/* Soft glow orb */}
+              <div
+                className={`pointer-events-none absolute -right-6 -top-6 h-28 w-28 rounded-full ${glow} blur-2xl`}
+              />
 
               <div className="flex items-start justify-between">
                 <div className={`rounded-xl ${iconBg} p-2.5`}>
@@ -232,8 +245,8 @@ function DashboardPage() {
           </div>
 
           <div className="flex flex-col items-center justify-center py-10 gap-3 text-center">
-            <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
-              <Activity className="h-5 w-5 text-muted-foreground" />
+            <div className="h-12 w-12 rounded-full bg-teal-500/10 border border-teal-500/20 flex items-center justify-center">
+              <Activity className="h-5 w-5 text-teal-500/60" />
             </div>
             <div>
               <p className="text-sm font-medium text-card-foreground">
@@ -245,7 +258,7 @@ function DashboardPage() {
             </div>
             <Link
               to="/payroll"
-              className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
+              className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-teal-500 hover:text-teal-400 transition-colors"
             >
               Run Payroll <ArrowRight className="h-3 w-3" />
             </Link>
@@ -260,11 +273,19 @@ function DashboardPage() {
 
           <div className="space-y-2">
             {quickActions.map(
-              ({ to, icon: Icon, label, description, iconColor, iconBg }) => (
+              ({
+                to,
+                icon: Icon,
+                label,
+                description,
+                iconColor,
+                iconBg,
+                hoverBorder,
+              }) => (
                 <Link
                   key={to}
                   to={to}
-                  className="group flex items-center gap-3 rounded-xl border border-border/60 p-3.5 transition-all duration-150 hover:bg-accent hover:border-border hover:shadow-sm"
+                  className={`group flex items-center gap-3 rounded-xl border border-border/60 p-3.5 transition-all duration-150 hover:bg-accent ${hoverBorder} hover:shadow-sm`}
                 >
                   <div className={`rounded-lg ${iconBg} p-2 shrink-0`}>
                     <Icon className={`h-4 w-4 ${iconColor}`} />

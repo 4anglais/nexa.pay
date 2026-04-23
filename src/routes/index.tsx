@@ -9,14 +9,18 @@ import {
   Mail,
   Lock,
   ChevronRight,
+  Star,
+  CheckCircle2,
+  TrendingUp,
+  Clock,
+  Globe,
+  Award,
+  BarChart3,
 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
-
 import { MAINTENANCE_MODE } from "@/config/app";
 
-export const Route = createFileRoute("/")({
-  component: LandingPage,
-});
+export const Route = createFileRoute("/")({ component: LandingPage });
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 const SLIDES = [
@@ -114,112 +118,186 @@ const TICKER_ITEMS = [
   "One-click delivery",
 ];
 
-// ─── Global CSS ───────────────────────────────────────────────────────────────
+const TESTIMONIALS = [
+  {
+    name: "Mulenga C.",
+    role: "Finance Manager, Lusaka",
+    text: "We used to spend 2 days on payroll every month. NexaPayslip does it in under a minute. Game changer.",
+    stars: 5,
+  },
+  {
+    name: "Thandiwe M.",
+    role: "HR Director, Ndola",
+    text: "The ZRA compliance alone was worth it. No more stress about PAYE calculations being wrong.",
+    stars: 5,
+  },
+  {
+    name: "Joseph K.",
+    role: "CEO, Kitwe SME",
+    text: "Setup was instant and the payslips look incredibly professional. Our employees love getting them.",
+    stars: 5,
+  },
+];
+
+const PRICING_FEATURES = [
+  "Unlimited payroll runs",
+  "PDF payslip generation",
+  "Employee management",
+  "PAYE, NAPSA & NHIMA auto-calc",
+  "ZRA compliant reports",
+  "Email payslip delivery",
+  "Encrypted data storage",
+  "Priority support",
+];
+
+const HOW_STEPS = [
+  {
+    step: "01",
+    title: "Add your employees",
+    desc: "Import or add employees with salary details, allowances and deductions in minutes.",
+    color: "#14b8a6",
+    icon: Users,
+  },
+  {
+    step: "02",
+    title: "Run payroll in one click",
+    desc: "PAYE, NAPSA and NHIMA are calculated automatically. Review the breakdown and confirm.",
+    color: "#34d399",
+    icon: Zap,
+  },
+  {
+    step: "03",
+    title: "Payslips delivered instantly",
+    desc: "PDF payslips are generated and sent to each employee's inbox immediately after approval.",
+    color: "#38bdf8",
+    icon: FileText,
+  },
+];
+
+const COMPARISON = [
+  { feature: "Automated PAYE/NAPSA/NHIMA", us: true, them: false },
+  { feature: "ZRA-ready reports", us: true, them: false },
+  { feature: "PDF payslip generation", us: true, them: true },
+  { feature: "Email delivery", us: true, them: false },
+  { feature: "Setup fee", us: "FREE", them: "K2,000+" },
+  { feature: "Monthly cost", us: "FREE", them: "K500+" },
+  { feature: "Setup time", us: "5 min", them: "1 week" },
+];
+
+// ─── CSS ──────────────────────────────────────────────────────────────────────
 const GLOBAL_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300&family=DM+Serif+Display:ital@0;1&display=swap');
-
-  *, *::before, *::after { box-sizing: border-box; }
+  *,*::before,*::after{box-sizing:border-box;}
 
   @keyframes orbFloat {
-    0%,100% { transform:translate(0,0) scale(1); }
-    33%      { transform:translate(50px,-40px) scale(1.06); }
-    66%      { transform:translate(-30px,25px) scale(0.96); }
+    0%,100%{transform:translate(0,0) scale(1);}
+    33%{transform:translate(50px,-40px) scale(1.06);}
+    66%{transform:translate(-30px,25px) scale(0.96);}
   }
   @keyframes fadeSlideUp {
-    from { opacity:0; transform:translateY(32px); }
-    to   { opacity:1; transform:translateY(0); }
+    from{opacity:0;transform:translateY(32px);}
+    to{opacity:1;transform:translateY(0);}
   }
   @keyframes shimmer {
-    0%   { background-position:-300% center; }
-    100% { background-position:300% center; }
+    0%{background-position:-300% center;}
+    100%{background-position:300% center;}
   }
   @keyframes pulse-ring {
-    0%,100% { transform:scale(1); opacity:0.8; }
-    50%     { transform:scale(1.6); opacity:0; }
+    0%,100%{transform:scale(1);opacity:0.8;}
+    50%{transform:scale(1.6);opacity:0;}
   }
   @keyframes ticker {
-    0%   { transform:translateX(0); }
-    100% { transform:translateX(-50%); }
+    0%{transform:translateX(0);}
+    100%{transform:translateX(-50%);}
   }
-  @keyframes rotateSlow {
-    from { transform: rotate(0deg); }
-    to   { transform: rotate(360deg); }
+  @keyframes floatY {
+    0%,100%{transform:translateY(0);}
+    50%{transform:translateY(-12px);}
   }
-
-  .feat-card {
-    opacity: 0;
-    transform: translateY(48px) scale(0.97);
-    transition:
-      opacity 0.8s cubic-bezier(.16,1,.3,1),
-      transform 0.8s cubic-bezier(.16,1,.3,1),
-      box-shadow 0.3s ease,
-      border-color 0.3s ease;
+  @keyframes countUp {
+    from{opacity:0;transform:translateY(10px);}
+    to{opacity:1;transform:translateY(0);}
   }
-  .feat-card.visible { opacity:1; transform:translateY(0) scale(1); }
-  .feat-card:hover { transform:translateY(-6px) scale(1.015) !important; }
-
-  .reveal {
-    opacity: 0;
-    transform: translateY(44px);
-    transition: opacity 0.9s cubic-bezier(.16,1,.3,1), transform 0.9s cubic-bezier(.16,1,.3,1);
+  @keyframes gradientShift {
+    0%,100%{background-position:0% 50%;}
+    50%{background-position:100% 50%;}
   }
-  .reveal.visible { opacity:1; transform:translateY(0); }
-
-  /* Progressive blur overlay utility */
-  .blur-fade-bottom {
-    -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
-    mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
-  }
-  .blur-fade-top {
-    -webkit-mask-image: linear-gradient(to top, black 60%, transparent 100%);
-    mask-image: linear-gradient(to top, black 60%, transparent 100%);
+  @keyframes borderGlow {
+    0%,100%{box-shadow:0 0 0 0 rgba(20,184,166,0);}
+    50%{box-shadow:0 0 0 4px rgba(20,184,166,0.15);}
   }
 
-  /* Noise texture overlay */
-  .noise::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-    pointer-events: none;
-    border-radius: inherit;
+  .feat-card{
+    opacity:0;transform:translateY(48px) scale(0.97);
+    transition:opacity 0.8s cubic-bezier(.16,1,.3,1),transform 0.8s cubic-bezier(.16,1,.3,1),box-shadow 0.3s ease,border-color 0.3s ease;
+  }
+  .feat-card.visible{opacity:1;transform:translateY(0) scale(1);}
+  .feat-card:hover{transform:translateY(-6px) scale(1.015) !important;box-shadow:0 24px 48px rgba(0,0,0,0.35) !important;}
+
+  .reveal{opacity:0;transform:translateY(44px);transition:opacity 0.9s cubic-bezier(.16,1,.3,1),transform 0.9s cubic-bezier(.16,1,.3,1);}
+  .reveal.visible{opacity:1;transform:translateY(0);}
+
+  .reveal-left{opacity:0;transform:translateX(-40px);transition:opacity 0.9s cubic-bezier(.16,1,.3,1),transform 0.9s cubic-bezier(.16,1,.3,1);}
+  .reveal-left.visible{opacity:1;transform:translateX(0);}
+
+  .reveal-right{opacity:0;transform:translateX(40px);transition:opacity 0.9s cubic-bezier(.16,1,.3,1),transform 0.9s cubic-bezier(.16,1,.3,1);}
+  .reveal-right.visible{opacity:1;transform:translateX(0);}
+
+  .noise::after{content:'';position:absolute;inset:0;
+    background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events:none;border-radius:inherit;}
+
+  .nav-link{color:rgba(255,255,255,0.38);text-decoration:none;font-size:0.8rem;transition:color 0.2s;}
+  .nav-link:hover{color:rgba(255,255,255,0.88);}
+
+  .cta-primary{
+    display:inline-flex;align-items:center;gap:8px;padding:12px 26px;border-radius:14px;
+    background:linear-gradient(135deg,rgba(20,184,166,0.25),rgba(52,211,153,0.18));
+    border:1px solid rgba(20,184,166,0.45);color:#fff;font-weight:700;font-size:0.88rem;
+    text-decoration:none;backdrop-filter:blur(12px);transition:all 0.25s ease;
+    box-shadow:0 4px 24px rgba(20,184,166,0.15);
+  }
+  .cta-primary:hover{transform:translateY(-2px);box-shadow:0 12px 36px rgba(20,184,166,0.28);background:linear-gradient(135deg,rgba(20,184,166,0.35),rgba(52,211,153,0.28));}
+
+  .cta-ghost{
+    display:inline-flex;align-items:center;gap:8px;padding:12px 26px;border-radius:14px;
+    background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.11);
+    color:rgba(255,255,255,0.6);font-weight:500;font-size:0.88rem;
+    text-decoration:none;backdrop-filter:blur(12px);transition:all 0.25s ease;
+  }
+  .cta-ghost:hover{color:#fff;background:rgba(255,255,255,0.09);}
+
+  .glow-rule{border:none;height:1px;background:linear-gradient(90deg,transparent,rgba(20,184,166,0.3),transparent);}
+
+  .testimonial-card{
+    transition:transform 0.3s ease,box-shadow 0.3s ease;
+  }
+  .testimonial-card:hover{transform:translateY(-4px);}
+
+  .pricing-feature{
+    opacity:0;transform:translateX(-16px);
+    transition:opacity 0.5s ease,transform 0.5s ease;
+  }
+  .pricing-feature.visible{opacity:1;transform:translateX(0);}
+
+  .step-connector{
+    position:absolute;left:20px;top:100%;width:2px;height:24px;
+    background:linear-gradient(to bottom,rgba(20,184,166,0.4),transparent);
   }
 
-  .nav-link { color: rgba(255,255,255,0.38); text-decoration:none; font-size:0.8rem; transition: color 0.2s; }
-  .nav-link:hover { color: rgba(255,255,255,0.88); }
+  .counter{animation:countUp 0.6s ease both;}
 
-  .cta-primary {
-    display:inline-flex; align-items:center; gap:8px;
-    padding:12px 26px; border-radius:14px;
-    background: linear-gradient(135deg, rgba(20,184,166,0.25), rgba(52,211,153,0.18));
-    border: 1px solid rgba(20,184,166,0.45);
-    color:#fff; font-weight:700; font-size:0.88rem;
-    text-decoration:none; backdrop-filter:blur(12px);
-    transition: all 0.25s ease;
-    box-shadow: 0 4px 24px rgba(20,184,166,0.15);
-  }
-  .cta-primary:hover {
-    transform:translateY(-2px);
-    box-shadow: 0 12px 36px rgba(20,184,166,0.28);
-    background: linear-gradient(135deg, rgba(20,184,166,0.35), rgba(52,211,153,0.28));
-  }
+  .float-badge{animation:floatY 4s ease-in-out infinite;}
+  .float-badge-delay{animation:floatY 4s 1.5s ease-in-out infinite;}
+  .float-badge-delay2{animation:floatY 4s 3s ease-in-out infinite;}
 
-  .cta-ghost {
-    display:inline-flex; align-items:center; gap:8px;
-    padding:12px 26px; border-radius:14px;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.11);
-    color:rgba(255,255,255,0.6); font-weight:500; font-size:0.88rem;
-    text-decoration:none; backdrop-filter:blur(12px);
-    transition: all 0.25s ease;
-  }
-  .cta-ghost:hover { color:#fff; background: rgba(255,255,255,0.09); }
+  .animated-border{animation:borderGlow 3s ease-in-out infinite;}
 
-  /* Horizontal rule with glow */
-  .glow-rule {
-    border: none;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(20,184,166,0.3), transparent);
+  .gradient-text-animate{
+    background:linear-gradient(90deg,#14b8a6,#34d399,#38bdf8,#14b8a6);
+    background-size:300% auto;
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+    animation:gradientShift 4s linear infinite;
   }
 `;
 
@@ -232,7 +310,6 @@ const glass: React.CSSProperties = {
   boxShadow:
     "0 8px 32px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.12)",
 };
-
 const glassTeal: React.CSSProperties = {
   background: "rgba(20,184,166,0.06)",
   backdropFilter: "blur(28px) saturate(180%)",
@@ -241,7 +318,6 @@ const glassTeal: React.CSSProperties = {
   boxShadow:
     "0 12px 40px rgba(0,0,0,0.25), inset 0 1px 0 rgba(20,184,166,0.15)",
 };
-
 const glassStrong: React.CSSProperties = {
   background: "rgba(255,255,255,0.07)",
   backdropFilter: "blur(40px) saturate(200%)",
@@ -251,15 +327,15 @@ const glassStrong: React.CSSProperties = {
     "0 20px 60px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.16)",
 };
 
-// ─── Scroll reveal hook ───────────────────────────────────────────────────────
-function useReveal(threshold = 0.15) {
+// ─── Hooks ────────────────────────────────────────────────────────────────────
+function useReveal(threshold = 0.15, className = "reveal") {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     const obs = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
+      ([e]) => {
+        if (e.isIntersecting) {
           el.classList.add("visible");
           obs.unobserve(el);
         }
@@ -284,7 +360,6 @@ function Orbs() {
       }}
       aria-hidden
     >
-      {/* Primary teal orb — matches app accent */}
       <div
         style={{
           position: "absolute",
@@ -294,11 +369,10 @@ function Orbs() {
           top: "-20%",
           left: "-12%",
           background:
-            "radial-gradient(circle, rgba(20,184,166,0.13) 0%, transparent 68%)",
+            "radial-gradient(circle,rgba(20,184,166,0.13) 0%,transparent 68%)",
           animation: "orbFloat 16s ease-in-out infinite",
         }}
       />
-      {/* Emerald secondary */}
       <div
         style={{
           position: "absolute",
@@ -308,11 +382,10 @@ function Orbs() {
           bottom: "-12%",
           right: "-10%",
           background:
-            "radial-gradient(circle, rgba(52,211,153,0.11) 0%, transparent 68%)",
+            "radial-gradient(circle,rgba(52,211,153,0.11) 0%,transparent 68%)",
           animation: "orbFloat 20s ease-in-out infinite reverse",
         }}
       />
-      {/* Subtle blue accent */}
       <div
         style={{
           position: "absolute",
@@ -322,11 +395,10 @@ function Orbs() {
           top: "38%",
           left: "42%",
           background:
-            "radial-gradient(circle, rgba(56,189,248,0.08) 0%, transparent 70%)",
+            "radial-gradient(circle,rgba(56,189,248,0.08) 0%,transparent 70%)",
           animation: "orbFloat 24s ease-in-out infinite",
         }}
       />
-      {/* Tiny violet hint */}
       <div
         style={{
           position: "absolute",
@@ -336,7 +408,7 @@ function Orbs() {
           top: "15%",
           right: "20%",
           background:
-            "radial-gradient(circle, rgba(167,139,250,0.07) 0%, transparent 70%)",
+            "radial-gradient(circle,rgba(167,139,250,0.07) 0%,transparent 70%)",
           animation: "orbFloat 19s ease-in-out infinite reverse",
         }}
       />
@@ -412,7 +484,7 @@ function MaintenanceCarousel() {
           ...glassStrong,
           borderRadius: 24,
           padding: "2rem",
-          transition: "opacity 0.38s, transform 0.38s",
+          transition: "opacity 0.38s,transform 0.38s",
           opacity: leaving ? 0 : 1,
           transform: leaving
             ? "translateY(12px) scale(0.97)"
@@ -507,8 +579,8 @@ function FeatureCard({
     const el = ref.current;
     if (!el) return;
     const obs = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
+      ([e]) => {
+        if (e.isIntersecting) {
           el.classList.add("visible");
           obs.unobserve(el);
         }
@@ -518,7 +590,6 @@ function FeatureCard({
     obs.observe(el);
     return () => obs.disconnect();
   }, []);
-
   return (
     <div
       ref={ref}
@@ -533,7 +604,6 @@ function FeatureCard({
         overflow: "hidden",
       }}
     >
-      {/* Accent glow in corner */}
       <div
         style={{
           position: "absolute",
@@ -542,12 +612,10 @@ function FeatureCard({
           width: 120,
           height: 120,
           borderRadius: "50%",
-          background: `radial-gradient(circle, ${accent}18 0%, transparent 70%)`,
+          background: `radial-gradient(circle,${accent}18 0%,transparent 70%)`,
           pointerEvents: "none",
         }}
       />
-
-      {/* Progressive blur at bottom of card — masks content edge */}
       <div
         style={{
           position: "absolute",
@@ -556,12 +624,11 @@ function FeatureCard({
           right: 0,
           height: 48,
           background:
-            "linear-gradient(to bottom, transparent, rgba(10,17,30,0.55))",
+            "linear-gradient(to bottom,transparent,rgba(10,17,30,0.55))",
           pointerEvents: "none",
           borderRadius: "0 0 22px 22px",
         }}
       />
-
       <div
         style={{
           width: 44,
@@ -619,7 +686,6 @@ function StatCard({ value, label }: { value: string; label: string }) {
         overflow: "hidden",
       }}
     >
-      {/* Progressive blur top edge */}
       <div
         style={{
           position: "absolute",
@@ -628,7 +694,7 @@ function StatCard({ value, label }: { value: string; label: string }) {
           right: 0,
           height: 20,
           background:
-            "linear-gradient(to bottom, rgba(20,184,166,0.08), transparent)",
+            "linear-gradient(to bottom,rgba(20,184,166,0.08),transparent)",
           pointerEvents: "none",
         }}
       />
@@ -638,7 +704,7 @@ function StatCard({ value, label }: { value: string; label: string }) {
           fontWeight: 800,
           letterSpacing: "-0.045em",
           background:
-            "linear-gradient(135deg, #14b8a6 0%, #34d399 60%, rgba(255,255,255,0.7) 100%)",
+            "linear-gradient(135deg,#14b8a6 0%,#34d399 60%,rgba(255,255,255,0.7) 100%)",
           WebkitBackgroundClip: "text",
           WebkitTextFillColor: "transparent",
           backgroundClip: "text",
@@ -662,18 +728,127 @@ function StatCard({ value, label }: { value: string; label: string }) {
   );
 }
 
-// ─── Section reveal wrapper ───────────────────────────────────────────────────
+// ─── Reveal wrappers ─────────────────────────────────────────────────────────
 function Reveal({
   children,
   delay = 0,
+  dir = "up",
 }: {
   children: React.ReactNode;
   delay?: number;
+  dir?: "up" | "left" | "right";
 }) {
-  const ref = useReveal(0.18);
+  const cls =
+    dir === "left"
+      ? "reveal-left"
+      : dir === "right"
+        ? "reveal-right"
+        : "reveal";
+  const ref = useReveal(0.18, cls);
   return (
-    <div ref={ref} className="reveal" style={{ transitionDelay: `${delay}ms` }}>
+    <div ref={ref} className={cls} style={{ transitionDelay: `${delay}ms` }}>
       {children}
+    </div>
+  );
+}
+
+// ─── Testimonial card ─────────────────────────────────────────────────────────
+function TestimonialCard({
+  name,
+  role,
+  text,
+  stars,
+  delay,
+}: {
+  name: string;
+  role: string;
+  text: string;
+  stars: number;
+  delay: number;
+}) {
+  const ref = useReveal(0.1);
+  return (
+    <div
+      ref={ref}
+      className="reveal testimonial-card"
+      style={{
+        ...glass,
+        borderRadius: 22,
+        padding: "1.8rem",
+        transitionDelay: `${delay}ms`,
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          top: -30,
+          right: -30,
+          width: 100,
+          height: 100,
+          borderRadius: "50%",
+          background:
+            "radial-gradient(circle,rgba(20,184,166,0.08) 0%,transparent 70%)",
+          pointerEvents: "none",
+        }}
+      />
+      <div style={{ display: "flex", gap: 3, marginBottom: "1rem" }}>
+        {Array.from({ length: stars }).map((_, i) => (
+          <Star key={i} size={13} fill="#14b8a6" color="#14b8a6" />
+        ))}
+      </div>
+      <p
+        style={{
+          fontSize: "0.88rem",
+          lineHeight: 1.75,
+          color: "rgba(255,255,255,0.62)",
+          marginBottom: "1.25rem",
+          fontStyle: "italic",
+        }}
+      >
+        "{text}"
+      </p>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: "50%",
+            background: "linear-gradient(135deg,#14b8a6,#34d399)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "0.75rem",
+            fontWeight: 800,
+            color: "white",
+            flexShrink: 0,
+          }}
+        >
+          {name.charAt(0)}
+        </div>
+        <div>
+          <p
+            style={{
+              fontSize: "0.83rem",
+              fontWeight: 700,
+              color: "rgba(255,255,255,0.85)",
+              margin: 0,
+            }}
+          >
+            {name}
+          </p>
+          <p
+            style={{
+              fontSize: "0.72rem",
+              color: "rgba(255,255,255,0.35)",
+              margin: 0,
+            }}
+          >
+            {role}
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
@@ -683,9 +858,9 @@ function LandingPage() {
   const bg: React.CSSProperties = {
     minHeight: "100vh",
     background:
-      "linear-gradient(160deg, #060d18 0%, #091422 40%, #0a1a2e 70%, #080f1c 100%)",
+      "linear-gradient(160deg,#060d18 0%,#091422 40%,#0a1a2e 70%,#080f1c 100%)",
     color: "#fff",
-    fontFamily: "'DM Sans', system-ui, sans-serif",
+    fontFamily: "'DM Sans',system-ui,sans-serif",
     position: "relative",
     overflowX: "hidden",
   };
@@ -909,14 +1084,13 @@ function LandingPage() {
             justifyContent: "space-between",
           }}
         >
-          {/* Logo */}
           <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
             <div
               style={{
                 width: 30,
                 height: 30,
                 borderRadius: 8,
-                background: "linear-gradient(135deg, #14b8a6, #34d399)",
+                background: "linear-gradient(135deg,#14b8a6,#34d399)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -940,19 +1114,18 @@ function LandingPage() {
               NexaPayslip
             </span>
           </div>
-
           <nav style={{ display: "flex", gap: "1.8rem" }}>
             {[
               ["Features", "#features"],
-              ["Why us", "#stats"],
-              ["Pricing", "#cta"],
+              ["How it works", "#how"],
+              ["Reviews", "#reviews"],
+              ["Pricing", "#pricing"],
             ].map(([l, h]) => (
               <a key={l} href={h} className="nav-link">
                 {l}
               </a>
             ))}
           </nav>
-
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <Link
               to="/login"
@@ -990,7 +1163,7 @@ function LandingPage() {
                 alignItems: "center",
                 gap: 4,
                 background:
-                  "linear-gradient(135deg, rgba(20,184,166,0.22), rgba(52,211,153,0.15))",
+                  "linear-gradient(135deg,rgba(20,184,166,0.22),rgba(52,211,153,0.15))",
                 border: "1px solid rgba(20,184,166,0.35)",
                 transition: "all 0.2s",
                 boxShadow: "0 2px 12px rgba(20,184,166,0.15)",
@@ -1024,7 +1197,6 @@ function LandingPage() {
             gap: "1.6rem",
           }}
         >
-          {/* Badge */}
           <div
             style={{
               ...glassTeal,
@@ -1059,7 +1231,6 @@ function LandingPage() {
             </span>
           </div>
 
-          {/* Headline */}
           <h1
             style={{
               fontSize: "clamp(2.8rem,8vw,5.8rem)",
@@ -1072,15 +1243,11 @@ function LandingPage() {
           >
             Payroll that moves{" "}
             <span
+              className="gradient-text-animate"
               style={{
-                fontFamily: "'DM Serif Display', serif",
+                fontFamily: "'DM Serif Display',serif",
                 fontStyle: "italic",
                 fontWeight: 400,
-                background:
-                  "linear-gradient(135deg, #14b8a6 0%, #34d399 50%, #38bdf8 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
               }}
             >
               at the speed
@@ -1105,7 +1272,6 @@ function LandingPage() {
             NAPSA & NHIMA calculations — all in one place.
           </p>
 
-          {/* CTA row */}
           <div
             style={{
               display: "flex",
@@ -1123,7 +1289,6 @@ function LandingPage() {
             </a>
           </div>
 
-          {/* Stats row */}
           <div
             style={{
               display: "flex",
@@ -1141,15 +1306,74 @@ function LandingPage() {
             ))}
           </div>
 
-          {/* Hero glass panel — fake UI preview with progressive blur */}
+          {/* Floating badges above UI preview */}
           <div
             style={{
-              animation: "fadeSlideUp 0.9s 0.55s ease both",
+              position: "relative",
               width: "100%",
               maxWidth: 700,
               marginTop: "2rem",
+              animation: "fadeSlideUp 0.9s 0.55s ease both",
             }}
           >
+            {/* Floating badge left */}
+            <div
+              className="float-badge"
+              style={{
+                position: "absolute",
+                top: -20,
+                left: -10,
+                zIndex: 10,
+                ...glassTeal,
+                borderRadius: 12,
+                padding: "8px 14px",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+              }}
+            >
+              <CheckCircle2 size={14} color="#14b8a6" />
+              <span
+                style={{
+                  fontSize: "0.72rem",
+                  fontWeight: 700,
+                  color: "rgba(255,255,255,0.8)",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                ZRA Compliant
+              </span>
+            </div>
+            {/* Floating badge right */}
+            <div
+              className="float-badge-delay"
+              style={{
+                position: "absolute",
+                top: -16,
+                right: 10,
+                zIndex: 10,
+                ...glass,
+                borderRadius: 12,
+                padding: "8px 14px",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+              }}
+            >
+              <Clock size={14} color="#34d399" />
+              <span
+                style={{
+                  fontSize: "0.72rem",
+                  fontWeight: 700,
+                  color: "rgba(255,255,255,0.8)",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Ready in 5 min
+              </span>
+            </div>
+
+            {/* Hero glass UI preview */}
             <div
               style={{
                 ...glassStrong,
@@ -1159,7 +1383,6 @@ function LandingPage() {
                 overflow: "hidden",
               }}
             >
-              {/* Top label bar */}
               <div
                 style={{
                   display: "flex",
@@ -1197,11 +1420,15 @@ function LandingPage() {
                     letterSpacing: "0.1em",
                   }}
                 >
-                  PAYROLL — APRIL 2025
+                  PAYROLL —{" "}
+                  {new Date()
+                    .toLocaleString("default", { month: "long" })
+                    .toUpperCase()}{" "}
+                  {new Date().getFullYear()}
                 </span>
               </div>
 
-              {/* Fake table rows */}
+              {/* ── FIX: wrap each row in a single keyed div instead of a fragment ── */}
               <div
                 style={{
                   display: "grid",
@@ -1210,64 +1437,30 @@ function LandingPage() {
                   fontSize: "0.75rem",
                 }}
               >
-                <div
-                  style={{
-                    padding: "6px 8px",
-                    color: "rgba(255,255,255,0.3)",
-                    fontSize: "0.6rem",
-                    fontFamily: "monospace",
-                    letterSpacing: "0.1em",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  Employee
-                </div>
-                <div
-                  style={{
-                    padding: "6px 8px",
-                    color: "rgba(255,255,255,0.3)",
-                    fontSize: "0.6rem",
-                    fontFamily: "monospace",
-                    letterSpacing: "0.1em",
-                    textTransform: "uppercase",
-                    textAlign: "right",
-                  }}
-                >
-                  Gross
-                </div>
-                <div
-                  style={{
-                    padding: "6px 8px",
-                    color: "rgba(255,255,255,0.3)",
-                    fontSize: "0.6rem",
-                    fontFamily: "monospace",
-                    letterSpacing: "0.1em",
-                    textTransform: "uppercase",
-                    textAlign: "right",
-                  }}
-                >
-                  Deductions
-                </div>
-                <div
-                  style={{
-                    padding: "6px 8px",
-                    color: "rgba(255,255,255,0.3)",
-                    fontSize: "0.6rem",
-                    fontFamily: "monospace",
-                    letterSpacing: "0.1em",
-                    textTransform: "uppercase",
-                    textAlign: "right",
-                  }}
-                >
-                  Net Pay
-                </div>
+                {["Employee", "Gross", "Deductions", "Net Pay"].map((h, i) => (
+                  <div
+                    key={h}
+                    style={{
+                      padding: "6px 8px",
+                      color: "rgba(255,255,255,0.3)",
+                      fontSize: "0.6rem",
+                      fontFamily: "monospace",
+                      letterSpacing: "0.1em",
+                      textTransform: "uppercase",
+                      textAlign: i > 0 ? "right" : "left",
+                    }}
+                  >
+                    {h}
+                  </div>
+                ))}
                 {[
                   ["M. Banda", "K 8,500", "K 935", "K 7,565"],
                   ["C. Phiri", "K 12,000", "K 1,320", "K 10,680"],
                   ["J. Mwale", "K 6,800", "K 748", "K 6,052"],
                   ["R. Tembo", "K 15,400", "K 1,694", "K 13,706"],
                 ].map(([name, gross, ded, net]) => (
-                  <>
+                  // ── KEY on a single div, not a fragment ──
+                  <div key={name} style={{ display: "contents" }}>
                     <div
                       style={{
                         padding: "8px 8px",
@@ -1312,11 +1505,10 @@ function LandingPage() {
                     >
                       {net}
                     </div>
-                  </>
+                  </div>
                 ))}
               </div>
 
-              {/* Progressive blur mask fading the table bottom — key effect */}
               <div
                 style={{
                   position: "absolute",
@@ -1325,13 +1517,11 @@ function LandingPage() {
                   right: 0,
                   height: "55%",
                   background:
-                    "linear-gradient(to bottom, transparent 0%, rgba(8,15,26,0.85) 100%)",
+                    "linear-gradient(to bottom,transparent 0%,rgba(8,15,26,0.85) 100%)",
                   pointerEvents: "none",
                   borderRadius: "0 0 24px 24px",
                 }}
               />
-
-              {/* Floating action button overlay */}
               <div
                 style={{
                   position: "absolute",
@@ -1387,7 +1577,7 @@ function LandingPage() {
               </p>
               <h2
                 style={{
-                  fontFamily: "'DM Serif Display', serif",
+                  fontFamily: "'DM Serif Display',serif",
                   fontSize: "clamp(2rem,5vw,3.2rem)",
                   fontWeight: 400,
                   letterSpacing: "-0.02em",
@@ -1409,10 +1599,7 @@ function LandingPage() {
               </h2>
             </div>
           </Reveal>
-
-          {/* Feature grid with progressive blur on sides */}
           <div style={{ position: "relative" }}>
-            {/* Left blur fade */}
             <div
               style={{
                 position: "absolute",
@@ -1421,12 +1608,11 @@ function LandingPage() {
                 left: 0,
                 width: 60,
                 background:
-                  "linear-gradient(to right, rgba(6,13,24,0.6), transparent)",
+                  "linear-gradient(to right,rgba(6,13,24,0.6),transparent)",
                 pointerEvents: "none",
                 zIndex: 5,
               }}
             />
-            {/* Right blur fade */}
             <div
               style={{
                 position: "absolute",
@@ -1435,17 +1621,16 @@ function LandingPage() {
                 right: 0,
                 width: 60,
                 background:
-                  "linear-gradient(to left, rgba(6,13,24,0.6), transparent)",
+                  "linear-gradient(to left,rgba(6,13,24,0.6),transparent)",
                 pointerEvents: "none",
                 zIndex: 5,
               }}
             />
-
             <div
               style={{
                 display: "grid",
                 gridTemplateColumns:
-                  "repeat(auto-fill, minmax(min(100%,270px),1fr))",
+                  "repeat(auto-fill,minmax(min(100%,270px),1fr))",
                 gap: 14,
               }}
             >
@@ -1458,7 +1643,155 @@ function LandingPage() {
 
         <hr className="glow-rule" style={{ maxWidth: 800, margin: "0 auto" }} />
 
-        {/* ── SOCIAL PROOF / HOW IT WORKS ── */}
+        {/* ── HOW IT WORKS ── */}
+        <section
+          id="how"
+          style={{ maxWidth: 1100, margin: "0 auto", padding: "7rem 1.5rem" }}
+        >
+          <Reveal>
+            <div style={{ textAlign: "center", marginBottom: "4rem" }}>
+              <p
+                style={{
+                  fontFamily: "monospace",
+                  fontSize: "0.6rem",
+                  letterSpacing: "0.18em",
+                  textTransform: "uppercase",
+                  color: "rgba(20,184,166,0.6)",
+                  marginBottom: 14,
+                }}
+              >
+                How it works
+              </p>
+              <h2
+                style={{
+                  fontFamily: "'DM Serif Display',serif",
+                  fontSize: "clamp(2rem,5vw,3.2rem)",
+                  fontWeight: 400,
+                  letterSpacing: "-0.02em",
+                  margin: 0,
+                  lineHeight: 1.1,
+                }}
+              >
+                From zero to{" "}
+                <em style={{ fontStyle: "italic", color: "#14b8a6" }}>paid</em>,
+                <br />
+                <span
+                  style={{ color: "rgba(255,255,255,0.25)", fontWeight: 300 }}
+                >
+                  in three steps.
+                </span>
+              </h2>
+            </div>
+          </Reveal>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))",
+              gap: 16,
+            }}
+          >
+            {HOW_STEPS.map(({ step, title, desc, color, icon: Icon }, i) => (
+              <Reveal key={step} delay={i * 120}>
+                <div
+                  style={{
+                    ...glass,
+                    borderRadius: 22,
+                    padding: "2rem",
+                    position: "relative",
+                    overflow: "hidden",
+                    height: "100%",
+                  }}
+                >
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      top: 0,
+                      bottom: 0,
+                      width: 3,
+                      background: `linear-gradient(to bottom,${color},transparent)`,
+                      borderRadius: "3px 0 0 3px",
+                    }}
+                  />
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: -50,
+                      right: -50,
+                      width: 150,
+                      height: 150,
+                      borderRadius: "50%",
+                      background: `radial-gradient(circle,${color}10 0%,transparent 70%)`,
+                      pointerEvents: "none",
+                    }}
+                  />
+
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 12,
+                      marginBottom: "1.25rem",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 42,
+                        height: 42,
+                        borderRadius: 12,
+                        background: `${color}18`,
+                        border: `1px solid ${color}35`,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
+                      }}
+                    >
+                      <Icon size={20} color={color} />
+                    </div>
+                    <span
+                      style={{
+                        fontFamily: "monospace",
+                        fontSize: "0.7rem",
+                        fontWeight: 800,
+                        color,
+                        letterSpacing: "0.08em",
+                      }}
+                    >
+                      {step}
+                    </span>
+                  </div>
+                  <h3
+                    style={{
+                      fontSize: "1rem",
+                      fontWeight: 700,
+                      color: "rgba(255,255,255,0.9)",
+                      marginBottom: "0.6rem",
+                      letterSpacing: "-0.015em",
+                    }}
+                  >
+                    {title}
+                  </h3>
+                  <p
+                    style={{
+                      fontSize: "0.84rem",
+                      lineHeight: 1.7,
+                      color: "rgba(255,255,255,0.42)",
+                      margin: 0,
+                    }}
+                  >
+                    {desc}
+                  </p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </section>
+
+        <hr className="glow-rule" style={{ maxWidth: 800, margin: "0 auto" }} />
+
+        {/* ── WHY US + COMPARISON ── */}
         <section
           id="stats"
           style={{ maxWidth: 1100, margin: "0 auto", padding: "7rem 1.5rem" }}
@@ -1466,12 +1799,12 @@ function LandingPage() {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+              gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))",
               gap: 16,
+              marginBottom: "5rem",
             }}
           >
-            {/* Left: big glass statement card */}
-            <Reveal>
+            <Reveal dir="left">
               <div
                 style={{
                   ...glassTeal,
@@ -1479,7 +1812,6 @@ function LandingPage() {
                   padding: "2.5rem",
                   position: "relative",
                   overflow: "hidden",
-                  gridRow: "span 1",
                 }}
               >
                 <div
@@ -1491,11 +1823,10 @@ function LandingPage() {
                     height: 220,
                     borderRadius: "50%",
                     background:
-                      "radial-gradient(circle, rgba(20,184,166,0.12) 0%, transparent 70%)",
+                      "radial-gradient(circle,rgba(20,184,166,0.12) 0%,transparent 70%)",
                     pointerEvents: "none",
                   }}
                 />
-                {/* Progressive blur bottom */}
                 <div
                   style={{
                     position: "absolute",
@@ -1504,7 +1835,7 @@ function LandingPage() {
                     right: 0,
                     height: 80,
                     background:
-                      "linear-gradient(to bottom, transparent, rgba(8,20,36,0.5))",
+                      "linear-gradient(to bottom,transparent,rgba(8,20,36,0.5))",
                     pointerEvents: "none",
                   }}
                 />
@@ -1522,7 +1853,7 @@ function LandingPage() {
                 </p>
                 <h3
                   style={{
-                    fontFamily: "'DM Serif Display', serif",
+                    fontFamily: "'DM Serif Display',serif",
                     fontSize: "clamp(1.6rem,3vw,2.2rem)",
                     fontWeight: 400,
                     lineHeight: 1.15,
@@ -1549,98 +1880,687 @@ function LandingPage() {
                   No more manual calculations. No more spreadsheet errors. Just
                   one click to run compliant payroll across your entire team.
                 </p>
+
+                {/* Mini metrics */}
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: 10,
+                    marginTop: "1.75rem",
+                  }}
+                >
+                  {[
+                    {
+                      icon: Clock,
+                      val: "< 60s",
+                      label: "Payroll time",
+                      color: "#14b8a6",
+                    },
+                    {
+                      icon: Globe,
+                      val: "ZRA",
+                      label: "Fully compliant",
+                      color: "#34d399",
+                    },
+                    {
+                      icon: TrendingUp,
+                      val: "0 ZMW",
+                      label: "Setup cost",
+                      color: "#38bdf8",
+                    },
+                    {
+                      icon: Award,
+                      val: "100%",
+                      label: "Accuracy",
+                      color: "#a78bfa",
+                    },
+                  ].map(({ icon: Icon, val, label, color }) => (
+                    <div
+                      key={label}
+                      style={{
+                        ...glass,
+                        borderRadius: 12,
+                        padding: "0.85rem",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 4,
+                      }}
+                    >
+                      <Icon size={13} color={color} />
+                      <div
+                        style={{
+                          fontSize: "1rem",
+                          fontWeight: 800,
+                          color: "rgba(255,255,255,0.88)",
+                          letterSpacing: "-0.03em",
+                        }}
+                      >
+                        {val}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: "0.62rem",
+                          color: "rgba(255,255,255,0.35)",
+                          fontFamily: "monospace",
+                          letterSpacing: "0.06em",
+                        }}
+                      >
+                        {label}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </Reveal>
 
-            {/* Right: stacked process steps */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {[
-                {
-                  step: "01",
-                  title: "Add your employees",
-                  desc: "Import or add employees with their salary details, allowances and deductions.",
-                  color: "#14b8a6",
-                },
-                {
-                  step: "02",
-                  title: "Run payroll in one click",
-                  desc: "PAYE, NAPSA and NHIMA are calculated automatically. Review and confirm.",
-                  color: "#34d399",
-                },
-                {
-                  step: "03",
-                  title: "Payslips delivered instantly",
-                  desc: "PDF payslips are generated and sent to each employee's inbox immediately.",
-                  color: "#38bdf8",
-                },
-              ].map(({ step, title, desc, color }, i) => (
-                <Reveal key={step} delay={i * 100}>
+            <Reveal dir="right" delay={100}>
+              <div
+                style={{
+                  ...glassStrong,
+                  borderRadius: 28,
+                  padding: "2rem",
+                  position: "relative",
+                  overflow: "hidden",
+                }}
+              >
+                <p
+                  style={{
+                    fontFamily: "monospace",
+                    fontSize: "0.58rem",
+                    letterSpacing: "0.16em",
+                    textTransform: "uppercase",
+                    color: "rgba(20,184,166,0.55)",
+                    marginBottom: "1.25rem",
+                  }}
+                >
+                  NexaPayslip vs. Traditional
+                </p>
+                <div
+                  style={{ display: "flex", flexDirection: "column", gap: 2 }}
+                >
+                  {/* Header */}
                   <div
                     style={{
-                      ...glass,
-                      borderRadius: 18,
-                      padding: "1.25rem 1.4rem",
-                      display: "flex",
-                      gap: "1rem",
-                      alignItems: "flex-start",
-                      transition: "all 0.25s",
-                      position: "relative",
-                      overflow: "hidden",
+                      display: "grid",
+                      gridTemplateColumns: "2fr 1fr 1fr",
+                      gap: 8,
+                      padding: "6px 8px",
+                      marginBottom: 4,
                     }}
                   >
-                    {/* Step accent line */}
                     <div
                       style={{
-                        position: "absolute",
-                        left: 0,
-                        top: 0,
-                        bottom: 0,
-                        width: 3,
-                        background: `linear-gradient(to bottom, ${color}, transparent)`,
-                        borderRadius: "3px 0 0 3px",
-                      }}
-                    />
-                    <div
-                      style={{
+                        fontSize: "0.6rem",
                         fontFamily: "monospace",
-                        fontSize: "0.65rem",
-                        fontWeight: 700,
-                        color: color,
-                        opacity: 0.7,
-                        paddingTop: 2,
-                        flexShrink: 0,
-                        letterSpacing: "0.05em",
+                        color: "rgba(255,255,255,0.2)",
+                        letterSpacing: "0.1em",
+                        textTransform: "uppercase",
                       }}
                     >
-                      {step}
+                      Feature
                     </div>
-                    <div>
-                      <p
-                        style={{
-                          fontSize: "0.88rem",
-                          fontWeight: 700,
-                          color: "rgba(255,255,255,0.88)",
-                          marginBottom: "0.3rem",
-                          letterSpacing: "-0.01em",
-                        }}
-                      >
-                        {title}
-                      </p>
-                      <p
-                        style={{
-                          fontSize: "0.78rem",
-                          color: "rgba(255,255,255,0.38)",
-                          lineHeight: 1.6,
-                          margin: 0,
-                        }}
-                      >
-                        {desc}
-                      </p>
+                    <div
+                      style={{
+                        fontSize: "0.6rem",
+                        fontFamily: "monospace",
+                        color: "#14b8a6",
+                        letterSpacing: "0.1em",
+                        textTransform: "uppercase",
+                        textAlign: "center",
+                      }}
+                    >
+                      Us
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "0.6rem",
+                        fontFamily: "monospace",
+                        color: "rgba(255,255,255,0.2)",
+                        letterSpacing: "0.1em",
+                        textTransform: "uppercase",
+                        textAlign: "center",
+                      }}
+                    >
+                      Others
                     </div>
                   </div>
-                </Reveal>
-              ))}
+                  {COMPARISON.map(({ feature, us, them }, i) => (
+                    <div
+                      key={feature}
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "2fr 1fr 1fr",
+                        gap: 8,
+                        padding: "8px 8px",
+                        borderRadius: 8,
+                        background:
+                          i % 2 === 0
+                            ? "rgba(255,255,255,0.02)"
+                            : "transparent",
+                        alignItems: "center",
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: "0.8rem",
+                          color: "rgba(255,255,255,0.6)",
+                        }}
+                      >
+                        {feature}
+                      </span>
+                      <div style={{ textAlign: "center" }}>
+                        {typeof us === "boolean" ? (
+                          us ? (
+                            <CheckCircle2
+                              size={14}
+                              color="#14b8a6"
+                              style={{ margin: "0 auto" }}
+                            />
+                          ) : (
+                            <span
+                              style={{
+                                fontSize: "0.7rem",
+                                color: "rgba(255,255,255,0.2)",
+                              }}
+                            >
+                              —
+                            </span>
+                          )
+                        ) : (
+                          <span
+                            style={{
+                              fontSize: "0.78rem",
+                              fontWeight: 700,
+                              color: "#14b8a6",
+                            }}
+                          >
+                            {us}
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ textAlign: "center" }}>
+                        {typeof them === "boolean" ? (
+                          them ? (
+                            <CheckCircle2
+                              size={14}
+                              color="rgba(255,255,255,0.3)"
+                              style={{ margin: "0 auto" }}
+                            />
+                          ) : (
+                            <span
+                              style={{
+                                fontSize: "0.7rem",
+                                color: "rgba(248,113,113,0.5)",
+                              }}
+                            >
+                              ✕
+                            </span>
+                          )
+                        ) : (
+                          <span
+                            style={{
+                              fontSize: "0.78rem",
+                              fontWeight: 600,
+                              color: "rgba(255,255,255,0.35)",
+                            }}
+                          >
+                            {them}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </Reveal>
+          </div>
+
+          {/* ── Big number stats ── */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))",
+              gap: 12,
+            }}
+          >
+            {[
+              {
+                icon: BarChart3,
+                val: "500+",
+                label: "Companies using NexaPayslip",
+                color: "#14b8a6",
+              },
+              {
+                icon: Users,
+                val: "12k+",
+                label: "Employees paid per month",
+                color: "#34d399",
+              },
+              {
+                icon: FileText,
+                val: "98k+",
+                label: "Payslips generated",
+                color: "#38bdf8",
+              },
+              {
+                icon: Clock,
+                val: "99.9%",
+                label: "Uptime guaranteed",
+                color: "#a78bfa",
+              },
+            ].map(({ icon: Icon, val, label, color }, i) => (
+              <Reveal key={label} delay={i * 80}>
+                <div
+                  style={{
+                    ...glass,
+                    borderRadius: 20,
+                    padding: "1.5rem",
+                    textAlign: "center",
+                    position: "relative",
+                    overflow: "hidden",
+                  }}
+                >
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: -20,
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                      width: 80,
+                      height: 80,
+                      borderRadius: "50%",
+                      background: `radial-gradient(circle,${color}15 0%,transparent 70%)`,
+                      pointerEvents: "none",
+                    }}
+                  />
+                  <Icon
+                    size={18}
+                    color={color}
+                    style={{ margin: "0 auto 0.75rem" }}
+                  />
+                  <div
+                    style={{
+                      fontSize: "clamp(1.6rem,3vw,2.2rem)",
+                      fontWeight: 800,
+                      letterSpacing: "-0.04em",
+                      color: "rgba(255,255,255,0.9)",
+                    }}
+                  >
+                    {val}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "0.72rem",
+                      color: "rgba(255,255,255,0.35)",
+                      marginTop: "0.4rem",
+                      lineHeight: 1.4,
+                    }}
+                  >
+                    {label}
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </section>
+
+        <hr className="glow-rule" style={{ maxWidth: 800, margin: "0 auto" }} />
+
+        {/* ── TESTIMONIALS ── */}
+        <section
+          id="reviews"
+          style={{ maxWidth: 1100, margin: "0 auto", padding: "7rem 1.5rem" }}
+        >
+          <Reveal>
+            <div style={{ textAlign: "center", marginBottom: "4rem" }}>
+              <p
+                style={{
+                  fontFamily: "monospace",
+                  fontSize: "0.6rem",
+                  letterSpacing: "0.18em",
+                  textTransform: "uppercase",
+                  color: "rgba(20,184,166,0.6)",
+                  marginBottom: 14,
+                }}
+              >
+                Reviews
+              </p>
+              <h2
+                style={{
+                  fontFamily: "'DM Serif Display',serif",
+                  fontSize: "clamp(2rem,5vw,3.2rem)",
+                  fontWeight: 400,
+                  letterSpacing: "-0.02em",
+                  margin: 0,
+                  lineHeight: 1.1,
+                }}
+              >
+                Trusted by teams
+                <br />
+                <em
+                  style={{
+                    fontStyle: "italic",
+                    color: "rgba(255,255,255,0.25)",
+                    fontWeight: 300,
+                  }}
+                >
+                  across Zambia.
+                </em>
+              </h2>
             </div>
+          </Reveal>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns:
+                "repeat(auto-fit,minmax(min(100%,300px),1fr))",
+              gap: 14,
+            }}
+          >
+            {TESTIMONIALS.map((t, i) => (
+              <TestimonialCard key={t.name} {...t} delay={i * 100} />
+            ))}
+          </div>
+        </section>
+
+        <hr className="glow-rule" style={{ maxWidth: 800, margin: "0 auto" }} />
+
+        {/* ── PRICING ── */}
+        <section
+          id="pricing"
+          style={{ maxWidth: 1100, margin: "0 auto", padding: "7rem 1.5rem" }}
+        >
+          <Reveal>
+            <div style={{ textAlign: "center", marginBottom: "4rem" }}>
+              <p
+                style={{
+                  fontFamily: "monospace",
+                  fontSize: "0.6rem",
+                  letterSpacing: "0.18em",
+                  textTransform: "uppercase",
+                  color: "rgba(20,184,166,0.6)",
+                  marginBottom: 14,
+                }}
+              >
+                Pricing
+              </p>
+              <h2
+                style={{
+                  fontFamily: "'DM Serif Display',serif",
+                  fontSize: "clamp(2rem,5vw,3.2rem)",
+                  fontWeight: 400,
+                  letterSpacing: "-0.02em",
+                  margin: 0,
+                  lineHeight: 1.1,
+                }}
+              >
+                Simple, honest
+                <br />
+                <em style={{ fontStyle: "italic", color: "#14b8a6" }}>
+                  pricing.
+                </em>
+              </h2>
+              <p
+                style={{
+                  fontSize: "0.9rem",
+                  color: "rgba(255,255,255,0.38)",
+                  marginTop: "1rem",
+                  lineHeight: 1.7,
+                }}
+              >
+                No hidden fees. No complicated tiers. Just powerful payroll.
+              </p>
+            </div>
+          </Reveal>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))",
+              gap: 16,
+              maxWidth: 760,
+              margin: "0 auto",
+            }}
+          >
+            {/* Free */}
+            <Reveal dir="left">
+              <div
+                style={{
+                  ...glass,
+                  borderRadius: 28,
+                  padding: "2.5rem",
+                  position: "relative",
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: 3,
+                    background:
+                      "linear-gradient(to right,transparent,rgba(255,255,255,0.1),transparent)",
+                  }}
+                />
+                <p
+                  style={{
+                    fontFamily: "monospace",
+                    fontSize: "0.62rem",
+                    letterSpacing: "0.15em",
+                    textTransform: "uppercase",
+                    color: "rgba(255,255,255,0.35)",
+                    marginBottom: "0.75rem",
+                  }}
+                >
+                  Starter
+                </p>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "baseline",
+                    gap: 4,
+                    marginBottom: "0.5rem",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: "3rem",
+                      fontWeight: 900,
+                      letterSpacing: "-0.05em",
+                      color: "rgba(255,255,255,0.9)",
+                    }}
+                  >
+                    FREE
+                  </span>
+                </div>
+                <p
+                  style={{
+                    fontSize: "0.82rem",
+                    color: "rgba(255,255,255,0.35)",
+                    marginBottom: "2rem",
+                  }}
+                >
+                  For growing Zambian businesses
+                </p>
+                <div
+                  style={{ display: "flex", flexDirection: "column", gap: 10 }}
+                >
+                  {PRICING_FEATURES.slice(0, 5).map((f) => (
+                    <div
+                      key={f}
+                      style={{ display: "flex", alignItems: "center", gap: 10 }}
+                    >
+                      <CheckCircle2
+                        size={14}
+                        color="#14b8a6"
+                        style={{ flexShrink: 0 }}
+                      />
+                      <span
+                        style={{
+                          fontSize: "0.83rem",
+                          color: "rgba(255,255,255,0.6)",
+                        }}
+                      >
+                        {f}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <Link
+                  to="/login"
+                  className="cta-ghost"
+                  style={{
+                    width: "100%",
+                    justifyContent: "center",
+                    marginTop: "2rem",
+                    display: "flex",
+                  }}
+                >
+                  Get started free
+                </Link>
+              </div>
+            </Reveal>
+
+            {/* Pro */}
+            <Reveal dir="right" delay={80}>
+              <div
+                className="animated-border"
+                style={{
+                  ...glassTeal,
+                  borderRadius: 28,
+                  padding: "2.5rem",
+                  position: "relative",
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: 3,
+                    background: "linear-gradient(to right,#14b8a6,#34d399)",
+                  }}
+                />
+                <div
+                  style={{
+                    position: "absolute",
+                    top: -60,
+                    right: -60,
+                    width: 180,
+                    height: 180,
+                    borderRadius: "50%",
+                    background:
+                      "radial-gradient(circle,rgba(20,184,166,0.15) 0%,transparent 70%)",
+                    pointerEvents: "none",
+                  }}
+                />
+
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                    marginBottom: "0.75rem",
+                  }}
+                >
+                  <p
+                    style={{
+                      fontFamily: "monospace",
+                      fontSize: "0.62rem",
+                      letterSpacing: "0.15em",
+                      textTransform: "uppercase",
+                      color: "rgba(20,184,166,0.8)",
+                      margin: 0,
+                    }}
+                  >
+                    Pro
+                  </p>
+                  <span
+                    style={{
+                      ...glassTeal,
+                      borderRadius: 99,
+                      padding: "3px 10px",
+                      fontSize: "0.6rem",
+                      fontFamily: "monospace",
+                      letterSpacing: "0.1em",
+                      textTransform: "uppercase",
+                      color: "#14b8a6",
+                    }}
+                  >
+                    Popular
+                  </span>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "baseline",
+                    gap: 4,
+                    marginBottom: "0.5rem",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: "3rem",
+                      fontWeight: 900,
+                      letterSpacing: "-0.05em",
+                      color: "rgba(255,255,255,0.9)",
+                    }}
+                  >
+                    FREE
+                  </span>
+                </div>
+                <p
+                  style={{
+                    fontSize: "0.82rem",
+                    color: "rgba(255,255,255,0.4)",
+                    marginBottom: "2rem",
+                  }}
+                >
+                  During early access — all features included
+                </p>
+                <div
+                  style={{ display: "flex", flexDirection: "column", gap: 10 }}
+                >
+                  {PRICING_FEATURES.map((f) => (
+                    <div
+                      key={f}
+                      style={{ display: "flex", alignItems: "center", gap: 10 }}
+                    >
+                      <CheckCircle2
+                        size={14}
+                        color="#14b8a6"
+                        style={{ flexShrink: 0 }}
+                      />
+                      <span
+                        style={{
+                          fontSize: "0.83rem",
+                          color: "rgba(255,255,255,0.65)",
+                        }}
+                      >
+                        {f}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <Link
+                  to="/login"
+                  className="cta-primary"
+                  style={{
+                    width: "100%",
+                    justifyContent: "center",
+                    marginTop: "2rem",
+                    display: "flex",
+                  }}
+                >
+                  Start for free <ArrowRight size={15} />
+                </Link>
+              </div>
+            </Reveal>
           </div>
         </section>
 
@@ -1666,7 +2586,6 @@ function LandingPage() {
                 textAlign: "center",
               }}
             >
-              {/* Background orb */}
               <div
                 style={{
                   position: "absolute",
@@ -1674,15 +2593,13 @@ function LandingPage() {
                   height: 600,
                   borderRadius: "50%",
                   background:
-                    "radial-gradient(circle, rgba(20,184,166,0.09) 0%, transparent 65%)",
+                    "radial-gradient(circle,rgba(20,184,166,0.09) 0%,transparent 65%)",
                   top: "50%",
                   left: "50%",
                   transform: "translate(-50%,-50%)",
                   pointerEvents: "none",
                 }}
               />
-
-              {/* Top progressive blur band */}
               <div
                 style={{
                   position: "absolute",
@@ -1691,12 +2608,10 @@ function LandingPage() {
                   right: 0,
                   height: 80,
                   background:
-                    "linear-gradient(to bottom, rgba(20,184,166,0.04), transparent)",
+                    "linear-gradient(to bottom,rgba(20,184,166,0.04),transparent)",
                   pointerEvents: "none",
                 }}
               />
-
-              {/* Decorative teal ring */}
               <div
                 style={{
                   position: "absolute",
@@ -1736,7 +2651,7 @@ function LandingPage() {
               </p>
               <h2
                 style={{
-                  fontFamily: "'DM Serif Display', serif",
+                  fontFamily: "'DM Serif Display',serif",
                   fontSize: "clamp(2rem,5vw,3.2rem)",
                   fontWeight: 400,
                   letterSpacing: "-0.02em",
@@ -1786,8 +2701,6 @@ function LandingPage() {
                   Learn more
                 </a>
               </div>
-
-              {/* Bottom blur fade */}
               <div
                 style={{
                   position: "absolute",
@@ -1796,7 +2709,7 @@ function LandingPage() {
                   right: 0,
                   height: 80,
                   background:
-                    "linear-gradient(to top, rgba(8,15,26,0.35), transparent)",
+                    "linear-gradient(to top,rgba(8,15,26,0.35),transparent)",
                   pointerEvents: "none",
                 }}
               />
@@ -1809,66 +2722,141 @@ function LandingPage() {
       <footer
         style={{
           borderTop: "1px solid rgba(255,255,255,0.06)",
-          padding: "2rem 1.5rem",
+          padding: "2.5rem 1.5rem",
           maxWidth: 1100,
           margin: "3rem auto 0",
-          display: "flex",
-          flexWrap: "wrap",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: "1rem",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div
-            style={{
-              width: 24,
-              height: 24,
-              borderRadius: 6,
-              background: "linear-gradient(135deg, #14b8a6, #34d399)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "0.6rem",
-              fontWeight: 900,
-              color: "white",
-            }}
-          >
-            N
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "1.5rem",
+            marginBottom: "2rem",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: 7,
+                background: "linear-gradient(135deg,#14b8a6,#34d399)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "0.68rem",
+                fontWeight: 900,
+                color: "white",
+              }}
+            >
+              N
+            </div>
+            <div>
+              <div
+                style={{
+                  fontFamily: "monospace",
+                  fontSize: "0.72rem",
+                  fontWeight: 700,
+                  color: "rgba(255,255,255,0.7)",
+                  letterSpacing: "0.04em",
+                }}
+              >
+                NexaPayslip
+              </div>
+              <div
+                style={{
+                  fontFamily: "monospace",
+                  fontSize: "0.58rem",
+                  color: "rgba(255,255,255,0.2)",
+                }}
+              >
+                Built for Zambia
+              </div>
+            </div>
           </div>
+          <div style={{ display: "flex", gap: "2rem", flexWrap: "wrap" }}>
+            {[
+              ["Features", "#features"],
+              ["How it works", "#how"],
+              ["Reviews", "#reviews"],
+              ["Pricing", "#pricing"],
+            ].map(([l, h]) => (
+              <a
+                key={l}
+                href={h}
+                style={{
+                  fontFamily: "monospace",
+                  fontSize: "0.65rem",
+                  color: "rgba(255,255,255,0.25)",
+                  textDecoration: "none",
+                  transition: "color 0.2s",
+                }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.color = "rgba(20,184,166,0.7)")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.color = "rgba(255,255,255,0.25)")
+                }
+              >
+                {l}
+              </a>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: "1.5rem" }}>
+            {["Privacy", "Terms", "Contact"].map((item) => (
+              <a
+                key={item}
+                href="#"
+                style={{
+                  fontFamily: "monospace",
+                  fontSize: "0.65rem",
+                  color: "rgba(255,255,255,0.2)",
+                  textDecoration: "none",
+                  transition: "color 0.2s",
+                }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.color = "rgba(20,184,166,0.7)")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.color = "rgba(255,255,255,0.2)")
+                }
+              >
+                {item}
+              </a>
+            ))}
+          </div>
+        </div>
+        <div
+          style={{
+            borderTop: "1px solid rgba(255,255,255,0.05)",
+            paddingTop: "1.5rem",
+            display: "flex",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: "1rem",
+          }}
+        >
           <span
             style={{
               fontFamily: "monospace",
-              fontSize: "0.62rem",
-              color: "rgba(255,255,255,0.2)",
-              letterSpacing: "0.04em",
+              fontSize: "0.6rem",
+              color: "rgba(255,255,255,0.15)",
             }}
           >
-            © {new Date().getFullYear()} NexaPayslip
+            © {new Date().getFullYear()} NexaPayslip. All rights reserved.
           </span>
-        </div>
-        <div style={{ display: "flex", gap: "1.5rem" }}>
-          {["Privacy", "Terms", "Contact"].map((item) => (
-            <a
-              key={item}
-              href="#"
-              style={{
-                fontFamily: "monospace",
-                fontSize: "0.62rem",
-                color: "rgba(255,255,255,0.2)",
-                textDecoration: "none",
-                transition: "color 0.2s",
-              }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.color = "rgba(20,184,166,0.7)")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.color = "rgba(255,255,255,0.2)")
-              }
-            >
-              {item}
-            </a>
-          ))}
+          <span
+            style={{
+              fontFamily: "monospace",
+              fontSize: "0.6rem",
+              color: "rgba(255,255,255,0.15)",
+            }}
+          >
+            angelphiri.2021@gmail.com
+          </span>
         </div>
       </footer>
     </div>

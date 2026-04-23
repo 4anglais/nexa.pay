@@ -13,15 +13,26 @@ import {
   ShieldCheck,
   Zap,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signInWithPopup,
 } from "firebase/auth";
+
+const C = {
+  bg: "#131F2F",
+  green: "#23F77A",
+  red: "#E03B16",
+  white: "#FFFFFF",
+} as const;
+
+const sans: React.CSSProperties = {
+  fontFamily: "'DM Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif",
+};
+const serif: React.CSSProperties = {
+  fontFamily: "'DM Serif Display', 'Playfair Display', Georgia, serif",
+};
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
@@ -110,54 +121,116 @@ function LoginPage() {
   const features = isSignUp ? signupFeatures : loginFeatures;
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Ambient blobs — teal/emerald matches the app's accent palette */}
+    <div
+      className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
+      style={{ backgroundColor: C.bg }}
+    >
+      {/* Ambient glows */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -top-40 -left-40 h-[480px] w-[480px] rounded-full bg-teal-500/[0.07] blur-3xl" />
-        <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-emerald-500/[0.07] blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-72 w-72 rounded-full bg-teal-400/[0.04] blur-3xl" />
+        <div
+          className="absolute -top-48 -left-48 h-[560px] w-[560px] rounded-full"
+          style={{ background: "rgba(35,247,122,0.07)", filter: "blur(120px)" }}
+        />
+        <div
+          className="absolute -bottom-36 -right-36 h-[400px] w-[400px] rounded-full"
+          style={{ background: "rgba(35,247,122,0.05)", filter: "blur(100px)" }}
+        />
+        <div
+          className="absolute top-1/2 left-1/3 -translate-y-1/2 h-64 w-64 rounded-full"
+          style={{ background: "rgba(35,247,122,0.04)", filter: "blur(80px)" }}
+        />
       </div>
 
       {/* Card */}
-      <div className="relative w-full max-w-[860px] min-h-[580px] rounded-3xl border border-border bg-card shadow-2xl flex overflow-hidden">
+      <div
+        className="relative w-full max-w-[860px] min-h-[580px] flex overflow-hidden"
+        style={{
+          borderRadius: "28px",
+          background: "rgba(255,255,255,0.04)",
+          backdropFilter: "blur(32px)",
+          WebkitBackdropFilter: "blur(32px)",
+          border: "1px solid rgba(255,255,255,0.08)",
+          boxShadow:
+            "0 0 0 1px rgba(35,247,122,0.05), 0 40px 100px rgba(0,0,0,0.75), 0 12px 48px rgba(35,247,122,0.1), inset 0 1px 0 rgba(255,255,255,0.07)",
+        }}
+      >
         {/* ── LEFT PANEL ── */}
-        <div className="relative hidden md:flex w-[44%] flex-shrink-0 flex-col overflow-hidden">
-          {/* Background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-teal-950/40 via-background/10 to-background dark:from-teal-950/60" />
-          {/* Subtle grid using border token */}
+        <div
+          className="relative hidden md:flex w-[44%] flex-shrink-0 flex-col overflow-hidden"
+          style={{
+            borderRadius: "28px 0 0 28px",
+            background: "rgba(35,247,122,0.03)",
+            borderRight: "1px solid rgba(255,255,255,0.06)",
+          }}
+        >
+          {/* Dot grid */}
           <div
-            className="absolute inset-0 opacity-40"
+            className="absolute inset-0"
             style={{
               backgroundImage:
-                "linear-gradient(hsl(var(--border)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--border)) 1px, transparent 1px)",
-              backgroundSize: "36px 36px",
+                "radial-gradient(rgba(255,255,255,0.055) 1px, transparent 1px)",
+              backgroundSize: "28px 28px",
+              borderRadius: "28px 0 0 28px",
             }}
           />
-          {/* Teal glow */}
-          <div className="absolute -top-20 -left-20 h-72 w-72 rounded-full bg-teal-500/[0.12] blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 right-4 h-48 w-48 rounded-full bg-emerald-500/[0.08] blur-2xl pointer-events-none" />
-          {/* Progressive blur at right edge — blends into right panel */}
-          <div className="absolute inset-y-0 right-0 w-14 bg-gradient-to-r from-transparent to-card/80 pointer-events-none z-10" />
+          {/* Green glow corner */}
+          <div
+            className="absolute -top-28 -left-28 h-80 w-80 rounded-full pointer-events-none"
+            style={{
+              background: "rgba(35,247,122,0.1)",
+              filter: "blur(100px)",
+            }}
+          />
+          <div
+            className="absolute bottom-0 left-0 h-40 w-40 rounded-full pointer-events-none"
+            style={{
+              background: "rgba(35,247,122,0.06)",
+              filter: "blur(60px)",
+            }}
+          />
+          {/* Edge fade */}
+          <div
+            className="absolute inset-y-0 right-0 w-12 pointer-events-none z-10"
+            style={{
+              background:
+                "linear-gradient(to right, transparent, rgba(19,31,47,0.25))",
+            }}
+          />
 
           <div className="relative z-20 flex flex-col justify-between h-full p-10">
             {/* Logo */}
-            <div className="flex items-center gap-2.5">
-              <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center text-white font-black text-base shadow-md shadow-teal-500/25">
+            <div className="flex items-center gap-3">
+              <div
+                className="h-9 w-9 flex items-center justify-center font-black text-base shrink-0"
+                style={{
+                  borderRadius: "12px",
+                  backgroundColor: C.green,
+                  color: C.bg,
+                  boxShadow:
+                    "0 4px 20px rgba(35,247,122,0.45), 0 8px 40px rgba(35,247,122,0.2)",
+                  ...sans,
+                }}
+              >
                 N
               </div>
-              <span className="text-sm font-bold text-foreground tracking-tight">
+              <span
+                className="text-sm font-bold tracking-tight"
+                style={{ color: C.white, ...sans }}
+              >
                 NexaPayslip
               </span>
             </div>
 
-            {/* Headline — cross-fades on mode switch */}
+            {/* Headline */}
             <div className="flex flex-col gap-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-teal-500 transition-all duration-500">
+              <p
+                className="text-[10px] font-semibold uppercase tracking-[0.22em]"
+                style={{ color: C.green, ...sans }}
+              >
                 {isSignUp ? "Join today" : "Payroll made simple"}
               </p>
 
-              {/* Fixed-height container so layout doesn't shift */}
-              <div className="relative h-[92px]">
+              <div className="relative h-[96px]">
                 <div
                   className="absolute inset-0 transition-all duration-500"
                   style={{
@@ -166,12 +239,15 @@ function LoginPage() {
                     transitionTimingFunction: "cubic-bezier(0.76,0,0.24,1)",
                   }}
                 >
-                  <h1 className="text-[38px] font-bold leading-[1.08] tracking-tight text-foreground">
+                  <h1
+                    className="text-[42px] leading-[1.04] tracking-tight"
+                    style={{ color: C.white, fontWeight: 400, ...serif }}
+                  >
                     Welcome
                     <br />
-                    <span className="bg-gradient-to-r from-teal-500 to-emerald-400 bg-clip-text text-transparent">
+                    <em style={{ color: C.green, fontStyle: "italic" }}>
                       back.
-                    </span>
+                    </em>
                   </h1>
                 </div>
                 <div
@@ -182,17 +258,23 @@ function LoginPage() {
                     transitionTimingFunction: "cubic-bezier(0.76,0,0.24,1)",
                   }}
                 >
-                  <h1 className="text-[38px] font-bold leading-[1.08] tracking-tight text-foreground">
+                  <h1
+                    className="text-[42px] leading-[1.04] tracking-tight"
+                    style={{ color: C.white, fontWeight: 400, ...serif }}
+                  >
                     New
                     <br />
-                    <span className="bg-gradient-to-r from-teal-500 to-emerald-400 bg-clip-text text-transparent">
+                    <em style={{ color: C.green, fontStyle: "italic" }}>
                       here?
-                    </span>
+                    </em>
                   </h1>
                 </div>
               </div>
 
-              <p className="text-sm text-muted-foreground leading-relaxed max-w-[210px] transition-all duration-500">
+              <p
+                className="text-sm leading-relaxed max-w-[210px]"
+                style={{ color: "rgba(255,255,255,0.45)", ...sans }}
+              >
                 {isSignUp
                   ? "Set up your company payroll in minutes — no spreadsheets, no stress."
                   : "Your payroll dashboard is ready. Pick up right where you left off."}
@@ -203,10 +285,20 @@ function LoginPage() {
             <div className="flex flex-col gap-3">
               {features.map(({ icon: Icon, label }) => (
                 <div key={label} className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-lg bg-teal-500/10 border border-teal-500/20 flex items-center justify-center shrink-0">
-                    <Icon className="h-3.5 w-3.5 text-teal-500" />
+                  <div
+                    className="h-8 w-8 flex items-center justify-center shrink-0"
+                    style={{
+                      borderRadius: "10px",
+                      background: "rgba(35,247,122,0.1)",
+                      border: "1px solid rgba(35,247,122,0.2)",
+                    }}
+                  >
+                    <Icon className="h-3.5 w-3.5" style={{ color: C.green }} />
                   </div>
-                  <span className="text-xs text-muted-foreground font-medium">
+                  <span
+                    className="text-xs font-medium"
+                    style={{ color: "rgba(255,255,255,0.5)", ...sans }}
+                  >
                     {label}
                   </span>
                 </div>
@@ -307,54 +399,131 @@ function AuthForm({
 }) {
   const isSignUp = mode === "signup";
 
+  const inputBase: React.CSSProperties = {
+    width: "100%",
+    borderRadius: "14px",
+    padding: "11px 14px",
+    fontSize: "14px",
+    outline: "none",
+    background: "rgba(255,255,255,0.06)",
+    border: "1px solid rgba(255,255,255,0.1)",
+    color: C.white,
+    transition: "border-color 0.2s, box-shadow 0.2s",
+    ...sans,
+  };
+
+  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    e.currentTarget.style.borderColor = "rgba(35,247,122,0.5)";
+    e.currentTarget.style.boxShadow = "0 0 0 4px rgba(35,247,122,0.08)";
+  };
+
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";
+    e.currentTarget.style.boxShadow = "none";
+  };
+
   return (
     <div className="w-full max-w-[320px] mx-auto">
       {isSignUp ? (
         <button
           onClick={onSwitch}
-          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors mb-8 font-medium"
+          className="inline-flex items-center gap-1.5 mb-8 transition-opacity hover:opacity-70"
+          style={{
+            fontSize: "12px",
+            fontWeight: 600,
+            color: "rgba(255,255,255,0.45)",
+            ...sans,
+          }}
         >
           <ArrowLeft className="h-3 w-3" /> Back to login
         </button>
       ) : (
         <Link
           to="/"
-          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors mb-8 font-medium"
+          className="inline-flex items-center gap-1.5 mb-8 transition-opacity hover:opacity-70"
+          style={{
+            fontSize: "12px",
+            fontWeight: 600,
+            color: "rgba(255,255,255,0.45)",
+            ...sans,
+          }}
         >
           <ArrowLeft className="h-3 w-3" /> Home
         </Link>
       )}
 
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-teal-500 mb-2">
+      <p
+        className="text-[10px] font-semibold uppercase tracking-[0.22em] mb-2"
+        style={{ color: C.green, ...sans }}
+      >
         {isSignUp ? "Get started" : "Sign in"}
       </p>
-      <h2 className="text-2xl font-bold text-foreground tracking-tight mb-1.5">
+      <h2
+        className="tracking-tight mb-1.5"
+        style={{
+          fontSize: "26px",
+          lineHeight: 1.1,
+          color: C.white,
+          fontWeight: 400,
+          ...serif,
+        }}
+      >
         {isSignUp ? "Create your account" : "Good to see you"}
       </h2>
-      <p className="text-sm text-muted-foreground mb-7 leading-relaxed">
+      <p
+        className="text-sm leading-relaxed mb-7"
+        style={{ color: "rgba(255,255,255,0.45)", ...sans }}
+      >
         {isSignUp
           ? "Join thousands of Zambian businesses on NexaPayslip."
           : "Enter your credentials to access your dashboard."}
       </p>
 
       {error && (
-        <div className="mb-5 rounded-xl border border-destructive/30 bg-destructive/10 px-3.5 py-3 text-xs font-medium text-destructive">
+        <div
+          className="mb-5 px-3.5 py-3 text-xs font-semibold"
+          style={{
+            borderRadius: "14px",
+            background: "rgba(224,59,22,0.12)",
+            border: "1px solid rgba(224,59,22,0.3)",
+            color: C.red,
+            ...sans,
+          }}
+        >
           {error}
         </div>
       )}
 
-      {/* Google */}
-      <Button
+      {/* Google button */}
+      <button
         type="button"
-        variant="outline"
-        className="w-full gap-2.5 rounded-xl mb-5 font-semibold"
         onClick={onGoogle}
         disabled={googleLoading}
+        className="w-full flex items-center justify-center gap-2.5 mb-5 transition-all duration-200 disabled:opacity-60"
+        style={{
+          borderRadius: "14px",
+          padding: "10px 16px",
+          background: C.white,
+          border: "1.5px solid #e2e2e2",
+          color: "#111",
+          fontSize: "14px",
+          fontWeight: 600,
+          cursor: googleLoading ? "not-allowed" : "pointer",
+          boxShadow: "0 2px 12px rgba(0,0,0,0.35)",
+          ...sans,
+        }}
+        onMouseEnter={(e) => {
+          if (!googleLoading)
+            e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.5)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.boxShadow = "0 2px 12px rgba(0,0,0,0.35)";
+        }}
       >
         {googleLoading ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
+          <Loader2 className="h-4 w-4 animate-spin" style={{ color: "#111" }} />
         ) : (
-          <svg width="16" height="16" viewBox="0 0 24 24" className="shrink-0">
+          <svg width="17" height="17" viewBox="0 0 24 24" className="shrink-0">
             <path
               fill="#4285F4"
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -374,47 +543,74 @@ function AuthForm({
           </svg>
         )}
         {isSignUp ? "Sign up with Google" : "Continue with Google"}
-      </Button>
+      </button>
 
       {/* Divider */}
       <div className="flex items-center gap-3 mb-5">
-        <div className="flex-1 h-px bg-border" />
-        <span className="text-xs text-muted-foreground font-medium">or</span>
-        <div className="flex-1 h-px bg-border" />
+        <div
+          className="flex-1 h-px"
+          style={{ background: "rgba(255,255,255,0.1)" }}
+        />
+        <span
+          className="text-xs font-medium"
+          style={{ color: "rgba(255,255,255,0.35)", ...sans }}
+        >
+          or
+        </span>
+        <div
+          className="flex-1 h-px"
+          style={{ background: "rgba(255,255,255,0.1)" }}
+        />
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        {/* Email */}
         <div className="space-y-1.5">
-          <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <label
+            className="block text-[10px] font-semibold uppercase tracking-[0.16em]"
+            style={{ color: "rgba(255,255,255,0.45)", ...sans }}
+          >
             Email
-          </Label>
-          <Input
+          </label>
+          <input
             placeholder="you@company.com"
-            className="rounded-xl"
+            style={inputBase}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
             {...register("email")}
           />
           {errors.email && (
-            <p className="text-xs text-destructive font-medium">
+            <p
+              className="text-xs font-semibold"
+              style={{ color: C.red, ...sans }}
+            >
               {errors.email.message}
             </p>
           )}
         </div>
 
+        {/* Password */}
         <div className="space-y-1.5">
-          <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <label
+            className="block text-[10px] font-semibold uppercase tracking-[0.16em]"
+            style={{ color: "rgba(255,255,255,0.45)", ...sans }}
+          >
             Password
-          </Label>
+          </label>
           <div className="relative">
-            <Input
+            <input
               placeholder={isSignUp ? "Min. 6 characters" : "••••••••"}
               type={showPassword ? "text" : "password"}
-              className="rounded-xl pr-10"
+              style={{ ...inputBase, paddingRight: "40px" }}
+              onFocus={handleFocus}
+              onBlur={handleBlur}
               {...register("password")}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 transition-opacity hover:opacity-70"
+              style={{ color: "rgba(255,255,255,0.4)" }}
             >
               {showPassword ? (
                 <EyeOff className="h-4 w-4" />
@@ -424,16 +620,45 @@ function AuthForm({
             </button>
           </div>
           {errors.password && (
-            <p className="text-xs text-destructive font-medium">
+            <p
+              className="text-xs font-semibold"
+              style={{ color: C.red, ...sans }}
+            >
               {errors.password.message}
             </p>
           )}
         </div>
 
-        <Button
+        {/* Submit */}
+        <button
           type="submit"
           disabled={isSubmitting || loading}
-          className="w-full rounded-xl gap-2 font-semibold bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white shadow-lg shadow-teal-500/20 border-0 mt-1"
+          className="w-full flex items-center justify-center gap-2 font-bold transition-all duration-200 mt-1 disabled:opacity-60"
+          style={{
+            borderRadius: "14px",
+            padding: "11px 16px",
+            background: C.green,
+            color: C.bg,
+            fontSize: "14px",
+            fontWeight: 700,
+            border: "none",
+            cursor: isSubmitting || loading ? "not-allowed" : "pointer",
+            boxShadow:
+              "0 4px 20px rgba(35,247,122,0.38), 0 8px 40px rgba(35,247,122,0.18), inset 0 1px 0 rgba(255,255,255,0.15)",
+            ...sans,
+          }}
+          onMouseEnter={(e) => {
+            if (!isSubmitting && !loading) {
+              e.currentTarget.style.boxShadow =
+                "0 6px 28px rgba(35,247,122,0.5), 0 12px 48px rgba(35,247,122,0.25), inset 0 1px 0 rgba(255,255,255,0.15)";
+              e.currentTarget.style.transform = "translateY(-1px)";
+            }
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.boxShadow =
+              "0 4px 20px rgba(35,247,122,0.38), 0 8px 40px rgba(35,247,122,0.18), inset 0 1px 0 rgba(255,255,255,0.15)";
+            e.currentTarget.style.transform = "translateY(0)";
+          }}
         >
           {loading && <Loader2 className="h-4 w-4 animate-spin" />}
           {loading
@@ -443,14 +668,18 @@ function AuthForm({
             : isSignUp
               ? "Create Account"
               : "Sign In"}
-        </Button>
+        </button>
       </form>
 
-      <p className="mt-6 text-center text-xs text-muted-foreground">
+      <p
+        className="mt-6 text-center text-xs"
+        style={{ color: "rgba(255,255,255,0.4)", ...sans }}
+      >
         {isSignUp ? "Already have an account? " : "Don't have an account? "}
         <button
           onClick={onSwitch}
-          className="font-bold text-teal-500 hover:text-teal-400 transition-colors"
+          className="font-bold transition-opacity hover:opacity-80"
+          style={{ color: C.green }}
         >
           {isSignUp ? "Sign in" : "Create one →"}
         </button>

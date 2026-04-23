@@ -1,0 +1,76 @@
+# Built application files
+*.apk
+*.aar
+*.ap_
+*.aab
+
+# Dalvik / ART
+*.dex
+*.class
+
+# Build outputs
+bin/
+gen/
+out/
+build/
+.externalNativeBuild/
+.cxx/
+
+# Gradle
+.gradle/
+**/.gradle/
+**/build/
+
+# Local configuration (SDK path etc.)
+local.properties
+
+# Android Studio / IntelliJ files
+.idea/
+*.iml
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/gradle.xml
+.idea/assetWizardSettings.xml
+.idea/dictionaries
+.idea/libraries
+.idea/caches
+.idea/modules.xml
+.idea/navEditor.xml
+.navigation/
+captures/
+.vscode/
+
+# Logs
+*.log
+
+# Proguard
+proguard/
+
+# Android profiling
+*.hprof
+
+# Keystore files
+*.jks
+*.keystore
+
+# Firebase / Google services
+google-services.json
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+fastlane/readme.md
+
+# Capacitor generated files
+capacitor-cordova-android-plugins/
+app/src/main/assets/public/
+app/src/main/assets/capacitor.config.json
+app/src/main/assets/capacitor.plugins.json
+app/src/main/res/xml/config.xml
+
+# Safety: prevent build and gradle pollution
+**/build/
+**/.gradle/
+local.properties

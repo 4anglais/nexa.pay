@@ -194,6 +194,18 @@ function PayslipDetailPage() {
       currency: "ZMW",
     }).format(n);
 
+  const formatGeneratedDate = (value: string) => {
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+      return value;
+    }
+
+    return new Intl.DateTimeFormat("en-ZM", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    }).format(parsed);
+  };
+
   const handlePrint = () => window.print();
 
   if (loading) {
@@ -236,6 +248,8 @@ function PayslipDetailPage() {
   const payload = `${payslip.id}|${emp?.full_name ?? ""}|${period}|${payslip.net_pay}|${payslip.created_at}`;
   const signature = createVerificationSignature(payload);
   const referenceCode = signature.slice(0, 10).toUpperCase();
+  const generatedDate = formatGeneratedDate(payslip.created_at);
+  const numberTextClass = "font-mono tabular-nums";
 
   /* ─────────────────────────────────────────────
      LANDSCAPE CARD
@@ -300,7 +314,7 @@ function PayslipDetailPage() {
             <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mb-1">
               ID Number
             </p>
-            <p className="font-bold text-slate-900 text-xs">
+            <p className={`font-bold text-slate-900 text-xs ${numberTextClass}`}>
               {emp?.nrc_or_id ?? "—"}
             </p>
           </div>
@@ -322,7 +336,7 @@ function PayslipDetailPage() {
             <div className="space-y-1">
               <div className="flex justify-between items-center text-[10px]">
                 <span className="text-slate-500 font-medium">Basic</span>
-                <span className="font-bold text-slate-900">
+                <span className={`font-bold text-slate-900 ${numberTextClass}`}>
                   {formatCurrency(emp?.basic_salary ?? 0).replace("ZMW ", "")}
                 </span>
               </div>
@@ -332,7 +346,7 @@ function PayslipDetailPage() {
                   className="flex justify-between items-center text-[10px]"
                 >
                   <span className="text-slate-500 font-medium">{a.type}</span>
-                  <span className="font-bold text-slate-900">
+                  <span className={`font-bold text-slate-900 ${numberTextClass}`}>
                     {formatCurrency(a.amount).replace("ZMW ", "")}
                   </span>
                 </div>
@@ -341,7 +355,7 @@ function PayslipDetailPage() {
                 <span className="text-[10px] font-bold text-slate-900">
                   Gross
                 </span>
-                <span className="font-black text-slate-900 text-[11px]">
+                <span className={`font-black text-slate-900 text-[11px] ${numberTextClass}`}>
                   {formatCurrency(gross).replace("ZMW ", "")}
                 </span>
               </div>
@@ -355,7 +369,7 @@ function PayslipDetailPage() {
             <div className="space-y-1">
               <div className="flex justify-between items-center text-[10px]">
                 <span className="text-slate-500 font-medium">Statutory</span>
-                <span className="font-bold text-red-600">
+                <span className={`font-bold text-red-600 ${numberTextClass}`}>
                   {formatCurrency(paye + napsa + nhima).replace("ZMW ", "")}
                 </span>
               </div>
@@ -365,7 +379,7 @@ function PayslipDetailPage() {
                   className="flex justify-between items-center text-[10px]"
                 >
                   <span className="text-slate-500 font-medium">{d.type}</span>
-                  <span className="font-bold text-red-600">
+                  <span className={`font-bold text-red-600 ${numberTextClass}`}>
                     {formatCurrency(d.amount).replace("ZMW ", "")}
                   </span>
                 </div>
@@ -374,7 +388,7 @@ function PayslipDetailPage() {
                 <span className="text-[10px] font-bold text-slate-900">
                   Total
                 </span>
-                <span className="font-bold text-red-600 text-[11px]">
+                <span className={`font-bold text-red-600 text-[11px] ${numberTextClass}`}>
                   {formatCurrency(payslip.total_deductions).replace("ZMW ", "")}
                 </span>
               </div>
@@ -396,7 +410,7 @@ function PayslipDetailPage() {
               <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mb-1">
                 Account
               </p>
-              <p className="text-[9px] font-bold text-slate-900 font-mono">
+              <p className={`text-[9px] font-bold text-slate-900 ${numberTextClass}`}>
                 {emp?.account_number
                   ? `••••${emp.account_number.slice(-4)}`
                   : "—"}
@@ -411,7 +425,7 @@ function PayslipDetailPage() {
               <p className="text-[7px] uppercase tracking-widest opacity-50 font-bold">
                 Net Pay
               </p>
-              <p className="text-base font-black">
+              <p className={`text-base font-black ${numberTextClass}`}>
                 {formatCurrency(payslip.net_pay)}
               </p>
             </div>
@@ -420,6 +434,13 @@ function PayslipDetailPage() {
               Paid
             </span>
           </div>
+        </div>
+
+        <div className="pt-2 text-[8px] text-slate-400 flex items-center justify-between">
+          <span>
+            Generated: <span className={numberTextClass}>{generatedDate}</span>
+          </span>
+          <span>Powered by NEXAPAY</span>
         </div>
       </div>
 
@@ -489,7 +510,7 @@ function PayslipDetailPage() {
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
               Period
             </p>
-            <p className="text-sm text-slate-900 font-bold mt-1">{period}</p>
+            <p className={`text-sm text-slate-900 font-bold mt-1 ${numberTextClass}`}>{period}</p>
             <p className="text-[9px] text-slate-500 mt-1 uppercase font-semibold tracking-wider">
               {copyLabel}
             </p>
@@ -512,7 +533,7 @@ function PayslipDetailPage() {
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
               ID Number
             </p>
-            <p className="font-bold text-slate-900 text-base">
+            <p className={`font-bold text-slate-900 text-base ${numberTextClass}`}>
               {emp?.nrc_or_id ?? "—"}
             </p>
             <p className="text-xs text-slate-500 mt-0.5 font-medium">
@@ -529,7 +550,7 @@ function PayslipDetailPage() {
             <div className="space-y-2">
               <div className="flex justify-between items-center text-xs">
                 <span className="text-slate-500 font-medium">Basic Salary</span>
-                <span className="font-bold text-slate-900">
+                <span className={`font-bold text-slate-900 ${numberTextClass}`}>
                   {formatCurrency(emp?.basic_salary ?? 0).replace("ZMW ", "")}
                 </span>
               </div>
@@ -539,7 +560,7 @@ function PayslipDetailPage() {
                   className="flex justify-between items-center text-xs"
                 >
                   <span className="text-slate-500 font-medium">{a.type}</span>
-                  <span className="font-bold text-slate-900">
+                  <span className={`font-bold text-slate-900 ${numberTextClass}`}>
                     {formatCurrency(a.amount).replace("ZMW ", "")}
                   </span>
                 </div>
@@ -548,7 +569,7 @@ function PayslipDetailPage() {
                 <span className="text-xs font-bold text-slate-900">
                   Gross Pay
                 </span>
-                <span className="font-black text-slate-900 text-sm">
+                <span className={`font-black text-slate-900 text-sm ${numberTextClass}`}>
                   {formatCurrency(gross).replace("ZMW ", "")}
                 </span>
               </div>
@@ -563,20 +584,20 @@ function PayslipDetailPage() {
               {payeRate > 0 && (
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-slate-500 font-medium">PAYE Tax</span>
-                  <span className="font-bold text-red-600">
+                  <span className={`font-bold text-red-600 ${numberTextClass}`}>
                     {formatCurrency(paye).replace("ZMW ", "")}
                   </span>
                 </div>
               )}
               <div className="flex justify-between items-center text-xs">
                 <span className="text-slate-500 font-medium">NAPSA</span>
-                <span className="font-bold text-red-600">
+                <span className={`font-bold text-red-600 ${numberTextClass}`}>
                   {formatCurrency(napsa).replace("ZMW ", "")}
                 </span>
               </div>
               <div className="flex justify-between items-center text-xs">
                 <span className="text-slate-500 font-medium">NHIMA</span>
-                <span className="font-bold text-red-600">
+                <span className={`font-bold text-red-600 ${numberTextClass}`}>
                   {formatCurrency(nhima).replace("ZMW ", "")}
                 </span>
               </div>
@@ -586,7 +607,7 @@ function PayslipDetailPage() {
                   className="flex justify-between items-center text-xs"
                 >
                   <span className="text-slate-500 font-medium">{d.type}</span>
-                  <span className="font-bold text-red-600">
+                  <span className={`font-bold text-red-600 ${numberTextClass}`}>
                     {formatCurrency(d.amount).replace("ZMW ", "")}
                   </span>
                 </div>
@@ -595,7 +616,7 @@ function PayslipDetailPage() {
                 <span className="text-xs font-bold text-slate-900">
                   Total Deductions
                 </span>
-                <span className="font-bold text-red-600 text-sm">
+                <span className={`font-bold text-red-600 text-sm ${numberTextClass}`}>
                   {formatCurrency(payslip.total_deductions).replace("ZMW ", "")}
                 </span>
               </div>
@@ -608,7 +629,7 @@ function PayslipDetailPage() {
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-60 mb-1">
               Net Pay
             </p>
-            <p className="text-2xl font-black tracking-tighter">
+            <p className={`text-2xl font-black tracking-tighter ${numberTextClass}`}>
               {formatCurrency(payslip.net_pay)}
             </p>
           </div>
@@ -666,7 +687,7 @@ function PayslipDetailPage() {
               <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1">
                 Account
               </p>
-              <p className="text-[10px] font-bold text-slate-900 font-mono">
+              <p className={`text-[10px] font-bold text-slate-900 ${numberTextClass}`}>
                 {emp?.account_number
                   ? `••••${emp.account_number.slice(-4)}`
                   : "—"}
@@ -693,6 +714,13 @@ function PayslipDetailPage() {
             Scan to Verify
           </p>
         </div>
+      </div>
+
+      <div className="px-8 pb-6 -mt-2 text-[10px] text-slate-400 flex items-center justify-between">
+        <span>
+          Generated: <span className={numberTextClass}>{generatedDate}</span>
+        </span>
+        <span>Powered by NEXAPAY</span>
       </div>
     </div>
   );

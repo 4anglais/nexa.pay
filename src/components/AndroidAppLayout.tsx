@@ -5,6 +5,7 @@ import { AppBottomNav } from "./AppBottomNav";
 import { appNavItems } from "./app-nav";
 import { Button } from "./ui/button";
 import { firebase } from "@/integrations/firebase/client";
+import { useStatusBar } from "@/hooks/useStatusBar";
 
 export function AndroidAppLayout() {
   const location = useLocation();
@@ -16,6 +17,15 @@ export function AndroidAppLayout() {
       location.pathname.startsWith(`${item.to}/`),
   );
 
+  // Set the status bar to dark for non-dashboard pages on Android
+  useStatusBar({
+    backgroundColor: "#0d1825",
+    style: "DARK",
+    overlaysWebView: false,
+    navigationBarColor: "#0d1825",
+    navigationBarDarkIcons: false,
+  });
+
   const handleLogout = async () => {
     await signOut(firebase.auth);
     navigate({ to: "/android/login", replace: true });
@@ -23,7 +33,7 @@ export function AndroidAppLayout() {
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(14,165,233,0.16),transparent_28%),linear-gradient(180deg,#eef6ff_0%,#f8fbff_42%,#f3f8ff_100%)] text-slate-950">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-80 bg-[radial-gradient(circle_at_top,_rgba(45,212,191,0.16),transparent_55%)]" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-80 bg-[radial-gradient(circle_at_top,_rgba(45,212,191,0.16),transparent_55%)]"></div>
 
       <div className="relative min-h-screen">
         <header

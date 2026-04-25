@@ -17,6 +17,14 @@
             android:launchMode="singleTask"
             android:exported="true">
 
+            <!--
+                CHANGED: was AppTheme.NoActionBarLaunch (splash theme).
+                After splash, activity now switches to AppTheme.NoActionBar
+                which carries your dark status/nav bar colors.
+                If you use a separate splash Activity, revert this line back
+                to AppTheme.NoActionBarLaunch and apply the color items there too.
+            -->
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -35,7 +43,6 @@
         </provider>
     </application>
 
-    <!-- Permissions -->
-
     <uses-permission android:name="android.permission.INTERNET" />
+
 </manifest>

@@ -7,8 +7,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { firebase } from "@/integrations/firebase/client";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import {
+  GoogleAuthProvider,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  signInWithCredential,
 } from "firebase/auth";
 import { FirebaseAuthentication } from "@capacitor-firebase/authentication";
 
@@ -23,10 +25,8 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-// ─── Shared style tokens ────────────────────────────────────────────────────
 const C = {
   bg: "#0d1825",
-  card: "rgba(255,255,255,0.04)",
   green: "#23F77A",
   red: "#E03B16",
   white: "#FFFFFF",
@@ -64,7 +64,6 @@ function AndroidLoginPage() {
     return unsubscribe;
   }, [navigate]);
 
-  // Reset form when switching modes
   useEffect(() => {
     reset();
     setError("");
@@ -76,8 +75,29 @@ function AndroidLoginPage() {
     setGoogleLoading(true);
     try {
       if (isNative) {
+        // Step 1 — Capacitor plugin opens the native Google sheet
+        // and authenticates with Google on the device level.
         const result = await FirebaseAuthentication.signInWithGoogle();
-        console.log("ANDROID USER:", result);
+
+        // Step 2 — Extract the idToken from the plugin result.
+        // The Capacitor plugin and the Firebase JS SDK are two separate auth
+        // sessions. Without this bridge, the JS SDK never knows the user
+        // signed in, so onAuthStateChanged never fires and navigation stalls.
+        const idToken = result.credential?.idToken;
+        if (!idToken) {
+          throw new Error(
+            "No idToken returned from Google sign-in. " +
+              "Ensure your SHA-1 fingerprint is registered in the Firebase console " +
+              "under Project Settings → Your Apps → Android app.",
+          );
+        }
+
+        // Step 3 — Feed the idToken into the Firebase JS SDK so both sessions
+        // are in sync. onAuthStateChanged will now fire and auto-navigate.
+        const credential = GoogleAuthProvider.credential(idToken);
+        await signInWithCredential(firebase.auth, credential);
+
+        // Step 4 — Navigate immediately as a belt-and-suspenders fallback.
         navigate({ to: "/android/payslips", replace: true });
       } else {
         setError("Google sign-in is only available in the mobile app.");
@@ -127,6 +147,7 @@ function AndroidLoginPage() {
     border: `1px solid ${C.border}`,
     color: C.white,
     WebkitAppearance: "none",
+    boxSizing: "border-box",
     ...sans,
   };
 
@@ -145,7 +166,7 @@ function AndroidLoginPage() {
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
       }}
     >
-      {/* Ambient glow background */}
+      {/* Ambient glows */}
       <div
         style={{
           position: "absolute",
@@ -174,7 +195,6 @@ function AndroidLoginPage() {
         }}
       />
 
-      {/* Card */}
       <div
         style={{
           position: "relative",
@@ -292,6 +312,7 @@ function AndroidLoginPage() {
             boxShadow: "0 2px 16px rgba(0,0,0,0.4)",
             marginBottom: "16px",
             minHeight: "52px",
+            boxSizing: "border-box",
             ...sans,
           }}
         >
@@ -483,6 +504,7 @@ function AndroidLoginPage() {
               opacity: emailLoading || googleLoading ? 0.65 : 1,
               minHeight: "52px",
               marginTop: "4px",
+              boxSizing: "border-box",
               boxShadow:
                 "0 4px 20px rgba(35,247,122,0.35), 0 8px 40px rgba(35,247,122,0.15)",
               ...sans,
@@ -533,7 +555,7 @@ function AndroidLoginPage() {
           </button>
         </p>
 
-        {/* Footer note */}
+        {/* Footer */}
         <p
           style={{
             marginTop: "28px",
@@ -544,9 +566,7 @@ function AndroidLoginPage() {
             ...sans,
           }}
         >
-          Signing in connects your Google account to the{" "}
-          <span style={{ color: "rgba(255,255,255,0.4)" }}>/android/...</span>{" "}
-          workspace.
+          By continuing you agree to NexaPayslip's terms of service.
         </p>
       </div>
     </div>

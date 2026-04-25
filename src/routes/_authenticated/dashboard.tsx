@@ -12,6 +12,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { collection, getDocs, query, where } from "firebase/firestore";
+import { useStatusBar } from "@/hooks/useStatusBar";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -83,6 +84,16 @@ const statConfig = [
 export function DashboardPage() {
   const location = useLocation();
   const isAndroidRoute = location.pathname.startsWith("/android");
+
+  // Set the status bar to white for the dashboard on Android
+  useStatusBar({
+    backgroundColor: "#FFFFFF",
+    style: "LIGHT",
+    overlaysWebView: false,
+    navigationBarColor: "#FFFFFF",
+    navigationBarDarkIcons: true,
+  });
+
   const [stats, setStats] = useState({
     totalEmployees: 0,
     monthlyPayroll: 0,

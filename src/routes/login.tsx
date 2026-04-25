@@ -1,13 +1,7 @@
 import { Capacitor } from "@capacitor/core";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import {
-  useForm,
-  type FieldErrors,
-  type SubmitHandler,
-  type UseFormHandleSubmit,
-  type UseFormRegister,
-} from "react-hook-form";
+import { useForm, type SubmitHandler } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { firebase } from "@/integrations/firebase/client";
@@ -26,6 +20,7 @@ import {
   signInWithEmailAndPassword,
   signInWithPopup,
 } from "firebase/auth";
+import { FirebaseAuthentication } from "@capacitor-firebase/authentication";
 
 const C = {
   bg: "#131F2F",
@@ -69,9 +64,7 @@ function LoginPage() {
   const isNative = Capacitor.isNativePlatform();
   const [error, setError] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (isNative) {
@@ -88,58 +81,32 @@ function LoginPage() {
     return unsubscribe;
   }, [isNative, navigate]);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-    reset,
-  } = useForm<FormData>({ resolver: zodResolver(schema) });
-
   const switchMode = (val: boolean) => {
     setIsSignUp(val);
     setError("");
-    reset();
   };
 
   const handleGoogle = async () => {
     setError("");
     setGoogleLoading(true);
-    try {
-      const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({ prompt: "select_account" });
-      await signInWithPopup(firebase.auth, provider);
-      navigate({ to: "/dashboard", replace: true });
-    } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "Google sign-in failed");
-    } finally {
-      setGoogleLoading(false);
-    }
-  };
 
-  const onSubmit: SubmitHandler<FormData> = async (data) => {
-    setError("");
-    setLoading(true);
     try {
-      if (isSignUp) {
-        await createUserWithEmailAndPassword(
-          firebase.auth,
-          data.email,
-          data.password,
-        );
+      if (isNative) {
+        const result = await FirebaseAuthentication.signInWithGoogle();
+        console.log("NATIVE USER:", result);
+        navigate({ to: "/dashboard", replace: true });
       } else {
-        await signInWithEmailAndPassword(
-          firebase.auth,
-          data.email,
-          data.password,
-        );
+        const provider = new GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: "select_account" });
+        await signInWithPopup(firebase.auth, provider);
+        navigate({ to: "/dashboard", replace: true });
       }
-      navigate({ to: "/dashboard", replace: true });
     } catch (error: unknown) {
       setError(
-        error instanceof Error ? error.message : "Authentication failed",
+        error instanceof Error ? error.message : "Google sign-in failed",
       );
     } finally {
-      setLoading(false);
+      setGoogleLoading(false);
     }
   };
 
@@ -181,6 +148,7 @@ function LoginPage() {
             "0 0 0 1px rgba(35,247,122,0.05), 0 40px 100px rgba(0,0,0,0.75), 0 12px 48px rgba(35,247,122,0.1), inset 0 1px 0 rgba(255,255,255,0.07)",
         }}
       >
+        {/* Left panel */}
         <div
           className="relative hidden md:flex w-[44%] flex-shrink-0 flex-col overflow-hidden"
           style={{
@@ -327,6 +295,7 @@ function LoginPage() {
           </div>
         </div>
 
+        {/* Right panel — each AuthForm owns its own useForm */}
         <div className="flex-1 relative overflow-hidden">
           <div
             className="absolute inset-0 flex flex-col justify-center px-10 py-10 transition-all duration-500"
@@ -339,18 +308,12 @@ function LoginPage() {
           >
             <AuthForm
               mode="login"
-              error={!isSignUp ? error : ""}
+              sharedError={!isSignUp ? error : ""}
+              setSharedError={setError}
               onGoogle={handleGoogle}
               googleLoading={googleLoading}
-              register={register}
-              errors={errors}
-              isSubmitting={isSubmitting}
-              loading={loading}
-              showPassword={showPassword}
-              setShowPassword={setShowPassword}
-              handleSubmit={handleSubmit}
-              onSubmit={onSubmit}
               onSwitch={() => switchMode(true)}
+              navigate={navigate}
             />
           </div>
 
@@ -365,18 +328,12 @@ function LoginPage() {
           >
             <AuthForm
               mode="signup"
-              error={isSignUp ? error : ""}
+              sharedError={isSignUp ? error : ""}
+              setSharedError={setError}
               onGoogle={handleGoogle}
               googleLoading={googleLoading}
-              register={register}
-              errors={errors}
-              isSubmitting={isSubmitting}
-              loading={loading}
-              showPassword={showPassword}
-              setShowPassword={setShowPassword}
-              handleSubmit={handleSubmit}
-              onSubmit={onSubmit}
               onSwitch={() => switchMode(false)}
+              navigate={navigate}
             />
           </div>
         </div>
@@ -385,36 +342,69 @@ function LoginPage() {
   );
 }
 
+// ─── AuthForm now owns its own useForm instance ───────────────────────────────
 function AuthForm({
   mode,
-  error,
+  sharedError,
+  setSharedError,
   onGoogle,
   googleLoading,
-  register,
-  errors,
-  isSubmitting,
-  loading,
-  showPassword,
-  setShowPassword,
-  handleSubmit,
-  onSubmit,
   onSwitch,
+  navigate,
 }: {
   mode: "login" | "signup";
-  error: string;
+  sharedError: string;
+  setSharedError: (e: string) => void;
   onGoogle: () => Promise<void>;
   googleLoading: boolean;
-  register: UseFormRegister<FormData>;
-  errors: FieldErrors<FormData>;
-  isSubmitting: boolean;
-  loading: boolean;
-  showPassword: boolean;
-  setShowPassword: (v: boolean) => void;
-  handleSubmit: UseFormHandleSubmit<FormData>;
-  onSubmit: SubmitHandler<FormData>;
   onSwitch: () => void;
+  navigate: ReturnType<typeof useNavigate>;
 }) {
   const isSignUp = mode === "signup";
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  // Each AuthForm gets its own isolated form state — no more cross-contamination
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+  } = useForm<FormData>({ resolver: zodResolver(schema) });
+
+  // Reset this form's fields whenever it becomes the active panel
+  useEffect(() => {
+    reset();
+    setSharedError("");
+  }, [mode, reset, setSharedError]);
+
+  const onSubmit: SubmitHandler<FormData> = async (data) => {
+    setSharedError("");
+    setLoading(true);
+    try {
+      if (isSignUp) {
+        await createUserWithEmailAndPassword(
+          firebase.auth,
+          data.email,
+          data.password,
+        );
+      } else {
+        await signInWithEmailAndPassword(
+          firebase.auth,
+          data.email,
+          data.password,
+        );
+      }
+      navigate({ to: "/dashboard", replace: true });
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Authentication failed";
+      setSharedError(errorMessage);
+      console.error("Authentication error:", errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const inputBase: React.CSSProperties = {
     width: "100%",
@@ -427,16 +417,6 @@ function AuthForm({
     color: C.white,
     transition: "border-color 0.2s, box-shadow 0.2s",
     ...sans,
-  };
-
-  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-    e.currentTarget.style.borderColor = "rgba(35,247,122,0.5)";
-    e.currentTarget.style.boxShadow = "0 0 0 4px rgba(35,247,122,0.08)";
-  };
-
-  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";
-    e.currentTarget.style.boxShadow = "none";
   };
 
   return (
@@ -496,7 +476,7 @@ function AuthForm({
           : "Enter your credentials to access your dashboard."}
       </p>
 
-      {error && (
+      {sharedError && (
         <div
           className="mb-5 px-3.5 py-3 text-xs font-semibold"
           style={{
@@ -507,7 +487,7 @@ function AuthForm({
             ...sans,
           }}
         >
-          {error}
+          {sharedError}
         </div>
       )}
 
@@ -529,9 +509,8 @@ function AuthForm({
           ...sans,
         }}
         onMouseEnter={(e) => {
-          if (!googleLoading) {
+          if (!googleLoading)
             e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.5)";
-          }
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.boxShadow = "0 2px 12px rgba(0,0,0,0.35)";
@@ -579,7 +558,7 @@ function AuthForm({
         />
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
         <div className="space-y-1.5">
           <label
             className="block text-[10px] font-semibold uppercase tracking-[0.16em]"
@@ -590,14 +569,12 @@ function AuthForm({
           <input
             placeholder="you@company.com"
             style={inputBase}
-            onFocus={handleFocus}
-            onBlur={handleBlur}
             {...register("email")}
           />
           {errors.email && (
             <p
-              className="text-xs font-semibold"
               style={{ color: C.red, ...sans }}
+              className="text-xs font-semibold"
             >
               {errors.email.message}
             </p>
@@ -615,9 +592,7 @@ function AuthForm({
             <input
               placeholder={isSignUp ? "Min. 6 characters" : "••••••••"}
               type={showPassword ? "text" : "password"}
-              style={{ ...inputBase, paddingRight: "40px" }}
-              onFocus={handleFocus}
-              onBlur={handleBlur}
+              style={inputBase}
               {...register("password")}
             />
             <button

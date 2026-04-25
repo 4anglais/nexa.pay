@@ -1,4 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Link,
+  useLocation,
+} from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { firebase } from "@/integrations/firebase/client";
 import { PageHeader } from "@/components/PageHeader";
@@ -40,7 +44,9 @@ type EmployeePayslips = {
   payslips: PayslipRow[];
 };
 
-function PayslipsPage() {
+export function PayslipsPage() {
+  const location = useLocation();
+  const isAndroidRoute = location.pathname.startsWith("/android");
   const [employeePayslips, setEmployeePayslips] = useState<EmployeePayslips[]>(
     [],
   );
@@ -98,7 +104,9 @@ function PayslipsPage() {
               if (snap.exists() && snap.data().userId === uid) {
                 empMap.set(id, { full_name: snap.data().full_name });
               }
-            } catch {}
+            } catch {
+              return null;
+            }
           }),
         );
 
@@ -114,7 +122,9 @@ function PayslipsPage() {
                   year: snap.data().year,
                 });
               }
-            } catch {}
+            } catch {
+              return null;
+            }
           }),
         );
 
@@ -187,7 +197,11 @@ function PayslipsPage() {
   const toggleExpand = (id: string) => {
     setExpanded((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
   };
@@ -262,7 +276,11 @@ function PayslipsPage() {
 
                       <div className="flex gap-2">
                         <Link
-                          to="/payslips/$payslipId"
+                          to={
+                            isAndroidRoute
+                              ? "/android/payslips/$payslipId"
+                              : "/payslips/$payslipId"
+                          }
                           params={{ payslipId: ps.id }}
                         >
                           <Button size="sm" variant="outline">

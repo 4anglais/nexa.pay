@@ -49,7 +49,7 @@ interface Settings {
   nhima_rate: number;
 }
 
-function PayrollPage() {
+export function PayrollPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [deductions, setDeductions] = useState<Deduction[]>([]);
   const [allowances, setAllowances] = useState<Allowance[]>([]);

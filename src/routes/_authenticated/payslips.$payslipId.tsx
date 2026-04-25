@@ -1,4 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Link,
+  useLocation,
+} from "@tanstack/react-router";
 import { useEffect, useState, useRef } from "react";
 import { firebase } from "@/integrations/firebase/client";
 import { PageHeader } from "@/components/PageHeader";
@@ -70,8 +74,18 @@ interface DeductionRow {
 
 type PrintLayout = "landscape" | "portrait";
 
-function PayslipDetailPage() {
+export function PayslipDetailPage() {
   const { payslipId } = Route.useParams();
+  return <PayslipDetailPageContent payslipId={payslipId} />;
+}
+
+export function PayslipDetailPageContent({
+  payslipId,
+}: {
+  payslipId: string;
+}) {
+  const location = useLocation();
+  const isAndroidRoute = location.pathname.startsWith("/android");
   const [payslip, setPayslip] = useState<PayslipDetail | null>(null);
   const [company, setCompany] = useState<CompanySettings | null>(null);
   const [allowances, setAllowances] = useState<AllowanceRow[]>([]);
@@ -224,7 +238,7 @@ function PayslipDetailPage() {
           title="Payslip Not Found"
           description="This payslip does not exist."
         />
-        <Link to="/payslips">
+        <Link to={isAndroidRoute ? "/android/payslips" : "/payslips"}>
           <Button variant="outline">
             <ArrowLeft className="h-4 w-4" strokeWidth={1.5} /> Back
           </Button>
@@ -748,7 +762,7 @@ function PayslipDetailPage() {
     <>
       <div className="print:hidden">
         <div className="mb-6 flex items-center gap-3 flex-wrap">
-          <Link to="/payslips">
+          <Link to={isAndroidRoute ? "/android/payslips" : "/payslips"}>
             <Button variant="ghost" size="sm" className="font-bold">
               <ArrowLeft className="h-4 w-4 mr-2" strokeWidth={2.5} /> Back
             </Button>

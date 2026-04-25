@@ -1,4 +1,8 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  useLocation,
+  useNavigate,
+} from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -66,8 +70,10 @@ function SectionHeading({
   );
 }
 
-function NewEmployeePage() {
+export function NewEmployeePage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isAndroidRoute = location.pathname.startsWith("/android");
   const [error, setError] = useState("");
   const [allowances, setAllowances] = useState<LineItem[]>([]);
   const [deductionItems, setDeductionItems] = useState<LineItem[]>([]);
@@ -110,7 +116,7 @@ function NewEmployeePage() {
         });
       }
 
-      navigate({ to: "/employees" });
+      navigate({ to: isAndroidRoute ? "/android/employees" : "/employees" });
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to create employee",
@@ -492,7 +498,11 @@ function NewEmployeePage() {
               type="button"
               variant="outline"
               className="rounded-xl px-5"
-              onClick={() => navigate({ to: "/employees" })}
+              onClick={() =>
+                navigate({
+                  to: isAndroidRoute ? "/android/employees" : "/employees",
+                })
+              }
             >
               Cancel
             </Button>

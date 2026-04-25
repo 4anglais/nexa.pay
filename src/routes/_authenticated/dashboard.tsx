@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useLocation } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { firebase } from "@/integrations/firebase/client";
 import { PageHeader } from "@/components/PageHeader";
@@ -80,43 +80,45 @@ const statConfig = [
   },
 ];
 
-const quickActions = [
-  {
-    to: "/employees",
-    icon: Users,
-    label: "Manage Employees",
-    description: "Add, edit, or remove staff",
-    iconColor: "text-teal-500",
-    iconBg: "bg-teal-500/10",
-    hoverBorder: "hover:border-teal-500/30",
-  },
-  {
-    to: "/payroll",
-    icon: Banknote,
-    label: "Run Payroll",
-    description: "Process this month's salaries",
-    iconColor: "text-emerald-500",
-    iconBg: "bg-emerald-500/10",
-    hoverBorder: "hover:border-emerald-500/30",
-  },
-  {
-    to: "/payslips",
-    icon: FileText,
-    label: "View Payslips",
-    description: "Browse generated documents",
-    iconColor: "text-sky-500",
-    iconBg: "bg-sky-500/10",
-    hoverBorder: "hover:border-sky-500/30",
-  },
-];
-
-function DashboardPage() {
+export function DashboardPage() {
+  const location = useLocation();
+  const isAndroidRoute = location.pathname.startsWith("/android");
   const [stats, setStats] = useState({
     totalEmployees: 0,
     monthlyPayroll: 0,
     payslipsGenerated: 0,
     payrollRuns: 0,
   });
+
+  const quickActions = [
+    {
+      to: isAndroidRoute ? "/android/employees" : "/employees",
+      icon: Users,
+      label: "Manage Employees",
+      description: "Add, edit, or remove staff",
+      iconColor: "text-teal-500",
+      iconBg: "bg-teal-500/10",
+      hoverBorder: "hover:border-teal-500/30",
+    },
+    {
+      to: isAndroidRoute ? "/android/payroll" : "/payroll",
+      icon: Banknote,
+      label: "Run Payroll",
+      description: "Process this month's salaries",
+      iconColor: "text-emerald-500",
+      iconBg: "bg-emerald-500/10",
+      hoverBorder: "hover:border-emerald-500/30",
+    },
+    {
+      to: isAndroidRoute ? "/android/payslips" : "/payslips",
+      icon: FileText,
+      label: "View Payslips",
+      description: "Browse generated documents",
+      iconColor: "text-sky-500",
+      iconBg: "bg-sky-500/10",
+      hoverBorder: "hover:border-sky-500/30",
+    },
+  ] as const;
 
   useEffect(() => {
     async function loadStats() {
@@ -257,7 +259,7 @@ function DashboardPage() {
               </p>
             </div>
             <Link
-              to="/payroll"
+              to={isAndroidRoute ? "/android/payroll" : "/payroll"}
               className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-teal-500 hover:text-teal-400 transition-colors"
             >
               Run Payroll <ArrowRight className="h-3 w-3" />

@@ -1,4 +1,8 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  useLocation,
+  useNavigate,
+} from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -47,9 +51,19 @@ interface LineItem {
   isNew?: boolean;
 }
 
-function EditEmployeePage() {
+export function EditEmployeePage() {
   const { employeeId } = Route.useParams();
+  return <EditEmployeePageContent employeeId={employeeId} />;
+}
+
+export function EditEmployeePageContent({
+  employeeId,
+}: {
+  employeeId: string;
+}) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isAndroidRoute = location.pathname.startsWith("/android");
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -185,7 +199,7 @@ function EditEmployeePage() {
         });
       }
 
-      navigate({ to: "/employees" });
+      navigate({ to: isAndroidRoute ? "/android/employees" : "/employees" });
     } catch (error) {
       setError(error instanceof Error ? error.message : "Unknown error");
     }

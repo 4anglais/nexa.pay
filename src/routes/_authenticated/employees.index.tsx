@@ -1,4 +1,9 @@
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Link,
+  useLocation,
+  useRouter,
+} from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { firebase } from "@/integrations/firebase/client";
 import { PageHeader } from "@/components/PageHeader";
@@ -28,7 +33,7 @@ interface Employee {
   userId: string;
 }
 
-async function fetchEmployees() {
+export async function fetchEmployees() {
   const user = firebase.auth.currentUser;
   if (!user) return [];
 
@@ -72,15 +77,26 @@ function getDeptColor(dept: string) {
   return DEPT_COLORS[dept];
 }
 
-function EmployeesIndexPage() {
-  const router = useRouter();
+export function EmployeesIndexPage() {
   const loaderEmployees = Route.useLoaderData();
+
+  return <EmployeesIndexPageContent initialEmployees={loaderEmployees || []} />;
+}
+
+export function EmployeesIndexPageContent({
+  initialEmployees,
+}: {
+  initialEmployees: Employee[];
+}) {
+  const location = useLocation();
+  const isAndroidRoute = location.pathname.startsWith("/android");
+  const router = useRouter();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    setEmployees(loaderEmployees || []);
-  }, [loaderEmployees]);
+    setEmployees(initialEmployees || []);
+  }, [initialEmployees]);
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this employee?")) return;
@@ -112,7 +128,7 @@ function EmployeesIndexPage() {
         title="Employees"
         description="Manage your team members"
         actions={
-          <Link to="/employees/new">
+          <Link to={isAndroidRoute ? "/android/employees/new" : "/employees/new"}>
             <Button className="gap-2 rounded-xl px-4 font-semibold">
               <Plus className="h-4 w-4" strokeWidth={2} /> Add Employee
             </Button>
@@ -187,7 +203,13 @@ function EmployeesIndexPage() {
                         </p>
                       </div>
                       {!search && (
-                        <Link to="/employees/new">
+                        <Link
+                          to={
+                            isAndroidRoute
+                              ? "/android/employees/new"
+                              : "/employees/new"
+                          }
+                        >
                           <Button size="sm" className="gap-1.5 rounded-lg mt-1">
                             <Plus className="h-3.5 w-3.5" /> Add Employee
                           </Button>
@@ -276,7 +298,11 @@ function EmployeesIndexPage() {
                       <td className="px-5 py-4 text-right">
                         <div className="flex justify-end gap-1">
                           <Link
-                            to="/employees/$employeeId"
+                            to={
+                              isAndroidRoute
+                                ? "/android/employees/$employeeId"
+                                : "/employees/$employeeId"
+                            }
                             params={{ employeeId: emp.id }}
                           >
                             <Button

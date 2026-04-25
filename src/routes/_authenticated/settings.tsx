@@ -104,7 +104,7 @@ function Field({
   );
 }
 
-function SettingsPage() {
+export function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");

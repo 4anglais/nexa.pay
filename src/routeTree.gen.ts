@@ -11,8 +11,12 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VerifyRouteImport } from './routes/verify'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as AndroidRouteImport } from './routes/android'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AndroidIndexRouteImport } from './routes/android/index'
+import { Route as AndroidLoginRouteImport } from './routes/android/login'
+import { Route as AndroidAuthenticatedRouteImport } from './routes/android/_authenticated'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedPayslipsRouteImport } from './routes/_authenticated/payslips'
 import { Route as AuthenticatedPayrollRouteImport } from './routes/_authenticated/payroll'
@@ -20,9 +24,19 @@ import { Route as AuthenticatedEmployeesRouteImport } from './routes/_authentica
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedPayslipsIndexRouteImport } from './routes/_authenticated/payslips.index'
 import { Route as AuthenticatedEmployeesIndexRouteImport } from './routes/_authenticated/employees.index'
+import { Route as AndroidAuthenticatedSettingsRouteImport } from './routes/android/_authenticated/settings'
+import { Route as AndroidAuthenticatedPayslipsRouteImport } from './routes/android/_authenticated/payslips'
+import { Route as AndroidAuthenticatedPayrollRouteImport } from './routes/android/_authenticated/payroll'
+import { Route as AndroidAuthenticatedEmployeesRouteImport } from './routes/android/_authenticated/employees'
+import { Route as AndroidAuthenticatedDashboardRouteImport } from './routes/android/_authenticated/dashboard'
 import { Route as AuthenticatedPayslipsPayslipIdRouteImport } from './routes/_authenticated/payslips.$payslipId'
 import { Route as AuthenticatedEmployeesNewRouteImport } from './routes/_authenticated/employees.new'
 import { Route as AuthenticatedEmployeesEmployeeIdRouteImport } from './routes/_authenticated/employees.$employeeId'
+import { Route as AndroidAuthenticatedPayslipsIndexRouteImport } from './routes/android/_authenticated/payslips.index'
+import { Route as AndroidAuthenticatedEmployeesIndexRouteImport } from './routes/android/_authenticated/employees.index'
+import { Route as AndroidAuthenticatedPayslipsPayslipIdRouteImport } from './routes/android/_authenticated/payslips.$payslipId'
+import { Route as AndroidAuthenticatedEmployeesNewRouteImport } from './routes/android/_authenticated/employees.new'
+import { Route as AndroidAuthenticatedEmployeesEmployeeIdRouteImport } from './routes/android/_authenticated/employees.$employeeId'
 
 const VerifyRoute = VerifyRouteImport.update({
   id: '/verify',
@@ -34,6 +48,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AndroidRoute = AndroidRouteImport.update({
+  id: '/android',
+  path: '/android',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
@@ -42,6 +61,20 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AndroidIndexRoute = AndroidIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AndroidRoute,
+} as any)
+const AndroidLoginRoute = AndroidLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => AndroidRoute,
+} as any)
+const AndroidAuthenticatedRoute = AndroidAuthenticatedRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => AndroidRoute,
 } as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
@@ -80,6 +113,36 @@ const AuthenticatedEmployeesIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedEmployeesRoute,
   } as any)
+const AndroidAuthenticatedSettingsRoute =
+  AndroidAuthenticatedSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AndroidAuthenticatedRoute,
+  } as any)
+const AndroidAuthenticatedPayslipsRoute =
+  AndroidAuthenticatedPayslipsRouteImport.update({
+    id: '/payslips',
+    path: '/payslips',
+    getParentRoute: () => AndroidAuthenticatedRoute,
+  } as any)
+const AndroidAuthenticatedPayrollRoute =
+  AndroidAuthenticatedPayrollRouteImport.update({
+    id: '/payroll',
+    path: '/payroll',
+    getParentRoute: () => AndroidAuthenticatedRoute,
+  } as any)
+const AndroidAuthenticatedEmployeesRoute =
+  AndroidAuthenticatedEmployeesRouteImport.update({
+    id: '/employees',
+    path: '/employees',
+    getParentRoute: () => AndroidAuthenticatedRoute,
+  } as any)
+const AndroidAuthenticatedDashboardRoute =
+  AndroidAuthenticatedDashboardRouteImport.update({
+    id: '/dashboard',
+    path: '/dashboard',
+    getParentRoute: () => AndroidAuthenticatedRoute,
+  } as any)
 const AuthenticatedPayslipsPayslipIdRoute =
   AuthenticatedPayslipsPayslipIdRouteImport.update({
     id: '/$payslipId',
@@ -98,9 +161,40 @@ const AuthenticatedEmployeesEmployeeIdRoute =
     path: '/$employeeId',
     getParentRoute: () => AuthenticatedEmployeesRoute,
   } as any)
+const AndroidAuthenticatedPayslipsIndexRoute =
+  AndroidAuthenticatedPayslipsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AndroidAuthenticatedPayslipsRoute,
+  } as any)
+const AndroidAuthenticatedEmployeesIndexRoute =
+  AndroidAuthenticatedEmployeesIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AndroidAuthenticatedEmployeesRoute,
+  } as any)
+const AndroidAuthenticatedPayslipsPayslipIdRoute =
+  AndroidAuthenticatedPayslipsPayslipIdRouteImport.update({
+    id: '/$payslipId',
+    path: '/$payslipId',
+    getParentRoute: () => AndroidAuthenticatedPayslipsRoute,
+  } as any)
+const AndroidAuthenticatedEmployeesNewRoute =
+  AndroidAuthenticatedEmployeesNewRouteImport.update({
+    id: '/new',
+    path: '/new',
+    getParentRoute: () => AndroidAuthenticatedEmployeesRoute,
+  } as any)
+const AndroidAuthenticatedEmployeesEmployeeIdRoute =
+  AndroidAuthenticatedEmployeesEmployeeIdRouteImport.update({
+    id: '/$employeeId',
+    path: '/$employeeId',
+    getParentRoute: () => AndroidAuthenticatedEmployeesRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/android': typeof AndroidAuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
   '/verify': typeof VerifyRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -108,11 +202,23 @@ export interface FileRoutesByFullPath {
   '/payroll': typeof AuthenticatedPayrollRoute
   '/payslips': typeof AuthenticatedPayslipsRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRoute
+  '/android/login': typeof AndroidLoginRoute
+  '/android/': typeof AndroidIndexRoute
   '/employees/$employeeId': typeof AuthenticatedEmployeesEmployeeIdRoute
   '/employees/new': typeof AuthenticatedEmployeesNewRoute
   '/payslips/$payslipId': typeof AuthenticatedPayslipsPayslipIdRoute
+  '/android/dashboard': typeof AndroidAuthenticatedDashboardRoute
+  '/android/employees': typeof AndroidAuthenticatedEmployeesRouteWithChildren
+  '/android/payroll': typeof AndroidAuthenticatedPayrollRoute
+  '/android/payslips': typeof AndroidAuthenticatedPayslipsRouteWithChildren
+  '/android/settings': typeof AndroidAuthenticatedSettingsRoute
   '/employees/': typeof AuthenticatedEmployeesIndexRoute
   '/payslips/': typeof AuthenticatedPayslipsIndexRoute
+  '/android/employees/$employeeId': typeof AndroidAuthenticatedEmployeesEmployeeIdRoute
+  '/android/employees/new': typeof AndroidAuthenticatedEmployeesNewRoute
+  '/android/payslips/$payslipId': typeof AndroidAuthenticatedPayslipsPayslipIdRoute
+  '/android/employees/': typeof AndroidAuthenticatedEmployeesIndexRoute
+  '/android/payslips/': typeof AndroidAuthenticatedPayslipsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -121,16 +227,27 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/payroll': typeof AuthenticatedPayrollRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/android': typeof AndroidIndexRoute
+  '/android/login': typeof AndroidLoginRoute
   '/employees/$employeeId': typeof AuthenticatedEmployeesEmployeeIdRoute
   '/employees/new': typeof AuthenticatedEmployeesNewRoute
   '/payslips/$payslipId': typeof AuthenticatedPayslipsPayslipIdRoute
+  '/android/dashboard': typeof AndroidAuthenticatedDashboardRoute
+  '/android/payroll': typeof AndroidAuthenticatedPayrollRoute
+  '/android/settings': typeof AndroidAuthenticatedSettingsRoute
   '/employees': typeof AuthenticatedEmployeesIndexRoute
   '/payslips': typeof AuthenticatedPayslipsIndexRoute
+  '/android/employees/$employeeId': typeof AndroidAuthenticatedEmployeesEmployeeIdRoute
+  '/android/employees/new': typeof AndroidAuthenticatedEmployeesNewRoute
+  '/android/payslips/$payslipId': typeof AndroidAuthenticatedPayslipsPayslipIdRoute
+  '/android/employees': typeof AndroidAuthenticatedEmployeesIndexRoute
+  '/android/payslips': typeof AndroidAuthenticatedPayslipsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/android': typeof AndroidRouteWithChildren
   '/login': typeof LoginRoute
   '/verify': typeof VerifyRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -138,16 +255,30 @@ export interface FileRoutesById {
   '/_authenticated/payroll': typeof AuthenticatedPayrollRoute
   '/_authenticated/payslips': typeof AuthenticatedPayslipsRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/android/_authenticated': typeof AndroidAuthenticatedRouteWithChildren
+  '/android/login': typeof AndroidLoginRoute
+  '/android/': typeof AndroidIndexRoute
   '/_authenticated/employees/$employeeId': typeof AuthenticatedEmployeesEmployeeIdRoute
   '/_authenticated/employees/new': typeof AuthenticatedEmployeesNewRoute
   '/_authenticated/payslips/$payslipId': typeof AuthenticatedPayslipsPayslipIdRoute
+  '/android/_authenticated/dashboard': typeof AndroidAuthenticatedDashboardRoute
+  '/android/_authenticated/employees': typeof AndroidAuthenticatedEmployeesRouteWithChildren
+  '/android/_authenticated/payroll': typeof AndroidAuthenticatedPayrollRoute
+  '/android/_authenticated/payslips': typeof AndroidAuthenticatedPayslipsRouteWithChildren
+  '/android/_authenticated/settings': typeof AndroidAuthenticatedSettingsRoute
   '/_authenticated/employees/': typeof AuthenticatedEmployeesIndexRoute
   '/_authenticated/payslips/': typeof AuthenticatedPayslipsIndexRoute
+  '/android/_authenticated/employees/$employeeId': typeof AndroidAuthenticatedEmployeesEmployeeIdRoute
+  '/android/_authenticated/employees/new': typeof AndroidAuthenticatedEmployeesNewRoute
+  '/android/_authenticated/payslips/$payslipId': typeof AndroidAuthenticatedPayslipsPayslipIdRoute
+  '/android/_authenticated/employees/': typeof AndroidAuthenticatedEmployeesIndexRoute
+  '/android/_authenticated/payslips/': typeof AndroidAuthenticatedPayslipsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/android'
     | '/login'
     | '/verify'
     | '/dashboard'
@@ -155,11 +286,23 @@ export interface FileRouteTypes {
     | '/payroll'
     | '/payslips'
     | '/settings'
+    | '/android/login'
+    | '/android/'
     | '/employees/$employeeId'
     | '/employees/new'
     | '/payslips/$payslipId'
+    | '/android/dashboard'
+    | '/android/employees'
+    | '/android/payroll'
+    | '/android/payslips'
+    | '/android/settings'
     | '/employees/'
     | '/payslips/'
+    | '/android/employees/$employeeId'
+    | '/android/employees/new'
+    | '/android/payslips/$payslipId'
+    | '/android/employees/'
+    | '/android/payslips/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -168,15 +311,26 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/payroll'
     | '/settings'
+    | '/android'
+    | '/android/login'
     | '/employees/$employeeId'
     | '/employees/new'
     | '/payslips/$payslipId'
+    | '/android/dashboard'
+    | '/android/payroll'
+    | '/android/settings'
     | '/employees'
     | '/payslips'
+    | '/android/employees/$employeeId'
+    | '/android/employees/new'
+    | '/android/payslips/$payslipId'
+    | '/android/employees'
+    | '/android/payslips'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/android'
     | '/login'
     | '/verify'
     | '/_authenticated/dashboard'
@@ -184,16 +338,30 @@ export interface FileRouteTypes {
     | '/_authenticated/payroll'
     | '/_authenticated/payslips'
     | '/_authenticated/settings'
+    | '/android/_authenticated'
+    | '/android/login'
+    | '/android/'
     | '/_authenticated/employees/$employeeId'
     | '/_authenticated/employees/new'
     | '/_authenticated/payslips/$payslipId'
+    | '/android/_authenticated/dashboard'
+    | '/android/_authenticated/employees'
+    | '/android/_authenticated/payroll'
+    | '/android/_authenticated/payslips'
+    | '/android/_authenticated/settings'
     | '/_authenticated/employees/'
     | '/_authenticated/payslips/'
+    | '/android/_authenticated/employees/$employeeId'
+    | '/android/_authenticated/employees/new'
+    | '/android/_authenticated/payslips/$payslipId'
+    | '/android/_authenticated/employees/'
+    | '/android/_authenticated/payslips/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  AndroidRoute: typeof AndroidRouteWithChildren
   LoginRoute: typeof LoginRoute
   VerifyRoute: typeof VerifyRoute
 }
@@ -214,6 +382,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/android': {
+      id: '/android'
+      path: '/android'
+      fullPath: '/android'
+      preLoaderRoute: typeof AndroidRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated': {
       id: '/_authenticated'
       path: ''
@@ -227,6 +402,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/android/': {
+      id: '/android/'
+      path: '/'
+      fullPath: '/android/'
+      preLoaderRoute: typeof AndroidIndexRouteImport
+      parentRoute: typeof AndroidRoute
+    }
+    '/android/login': {
+      id: '/android/login'
+      path: '/login'
+      fullPath: '/android/login'
+      preLoaderRoute: typeof AndroidLoginRouteImport
+      parentRoute: typeof AndroidRoute
+    }
+    '/android/_authenticated': {
+      id: '/android/_authenticated'
+      path: ''
+      fullPath: '/android'
+      preLoaderRoute: typeof AndroidAuthenticatedRouteImport
+      parentRoute: typeof AndroidRoute
     }
     '/_authenticated/settings': {
       id: '/_authenticated/settings'
@@ -277,6 +473,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEmployeesIndexRouteImport
       parentRoute: typeof AuthenticatedEmployeesRoute
     }
+    '/android/_authenticated/settings': {
+      id: '/android/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/android/settings'
+      preLoaderRoute: typeof AndroidAuthenticatedSettingsRouteImport
+      parentRoute: typeof AndroidAuthenticatedRoute
+    }
+    '/android/_authenticated/payslips': {
+      id: '/android/_authenticated/payslips'
+      path: '/payslips'
+      fullPath: '/android/payslips'
+      preLoaderRoute: typeof AndroidAuthenticatedPayslipsRouteImport
+      parentRoute: typeof AndroidAuthenticatedRoute
+    }
+    '/android/_authenticated/payroll': {
+      id: '/android/_authenticated/payroll'
+      path: '/payroll'
+      fullPath: '/android/payroll'
+      preLoaderRoute: typeof AndroidAuthenticatedPayrollRouteImport
+      parentRoute: typeof AndroidAuthenticatedRoute
+    }
+    '/android/_authenticated/employees': {
+      id: '/android/_authenticated/employees'
+      path: '/employees'
+      fullPath: '/android/employees'
+      preLoaderRoute: typeof AndroidAuthenticatedEmployeesRouteImport
+      parentRoute: typeof AndroidAuthenticatedRoute
+    }
+    '/android/_authenticated/dashboard': {
+      id: '/android/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/android/dashboard'
+      preLoaderRoute: typeof AndroidAuthenticatedDashboardRouteImport
+      parentRoute: typeof AndroidAuthenticatedRoute
+    }
     '/_authenticated/payslips/$payslipId': {
       id: '/_authenticated/payslips/$payslipId'
       path: '/$payslipId'
@@ -297,6 +528,41 @@ declare module '@tanstack/react-router' {
       fullPath: '/employees/$employeeId'
       preLoaderRoute: typeof AuthenticatedEmployeesEmployeeIdRouteImport
       parentRoute: typeof AuthenticatedEmployeesRoute
+    }
+    '/android/_authenticated/payslips/': {
+      id: '/android/_authenticated/payslips/'
+      path: '/'
+      fullPath: '/android/payslips/'
+      preLoaderRoute: typeof AndroidAuthenticatedPayslipsIndexRouteImport
+      parentRoute: typeof AndroidAuthenticatedPayslipsRoute
+    }
+    '/android/_authenticated/employees/': {
+      id: '/android/_authenticated/employees/'
+      path: '/'
+      fullPath: '/android/employees/'
+      preLoaderRoute: typeof AndroidAuthenticatedEmployeesIndexRouteImport
+      parentRoute: typeof AndroidAuthenticatedEmployeesRoute
+    }
+    '/android/_authenticated/payslips/$payslipId': {
+      id: '/android/_authenticated/payslips/$payslipId'
+      path: '/$payslipId'
+      fullPath: '/android/payslips/$payslipId'
+      preLoaderRoute: typeof AndroidAuthenticatedPayslipsPayslipIdRouteImport
+      parentRoute: typeof AndroidAuthenticatedPayslipsRoute
+    }
+    '/android/_authenticated/employees/new': {
+      id: '/android/_authenticated/employees/new'
+      path: '/new'
+      fullPath: '/android/employees/new'
+      preLoaderRoute: typeof AndroidAuthenticatedEmployeesNewRouteImport
+      parentRoute: typeof AndroidAuthenticatedEmployeesRoute
+    }
+    '/android/_authenticated/employees/$employeeId': {
+      id: '/android/_authenticated/employees/$employeeId'
+      path: '/$employeeId'
+      fullPath: '/android/employees/$employeeId'
+      preLoaderRoute: typeof AndroidAuthenticatedEmployeesEmployeeIdRouteImport
+      parentRoute: typeof AndroidAuthenticatedEmployeesRoute
     }
   }
 }
@@ -355,9 +621,85 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
   AuthenticatedRouteChildren,
 )
 
+interface AndroidAuthenticatedEmployeesRouteChildren {
+  AndroidAuthenticatedEmployeesEmployeeIdRoute: typeof AndroidAuthenticatedEmployeesEmployeeIdRoute
+  AndroidAuthenticatedEmployeesNewRoute: typeof AndroidAuthenticatedEmployeesNewRoute
+  AndroidAuthenticatedEmployeesIndexRoute: typeof AndroidAuthenticatedEmployeesIndexRoute
+}
+
+const AndroidAuthenticatedEmployeesRouteChildren: AndroidAuthenticatedEmployeesRouteChildren =
+  {
+    AndroidAuthenticatedEmployeesEmployeeIdRoute:
+      AndroidAuthenticatedEmployeesEmployeeIdRoute,
+    AndroidAuthenticatedEmployeesNewRoute:
+      AndroidAuthenticatedEmployeesNewRoute,
+    AndroidAuthenticatedEmployeesIndexRoute:
+      AndroidAuthenticatedEmployeesIndexRoute,
+  }
+
+const AndroidAuthenticatedEmployeesRouteWithChildren =
+  AndroidAuthenticatedEmployeesRoute._addFileChildren(
+    AndroidAuthenticatedEmployeesRouteChildren,
+  )
+
+interface AndroidAuthenticatedPayslipsRouteChildren {
+  AndroidAuthenticatedPayslipsPayslipIdRoute: typeof AndroidAuthenticatedPayslipsPayslipIdRoute
+  AndroidAuthenticatedPayslipsIndexRoute: typeof AndroidAuthenticatedPayslipsIndexRoute
+}
+
+const AndroidAuthenticatedPayslipsRouteChildren: AndroidAuthenticatedPayslipsRouteChildren =
+  {
+    AndroidAuthenticatedPayslipsPayslipIdRoute:
+      AndroidAuthenticatedPayslipsPayslipIdRoute,
+    AndroidAuthenticatedPayslipsIndexRoute:
+      AndroidAuthenticatedPayslipsIndexRoute,
+  }
+
+const AndroidAuthenticatedPayslipsRouteWithChildren =
+  AndroidAuthenticatedPayslipsRoute._addFileChildren(
+    AndroidAuthenticatedPayslipsRouteChildren,
+  )
+
+interface AndroidAuthenticatedRouteChildren {
+  AndroidAuthenticatedDashboardRoute: typeof AndroidAuthenticatedDashboardRoute
+  AndroidAuthenticatedEmployeesRoute: typeof AndroidAuthenticatedEmployeesRouteWithChildren
+  AndroidAuthenticatedPayrollRoute: typeof AndroidAuthenticatedPayrollRoute
+  AndroidAuthenticatedPayslipsRoute: typeof AndroidAuthenticatedPayslipsRouteWithChildren
+  AndroidAuthenticatedSettingsRoute: typeof AndroidAuthenticatedSettingsRoute
+}
+
+const AndroidAuthenticatedRouteChildren: AndroidAuthenticatedRouteChildren = {
+  AndroidAuthenticatedDashboardRoute: AndroidAuthenticatedDashboardRoute,
+  AndroidAuthenticatedEmployeesRoute:
+    AndroidAuthenticatedEmployeesRouteWithChildren,
+  AndroidAuthenticatedPayrollRoute: AndroidAuthenticatedPayrollRoute,
+  AndroidAuthenticatedPayslipsRoute:
+    AndroidAuthenticatedPayslipsRouteWithChildren,
+  AndroidAuthenticatedSettingsRoute: AndroidAuthenticatedSettingsRoute,
+}
+
+const AndroidAuthenticatedRouteWithChildren =
+  AndroidAuthenticatedRoute._addFileChildren(AndroidAuthenticatedRouteChildren)
+
+interface AndroidRouteChildren {
+  AndroidAuthenticatedRoute: typeof AndroidAuthenticatedRouteWithChildren
+  AndroidLoginRoute: typeof AndroidLoginRoute
+  AndroidIndexRoute: typeof AndroidIndexRoute
+}
+
+const AndroidRouteChildren: AndroidRouteChildren = {
+  AndroidAuthenticatedRoute: AndroidAuthenticatedRouteWithChildren,
+  AndroidLoginRoute: AndroidLoginRoute,
+  AndroidIndexRoute: AndroidIndexRoute,
+}
+
+const AndroidRouteWithChildren =
+  AndroidRoute._addFileChildren(AndroidRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  AndroidRoute: AndroidRouteWithChildren,
   LoginRoute: LoginRoute,
   VerifyRoute: VerifyRoute,
 }

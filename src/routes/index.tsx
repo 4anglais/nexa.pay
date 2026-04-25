@@ -1,4 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Capacitor } from "@capacitor/core";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   ArrowRight,
   Shield,
@@ -20,7 +21,24 @@ import {
 import { useEffect, useState, useRef } from "react";
 import { MAINTENANCE_MODE } from "@/config/app";
 
-export const Route = createFileRoute("/")({ component: LandingPage });
+export const Route = createFileRoute("/")({ component: HomePage });
+
+function HomePage() {
+  const navigate = useNavigate();
+  const isNative = Capacitor.isNativePlatform();
+
+  useEffect(() => {
+    if (isNative) {
+      navigate({ to: "/android/payslips", replace: true });
+    }
+  }, [isNative, navigate]);
+
+  if (isNative) {
+    return null;
+  }
+
+  return <Landing />;
+}
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 const SLIDES = [
@@ -854,7 +872,7 @@ function TestimonialCard({
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
-function LandingPage() {
+function Landing() {
   const bg: React.CSSProperties = {
     minHeight: "100vh",
     background:

@@ -1,6 +1,13 @@
+import { Capacitor } from "@capacitor/core";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useEffect, useState } from "react";
+import {
+  useForm,
+  type FieldErrors,
+  type SubmitHandler,
+  type UseFormHandleSubmit,
+  type UseFormRegister,
+} from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { firebase } from "@/integrations/firebase/client";
@@ -59,11 +66,27 @@ const signupFeatures = [
 
 function LoginPage() {
   const navigate = useNavigate();
+  const isNative = Capacitor.isNativePlatform();
   const [error, setError] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    if (isNative) {
+      navigate({ to: "/android/login", replace: true });
+      return;
+    }
+
+    const unsubscribe = firebase.auth.onAuthStateChanged((user) => {
+      if (user) {
+        navigate({ to: "/dashboard", replace: true });
+      }
+    });
+
+    return unsubscribe;
+  }, [isNative, navigate]);
 
   const {
     register,
@@ -85,15 +108,15 @@ function LoginPage() {
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: "select_account" });
       await signInWithPopup(firebase.auth, provider);
-      navigate({ to: "/dashboard" });
-    } catch (e: any) {
-      setError(e.message || "Google sign-in failed");
+      navigate({ to: "/dashboard", replace: true });
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : "Google sign-in failed");
     } finally {
       setGoogleLoading(false);
     }
   };
 
-  const onSubmit = async (data: FormData) => {
+  const onSubmit: SubmitHandler<FormData> = async (data) => {
     setError("");
     setLoading(true);
     try {
@@ -110,9 +133,11 @@ function LoginPage() {
           data.password,
         );
       }
-      navigate({ to: "/dashboard" });
-    } catch (e: any) {
-      setError(e.message || "Authentication failed");
+      navigate({ to: "/dashboard", replace: true });
+    } catch (error: unknown) {
+      setError(
+        error instanceof Error ? error.message : "Authentication failed",
+      );
     } finally {
       setLoading(false);
     }
@@ -120,12 +145,15 @@ function LoginPage() {
 
   const features = isSignUp ? signupFeatures : loginFeatures;
 
+  if (isNative) {
+    return null;
+  }
+
   return (
     <div
       className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
       style={{ backgroundColor: C.bg }}
     >
-      {/* Ambient glows */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div
           className="absolute -top-48 -left-48 h-[560px] w-[560px] rounded-full"
@@ -141,7 +169,6 @@ function LoginPage() {
         />
       </div>
 
-      {/* Card */}
       <div
         className="relative w-full max-w-[860px] min-h-[580px] flex overflow-hidden"
         style={{
@@ -154,7 +181,6 @@ function LoginPage() {
             "0 0 0 1px rgba(35,247,122,0.05), 0 40px 100px rgba(0,0,0,0.75), 0 12px 48px rgba(35,247,122,0.1), inset 0 1px 0 rgba(255,255,255,0.07)",
         }}
       >
-        {/* ── LEFT PANEL ── */}
         <div
           className="relative hidden md:flex w-[44%] flex-shrink-0 flex-col overflow-hidden"
           style={{
@@ -163,7 +189,6 @@ function LoginPage() {
             borderRight: "1px solid rgba(255,255,255,0.06)",
           }}
         >
-          {/* Dot grid */}
           <div
             className="absolute inset-0"
             style={{
@@ -173,7 +198,6 @@ function LoginPage() {
               borderRadius: "28px 0 0 28px",
             }}
           />
-          {/* Green glow corner */}
           <div
             className="absolute -top-28 -left-28 h-80 w-80 rounded-full pointer-events-none"
             style={{
@@ -188,7 +212,6 @@ function LoginPage() {
               filter: "blur(60px)",
             }}
           />
-          {/* Edge fade */}
           <div
             className="absolute inset-y-0 right-0 w-12 pointer-events-none z-10"
             style={{
@@ -198,7 +221,6 @@ function LoginPage() {
           />
 
           <div className="relative z-20 flex flex-col justify-between h-full p-10">
-            {/* Logo */}
             <div className="flex items-center gap-3">
               <div
                 className="h-9 w-9 flex items-center justify-center font-black text-base shrink-0"
@@ -221,7 +243,6 @@ function LoginPage() {
               </span>
             </div>
 
-            {/* Headline */}
             <div className="flex flex-col gap-4">
               <p
                 className="text-[10px] font-semibold uppercase tracking-[0.22em]"
@@ -281,7 +302,6 @@ function LoginPage() {
               </p>
             </div>
 
-            {/* Feature bullets */}
             <div className="flex flex-col gap-3">
               {features.map(({ icon: Icon, label }) => (
                 <div key={label} className="flex items-center gap-3">
@@ -307,9 +327,7 @@ function LoginPage() {
           </div>
         </div>
 
-        {/* ── RIGHT PANEL ── */}
         <div className="flex-1 relative overflow-hidden">
-          {/* LOGIN */}
           <div
             className="absolute inset-0 flex flex-col justify-center px-10 py-10 transition-all duration-500"
             style={{
@@ -336,7 +354,6 @@ function LoginPage() {
             />
           </div>
 
-          {/* SIGNUP */}
           <div
             className="absolute inset-0 flex flex-col justify-center px-10 py-10 transition-all duration-500"
             style={{
@@ -385,16 +402,16 @@ function AuthForm({
 }: {
   mode: "login" | "signup";
   error: string;
-  onGoogle: () => void;
+  onGoogle: () => Promise<void>;
   googleLoading: boolean;
-  register: any;
-  errors: any;
+  register: UseFormRegister<FormData>;
+  errors: FieldErrors<FormData>;
   isSubmitting: boolean;
   loading: boolean;
   showPassword: boolean;
   setShowPassword: (v: boolean) => void;
-  handleSubmit: any;
-  onSubmit: any;
+  handleSubmit: UseFormHandleSubmit<FormData>;
+  onSubmit: SubmitHandler<FormData>;
   onSwitch: () => void;
 }) {
   const isSignUp = mode === "signup";
@@ -494,7 +511,6 @@ function AuthForm({
         </div>
       )}
 
-      {/* Google button */}
       <button
         type="button"
         onClick={onGoogle}
@@ -513,8 +529,9 @@ function AuthForm({
           ...sans,
         }}
         onMouseEnter={(e) => {
-          if (!googleLoading)
+          if (!googleLoading) {
             e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.5)";
+          }
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.boxShadow = "0 2px 12px rgba(0,0,0,0.35)";
@@ -545,7 +562,6 @@ function AuthForm({
         {isSignUp ? "Sign up with Google" : "Continue with Google"}
       </button>
 
-      {/* Divider */}
       <div className="flex items-center gap-3 mb-5">
         <div
           className="flex-1 h-px"
@@ -564,7 +580,6 @@ function AuthForm({
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        {/* Email */}
         <div className="space-y-1.5">
           <label
             className="block text-[10px] font-semibold uppercase tracking-[0.16em]"
@@ -589,7 +604,6 @@ function AuthForm({
           )}
         </div>
 
-        {/* Password */}
         <div className="space-y-1.5">
           <label
             className="block text-[10px] font-semibold uppercase tracking-[0.16em]"
@@ -629,7 +643,6 @@ function AuthForm({
           )}
         </div>
 
-        {/* Submit */}
         <button
           type="submit"
           disabled={isSubmitting || loading}
